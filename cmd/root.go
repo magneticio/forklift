@@ -23,27 +23,39 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
+// version should be in format d.d.d where d is a decimal number
+const Version string = "0.0.1"
+const AppName string = "forklift"
+
+// Backend version is the version this client is tested with
+const BackendVersion string = "1.0.0"
+
+/*
+Application name can change over time so it is made parameteric
+*/
+func AddAppName(str string) string {
+	return strings.Replace(str, "$AppName", AppName, -1)
+}
+
 var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "forklift",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
+	Use:   AddAppName("$AppName"),
+	Short: AddAppName("A command line client for $AppName"),
+	Long: AddAppName(`A longer description that spans multiple lines and likely contains
 examples and usage of using your application. For example:
 
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	//	Run: func(cmd *cobra.Command, args []string) { },
+to quickly create a Cobra application.`),
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
