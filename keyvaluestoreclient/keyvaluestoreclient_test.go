@@ -2,9 +2,7 @@ package keyvaluestoreclient_test
 
 import (
 	"context"
-	"database/sql"
 	"encoding/base64"
-	"fmt"
 	"net"
 	"net/http"
 	"testing"
@@ -24,7 +22,6 @@ import (
 	credUserpass "github.com/hashicorp/vault/builtin/credential/userpass"
 	vaulthttp "github.com/hashicorp/vault/http"
 	"github.com/magneticio/forklift/keyvaluestoreclient"
-	"github.com/ory/dockertest"
 )
 
 // testVaultServer creates a test vault cluster and returns a configured API
@@ -135,45 +132,6 @@ func testVaultServerBad(t testing.TB) (*api.Client, func()) {
 
 		server.Shutdown(ctx)
 	}
-}
-
-// testPostgresDB creates a testing postgres database in a Docker container,
-// returning the connection URL and the associated closer function.
-func testPostgresDB(t testing.TB) (string, func()) {
-	pool, err := dockertest.NewPool("")
-	if err != nil {
-		t.Fatalf("postgresdb: failed to connect to docker: %s", err)
-	}
-
-	resource, err := pool.Run("postgres", "latest", []string{
-		"POSTGRES_PASSWORD=secret",
-		"POSTGRES_DB=database",
-	})
-	if err != nil {
-		t.Fatalf("postgresdb: could not start container: %s", err)
-	}
-
-	cleanup := func() {
-		if err := pool.Purge(resource); err != nil {
-			t.Fatalf("failed to cleanup local container: %s", err)
-		}
-	}
-
-	addr := fmt.Sprintf("postgres://postgres:secret@localhost:%s/database?sslmode=disable", resource.GetPort("5432/tcp"))
-
-	if err := pool.Retry(func() error {
-		db, err := sql.Open("postgres", addr)
-		if err != nil {
-			return err
-		}
-		defer db.Close()
-		return db.Ping()
-	}); err != nil {
-		cleanup()
-		t.Fatalf("postgresdb: could not connect: %s", err)
-	}
-
-	return addr, cleanup
 }
 
 func TestVaultKeyVauleStoreClient(t *testing.T) {
