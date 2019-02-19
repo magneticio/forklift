@@ -8,6 +8,7 @@ jobs:
       - checkout
       - run: mkdir -p ./artifacts
       - run: go get -v ./...
+      - run: go get github.com/stretchr/testify
       - run: ./test.sh
       - run: ./build.sh local
       - run: cp ./bin/* ./artifacts
