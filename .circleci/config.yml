@@ -7,7 +7,7 @@ jobs:
     steps:
       - checkout
       - run: mkdir -p ./artifacts
-      - run: go get
+      - run: go get ./...
       - run: ./test.sh
       - run: ./build.sh local
       - run: cp ./bin/* ./artifacts
