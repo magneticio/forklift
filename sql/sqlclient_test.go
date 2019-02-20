@@ -42,7 +42,7 @@ func TestSetupOrganization(t *testing.T) {
 
 	mock.ExpectCommit()
 
-	createError := client.SetupOrganisation("organization")
+	createError := client.SetupOrganization("organization")
 
 	assert.Nil(t, createError, fmt.Sprintf("Create resulted in error %v \n", createError))
 

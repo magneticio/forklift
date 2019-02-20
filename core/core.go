@@ -32,9 +32,9 @@ func NewCore(conf Configuration) (*Core, error) {
 	}, nil
 }
 
-func (c *Core) CreateOrganiation(namespacedOrganisation string) {
+func (c *Core) CreateOrganization(namespacedOrganization string) error {
 
-	sqlConfig := c.GetNamespaceSqlConfiguratio(namespacedOrganisation)
+	sqlConfig := c.GetNamespaceSqlConfiguration(namespacedOrganization)
 
 	host, hostError := util.GetHostFromUrl(sqlConfig.Url)
 	if hostError != nil {
@@ -48,11 +48,11 @@ func (c *Core) CreateOrganiation(namespacedOrganisation string) {
 		return clientError
 	}
 
-	client.SetupOrganisation(namespacedOrganisation)
-
+	client.SetupOrganization(namespacedOrganization)
+	return nil
 }
 
-func (c *Core) GetNamespaceSqlConfiguratio(namespace string) *SqlConfiguration {
+func (c *Core) GetNamespaceSqlConfiguration(namespace string) *SqlConfiguration {
 	return &SqlConfiguration{
 		Database:          Namespaced(namespace, c.Conf.Sql.Database),
 		Table:             Namespaced(namespace, c.Conf.Sql.Table),

@@ -62,7 +62,7 @@ func (client *MySqlClient) Close() error {
 	return nil
 }
 
-func (client *MySqlClient) SetupOrganisation(name string) error {
+func (client *MySqlClient) SetupOrganization(name string) error {
 
 	tx, txErr := client.Db.Begin()
 	if txErr != nil {
