@@ -1,6 +1,7 @@
-package mysql
+package sql
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -8,7 +9,7 @@ import (
 )
 
 type SqlClient interface {
-	CreateTable() error
+	SetupOrganisation() error
 	Insert(name string, description string) error
 	Query(name string) (string, error)
 	Update(name string, description string) error
@@ -28,11 +29,13 @@ func NewMySqlClient(user string, password string, host string, dbName string) (*
 
 	//"zEXmohRjfa:zaqT1JkXil@tcp(remotemysql.com)/zEXmohRjfa"
 
-	db, err := sql.Open("mysql", fmt.Sprint(user, ":", password, "@tcp(", host, ")/", dbName))
-	if err != nil {
-		fmt.Printf("Error: %v\n", err.Error())
-		return nil, err
+	db, connectionErr := sql.Open("mysql", fmt.Sprint(user, ":", password, "@tcp(", host, ")/", dbName))
+	if connectionErr != nil {
+		fmt.Printf("Error: %v\n", connectionErr.Error())
+		return nil, connectionErr
 	}
+
+	c := context.Background()
 
 	return &MySqlClient{
 		User:     user,
@@ -54,20 +57,48 @@ func (client *MySqlClient) Close() error {
 	return nil
 }
 
-func (client *MySqlClient) CreateTable() error {
+func (client *MySqlClient) SetupOrganisation(name string) error {
 
-	stmtIns, err := client.Db.Prepare("CREATE TABLE IF NOT EXISTS ENVIRONMENT (NAME TEXT NULL, DESCRIPTION TEXT NULL)") // ? = placeholder
-	if err != nil {
-		fmt.Printf("Error: %v\n", err.Error())
-		return err
+	tx, txErr := client.Db.Begin()
+	if txErr != nil {
+		fmt.Printf("Error: %v\n", txErr.Error())
+		return txErr
+	}
+
+	stmtSchema, schemaErr := client.Db.Prepare("CREATE SCHEMA IF NOT EXISTS ?")
+	if schemaErr != nil {
+		_ = tx.Rollback()
+		fmt.Printf("Error: %v\n", schemaErr.Error())
+		return schemaErr
+	}
+
+	defer stmtSchema.Close()
+
+	_, stmtSchemaErr := stmtSchema.Exec(name)
+	if stmtSchemaErr != nil {
+		_ = tx.Rollback()
+		fmt.Printf("Error: %v\n", stmtSchemaErr.Error())
+		return stmtSchemaErr
+	}
+
+	stmtIns, tableErr := client.Db.Prepare("CREATE TABLE ? (`ID` int(11) NOT NULL AUTO_INCREMENT, `Record` mediumtext, PRIMARY KEY (`ID`) ENGINE=InnoDB DEFAULT CHARSET=utf8")
+	if tableErr != nil {
+		_ = tx.Rollback()
+		fmt.Printf("Error: %v\n", tableErr.Error())
+		return tableErr
 	}
 
 	defer stmtIns.Close()
 
-	_, err = stmtIns.Exec()
-	if err != nil {
-		fmt.Printf("Error: %v\n", err.Error())
-		return err
+	_, stmtInsErr := stmtIns.Exec(name)
+	if stmtInsErr != nil {
+		fmt.Printf("Error: %v\n", stmtInsErr.Error())
+		return stmtInsErr
+	}
+
+	if commitError := tx.Commit(); commitError != nil {
+		fmt.Printf("Error: %v\n", commitError.Error())
+		return commitError
 	}
 
 	return nil
