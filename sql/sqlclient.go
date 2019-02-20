@@ -26,7 +26,9 @@ type MySqlClient struct {
 
 func NewMySqlClient(user string, password string, host string, dbName string) (*MySqlClient, error) {
 
-	db, err := sql.Open("mysql", "zEXmohRjfa:zaqT1JkXil@tcp(remotemysql.com)/zEXmohRjfa")
+	//"zEXmohRjfa:zaqT1JkXil@tcp(remotemysql.com)/zEXmohRjfa"
+
+	db, err := sql.Open("mysql", fmt.Sprint(user, ":", password, "@tcp(", host, ")/", dbName))
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
 		return nil, err
