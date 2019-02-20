@@ -43,7 +43,7 @@ func NewMySqlClient(user string, password string, host string, dbName string) (*
 	}, nil
 }
 
-func (client MySqlClient) Close() error {
+func (client *MySqlClient) Close() error {
 
 	err := client.Db.Close()
 	if err != nil {
@@ -54,7 +54,7 @@ func (client MySqlClient) Close() error {
 	return nil
 }
 
-func (client MySqlClient) CreateTable() error {
+func (client *MySqlClient) CreateTable() error {
 
 	stmtIns, err := client.Db.Prepare("CREATE TABLE IF NOT EXISTS ENVIRONMENT (NAME TEXT NULL, DESCRIPTION TEXT NULL)") // ? = placeholder
 	if err != nil {
@@ -73,7 +73,7 @@ func (client MySqlClient) CreateTable() error {
 	return nil
 }
 
-func (client MySqlClient) Insert(name string, description string) error {
+func (client *MySqlClient) Insert(name string, description string) error {
 
 	stmtIns, err := client.Db.Prepare("INSERT INTO ENVIRONMENT VALUES( ?, ? )")
 	if err != nil {
@@ -92,7 +92,7 @@ func (client MySqlClient) Insert(name string, description string) error {
 	return nil
 }
 
-func (client MySqlClient) Query(name string) (string, error) {
+func (client *MySqlClient) Query(name string) (string, error) {
 
 	stmtOut, err := client.Db.Prepare("SELECT DESCRIPTION FROM ENVIRONMENT WHERE NAME = ?")
 	if err != nil {
@@ -113,7 +113,7 @@ func (client MySqlClient) Query(name string) (string, error) {
 	return result, nil
 }
 
-func (client MySqlClient) Update(name string, description string) error {
+func (client *MySqlClient) Update(name string, description string) error {
 
 	stmtIns, err := client.Db.Prepare("UPDATE ENVIRONMENT SET DESCRIPTION = ? WHERE NAME = ?")
 	if err != nil {
@@ -132,7 +132,7 @@ func (client MySqlClient) Update(name string, description string) error {
 	return nil
 }
 
-func (client MySqlClient) Delete(name string) error {
+func (client *MySqlClient) Delete(name string) error {
 
 	stmtIns, err := client.Db.Prepare("DELETE FROM ENVIRONMENT WHERE NAME = ?")
 	if err != nil {
