@@ -9,6 +9,7 @@ jobs:
       - run: mkdir -p ./artifacts
       - run: go get -v ./...
       - run: go get github.com/stretchr/testify
+      - run: go get github.com/DATA-DOG/go-sqlmock
       - run: ./test.sh
       - run: ./build.sh local
       - run: cp ./bin/* ./artifacts
