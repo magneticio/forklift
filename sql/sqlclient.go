@@ -3,6 +3,7 @@ package sql
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -36,6 +37,10 @@ func NewMySqlClient(user string, password string, host string, dbName string) (*
 	}
 
 	c := context.Background()
+
+	if c == nil {
+		return nil, errors.New("SQL: Context background can not be initialized.")
+	}
 
 	return &MySqlClient{
 		User:     user,
