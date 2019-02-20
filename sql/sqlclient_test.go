@@ -1,4 +1,4 @@
-package mysql
+package sql
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCreateTable(t *testing.T) {
+func TestSetupOrganization(t *testing.T) {
 
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -24,14 +24,25 @@ func TestCreateTable(t *testing.T) {
 		Db:       db,
 	}
 
-	createTableStatement := "CREATE TABLE IF NOT EXISTS ENVIRONMENT \\(NAME TEXT NULL, DESCRIPTION TEXT NULL\\)"
+	createSchemaStatement := "CREATE SCHEMA IF NOT EXISTS \\?"
+
+	mock.ExpectBegin()
+
+	mock.ExpectPrepare(createSchemaStatement).
+		ExpectExec().
+		WithArgs("organization").
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	createTableStatement := "CREATE TABLE \\? \\(`ID` int\\(11\\) NOT NULL AUTO_INCREMENT, `Record` mediumtext, PRIMARY KEY \\(`ID`\\) ENGINE=InnoDB DEFAULT CHARSET=utf8"
 
 	mock.ExpectPrepare(createTableStatement).
 		ExpectExec().
-		WithArgs().
+		WithArgs("organization").
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	createError := client.CreateTable()
+	mock.ExpectCommit()
+
+	createError := client.SetupOrganization("organization")
 
 	assert.Nil(t, createError, fmt.Sprintf("Create resulted in error %v \n", createError))
 

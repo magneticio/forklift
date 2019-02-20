@@ -133,6 +133,15 @@ func GetJsonPath(source string, sourceFormat string, jsonPath string) (string, e
 	return str, nil
 }
 
+func GetHostFromUrl(resourceUrl string) (string, error) {
+	u, err_url := url.ParseRequestURI(resourceUrl)
+	if err_url != nil {
+		return "", err_url
+	}
+
+	return u.Host, nil
+}
+
 func VerifyCertForHost(resourceUrl string, cert string) error {
 	u, err_url := url.ParseRequestURI(resourceUrl)
 	if err_url != nil {
