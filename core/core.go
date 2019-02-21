@@ -48,8 +48,8 @@ func (c *Core) CreateOrganization(namespacedOrganization string) error {
 		return clientError
 	}
 
-	client.SetupOrganization(namespacedOrganization)
-	return nil
+	return client.SetupOrganization(namespacedOrganization)
+
 }
 
 func (c *Core) GetNamespaceSqlConfiguration(namespace string) *SqlConfiguration {

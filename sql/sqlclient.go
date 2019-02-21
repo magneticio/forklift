@@ -1,16 +1,14 @@
 package sql
 
 import (
-	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
 type SqlClient interface {
-	SetupOrganisation() error
+	SetupOrganization() error
 	Insert(name string, description string) error
 	Query(name string) (string, error)
 	Update(name string, description string) error
@@ -34,12 +32,6 @@ func NewMySqlClient(user string, password string, host string, dbName string) (*
 	if connectionErr != nil {
 		fmt.Printf("Error: %v\n", connectionErr.Error())
 		return nil, connectionErr
-	}
-
-	c := context.Background()
-
-	if c == nil {
-		return nil, errors.New("SQL: Context background can not be initialized.")
 	}
 
 	return &MySqlClient{
