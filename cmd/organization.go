@@ -56,17 +56,28 @@ var organizationCmd = &cobra.Command{
 		configText := string(configBtye)
 		conf := hocon.ParseString(configText)
 
-		basePath := "vamp.persistence.database.sql."
+		basePathSql := "vamp.persistence.database.sql."
 		sqlConfiguration := core.SqlConfiguration{
-			Database:          conf.GetString(basePath + "database"),
-			Table:             conf.GetString(basePath + "table"),
-			User:              conf.GetString(basePath + "user"),
-			Password:          conf.GetString(basePath + "password"),
-			Url:               conf.GetString(basePath + "url"),
-			DatabaseServerUrl: conf.GetString(basePath + "database-server-url"),
+			Database:          conf.GetString(basePathSql + "database"),
+			Table:             conf.GetString(basePathSql + "table"),
+			User:              conf.GetString(basePathSql + "user"),
+			Password:          conf.GetString(basePathSql + "password"),
+			Url:               conf.GetString(basePathSql + "url"),
+			DatabaseServerUrl: conf.GetString(basePathSql + "database-server-url"),
+		}
+		basePathKeyValueStore := "vamp.persistence.key-value-store."
+		KeyValueStoreConfiguration := core.KeyValueStoreConfiguration{
+			Type:     conf.GetString(basePathKeyValueStore + "type"),
+			BasePath: conf.GetString(basePathKeyValueStore + "base-path"),
+			Vault: core.VaultKeyValueStoreConfiguration{
+				Url:   conf.GetString(basePathKeyValueStore + "vault.url"),
+				Token: conf.GetString(basePathKeyValueStore + "vault.token"),
+			},
 		}
 		config := core.Configuration{
-			Sql: sqlConfiguration,
+			Sql:           sqlConfiguration,
+			KeyValueStore: KeyValueStoreConfiguration,
+			Hocon:         configText,
 		}
 		core, coreError := core.NewCore(config)
 		if coreError != nil {

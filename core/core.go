@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/magneticio/forklift/keyvaluestoreclient"
 	"github.com/magneticio/forklift/sql"
 	"github.com/magneticio/forklift/util"
 )
@@ -29,7 +30,9 @@ type KeyValueStoreConfiguration struct {
 }
 
 type Configuration struct {
-	Sql SqlConfiguration `yaml:"sql,omitempty" json:"sql,omitempty"`
+	Sql           SqlConfiguration           `yaml:"sql,omitempty" json:"sql,omitempty"`
+	KeyValueStore KeyValueStoreConfiguration `yaml:"key-value-store,omitempty" json:"key-value-store,omitempty"`
+	Hocon         string                     `hocon:"sql,omitempty" json:"hocon,omitempty"`
 }
 
 type Core struct {
@@ -44,6 +47,26 @@ func NewCore(conf Configuration) (*Core, error) {
 }
 
 func (c *Core) CreateOrganization(namespacedOrganization string) error {
+
+	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(namespacedOrganization)
+	// TODO: add params
+	params := map[string]string{
+		"cert":   "???",
+		"key":    "???",
+		"caCert": "???",
+	}
+	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewVaultKeyValueStoreClient(keyValueStoreConfig.Vault.Url, keyValueStoreConfig.Vault.Token, params)
+	if keyValueStoreClientError != nil {
+		return keyValueStoreClientError
+	}
+	key := "vamp/" + namespacedOrganization // this should be fixed
+	value := map[string]interface{}{
+		"value": c.Conf.Hocon,
+	}
+	keyValueStoreClientPutError := keyValueStoreClient.Put(key, value)
+	if keyValueStoreClientPutError != nil {
+		return keyValueStoreClientPutError
+	}
 
 	sqlConfig := c.GetNamespaceSqlConfiguration(namespacedOrganization)
 
@@ -71,6 +94,17 @@ func (c *Core) GetNamespaceSqlConfiguration(namespace string) *SqlConfiguration 
 		Password:          Namespaced(namespace, c.Conf.Sql.Password),
 		Url:               Namespaced(namespace, c.Conf.Sql.Url),
 		DatabaseServerUrl: Namespaced(namespace, c.Conf.Sql.DatabaseServerUrl),
+	}
+}
+
+func (c *Core) GetNamespaceKeyValueStoreConfiguration(namespace string) *KeyValueStoreConfiguration {
+	return &KeyValueStoreConfiguration{
+		Type:     c.Conf.KeyValueStore.Type,
+		BasePath: Namespaced(namespace, c.Conf.KeyValueStore.BasePath),
+		Vault: VaultKeyValueStoreConfiguration{
+			Url:   Namespaced(namespace, c.Conf.KeyValueStore.Vault.Url),
+			Token: Namespaced(namespace, c.Conf.KeyValueStore.Vault.Token),
+		},
 	}
 }
 
