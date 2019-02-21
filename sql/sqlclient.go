@@ -9,10 +9,11 @@ import (
 
 type SqlClient interface {
 	SetupOrganization() error
-	Insert(name string, description string) error
-	Query(name string) (string, error)
-	Update(name string, description string) error
-	Delete(name string) error
+	Insert(organization string, id int, record string) error
+	FindById(name string) (string, error)
+	List(organization string) ([]Organization, error)
+	Update(organization string, id int, record string) error
+	Delete(organization string, id int) error
 	Close() error
 }
 
