@@ -17,6 +17,17 @@ type SqlConfiguration struct {
 	DatabaseServerUrl string `yaml:"database-server-url,omitempty" json:"database-server-url,omitempty"`
 }
 
+type VaultKeyValueStoreConfiguration struct {
+	Url   string `yaml:"url,omitempty" json:"url,omitempty"`
+	Token string `yaml:"token,omitempty" json:"token,omitempty"`
+}
+
+type KeyValueStoreConfiguration struct {
+	Type     string                          `yaml:"type,omitempty" json:"type,omitempty"`
+	BasePath string                          `yaml:"base-path,omitempty" json:"base-path,omitempty"`
+	Vault    VaultKeyValueStoreConfiguration `yaml:"vault,omitempty" json:"vault,omitempty"`
+}
+
 type Configuration struct {
 	Sql SqlConfiguration `yaml:"sql,omitempty" json:"sql,omitempty"`
 }
