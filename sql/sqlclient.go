@@ -8,7 +8,7 @@ import (
 )
 
 type SqlClient interface {
-	SetupOrganisation() error
+	SetupOrganization() error
 	Insert(name string, description string) error
 	Query(name string) (string, error)
 	Update(name string, description string) error
@@ -54,7 +54,7 @@ func (client *MySqlClient) Close() error {
 	return nil
 }
 
-func (client *MySqlClient) SetupOrganisation(name string) error {
+func (client *MySqlClient) SetupOrganization(name string) error {
 
 	tx, txErr := client.Db.Begin()
 	if txErr != nil {
