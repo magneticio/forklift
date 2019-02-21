@@ -30,19 +30,19 @@ func TestSetupOrganization(t *testing.T) {
 
 	mock.ExpectPrepare(createSchemaStatement).
 		ExpectExec().
-		WithArgs("organization").
+		WithArgs("organisation").
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	createTableStatement := "CREATE TABLE \\? \\(`ID` int\\(11\\) NOT NULL AUTO_INCREMENT, `Record` mediumtext, PRIMARY KEY \\(`ID`\\) ENGINE=InnoDB DEFAULT CHARSET=utf8"
 
 	mock.ExpectPrepare(createTableStatement).
 		ExpectExec().
-		WithArgs("organization").
+		WithArgs("organisation").
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	mock.ExpectCommit()
 
-	createError := client.SetupOrganization("organization")
+	createError := client.SetupOrganisation("organisation")
 
 	assert.Nil(t, createError, fmt.Sprintf("Create resulted in error %v \n", createError))
 
