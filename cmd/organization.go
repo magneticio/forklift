@@ -24,6 +24,8 @@ import (
 	"errors"
 	"fmt"
 
+	hocon "github.com/go-akka/configuration"
+	"github.com/magneticio/forklift/core"
 	"github.com/magneticio/forklift/util"
 	"github.com/spf13/cobra"
 )
@@ -46,25 +48,35 @@ var organizationCmd = &cobra.Command{
 		}
 		name := args[0]
 		fmt.Printf("name: %v , configPath: %v , configFileType %v\n", name, configPath, configFileType)
-		// Todo: Call Core Create organization
 
 		configBtye, readErr := util.UseSourceUrl(configPath) // just pass the file name
 		if readErr != nil {
 			return readErr
 		}
-		source := string(configBtye)
-		configJson, convertErr := util.Convert(configFileType, "json", source)
-		if convertErr != nil {
-			return convertErr
+		configText := string(configBtye)
+		conf := hocon.ParseString(configText)
+
+		basePath := "vamp.persistence.database.sql."
+		sqlConfiguration := core.SqlConfiguration{
+			Database:          conf.GetString(basePath + "database"),
+			Table:             conf.GetString(basePath + "table"),
+			User:              conf.GetString(basePath + "user"),
+			Password:          conf.GetString(basePath + "password"),
+			Url:               conf.GetString(basePath + "url"),
+			DatabaseServerUrl: conf.GetString(basePath + "database-server-url"),
 		}
-		fmt.Printf("%v\n", configJson)
-		/* TODO: convert file to core configuration
-		var config core.Configuration
-		unmarshallError := json.Unmarshal([]byte(configJson), &config)
-		if unmarshallError != nil {
-			return unmarshallError
+		config := core.Configuration{
+			Sql: sqlConfiguration,
 		}
-		*/
+		core, coreError := core.NewCore(config)
+		if coreError != nil {
+			return coreError
+		}
+		createOrganizationError := core.CreateOrganization(name)
+		if createOrganizationError != nil {
+			return createOrganizationError
+		}
+		fmt.Printf("Organization %v is created\n", name)
 		return nil
 	},
 }
@@ -74,5 +86,5 @@ func init() {
 
 	organizationCmd.Flags().StringVarP(&configPath, "configuration", "", "", "Organization configuration file path")
 	organizationCmd.MarkFlagRequired("configuration")
-	organizationCmd.Flags().StringVarP(&configFileType, "input", "i", "yaml", "Configuration file type yaml or json")
+	organizationCmd.Flags().StringVarP(&configFileType, "input", "i", "hocon", "Configuration file type yaml or json, hocon")
 }
