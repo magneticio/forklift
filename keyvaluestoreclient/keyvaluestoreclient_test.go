@@ -144,7 +144,7 @@ func TestVaultKeyVauleStoreClient(t *testing.T) {
 	assert.Nil(t, clientErr)
 	assert.NotNil(t, vaultKeyValueStoreClient)
 
-	keyName := "test"
+	keyName := "secret/test"
 	values := map[string]interface{}{
 		"a": "b",
 		"c": "d",
@@ -158,4 +158,29 @@ func TestVaultKeyVauleStoreClient(t *testing.T) {
 
 	deleteErr := vaultKeyValueStoreClient.Delete(keyName)
 	assert.Nil(t, deleteErr)
+
+}
+
+func TestVaultKeyVauleStoreClientValueWrappers(t *testing.T) {
+	client, params, closer := testVaultServer(t)
+	defer closer()
+	url := client.Address()
+	token := client.Token()
+
+	vaultKeyValueStoreClient, clientErr := keyvaluestoreclient.NewVaultKeyValueStoreClient(url, token, params)
+	assert.Nil(t, clientErr)
+	assert.NotNil(t, vaultKeyValueStoreClient)
+
+	key := "secret/test2"
+	value := "value2"
+	putErr := vaultKeyValueStoreClient.PutValue(key, value)
+	assert.Nil(t, putErr)
+
+	value2, getErr := vaultKeyValueStoreClient.GetValue(key)
+	assert.Nil(t, getErr)
+	assert.Equal(t, value, value2)
+
+	deleteErr := vaultKeyValueStoreClient.Delete(key)
+	assert.Nil(t, deleteErr)
+
 }

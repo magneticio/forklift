@@ -3,6 +3,7 @@ package keyvaluestoreclient
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -51,7 +52,7 @@ func (c *VaultKeyValueStoreClient) GetClient() *vaultapi.Client {
 }
 
 func (c *VaultKeyValueStoreClient) Put(keyName string, secretData map[string]interface{}) error {
-	_, err := c.GetClient().Logical().Write(secret(keyName), secretData)
+	_, err := c.GetClient().Logical().Write(keyName, secretData)
 	if err != nil {
 		return err
 	}
@@ -59,7 +60,7 @@ func (c *VaultKeyValueStoreClient) Put(keyName string, secretData map[string]int
 }
 
 func (c *VaultKeyValueStoreClient) Get(keyName string) (map[string]interface{}, error) {
-	secretValues, err := c.GetClient().Logical().Read(secret(keyName))
+	secretValues, err := c.GetClient().Logical().Read(keyName)
 	if err != nil {
 		return nil, nil
 	}
@@ -67,7 +68,7 @@ func (c *VaultKeyValueStoreClient) Get(keyName string) (map[string]interface{}, 
 }
 
 func (c *VaultKeyValueStoreClient) Delete(keyName string) error {
-	_, err := c.GetClient().Logical().Delete(secret(keyName))
+	_, err := c.GetClient().Logical().Delete(keyName)
 	if err != nil {
 		return err
 	}
@@ -107,4 +108,26 @@ func getConfig(address, cert, key, caCert string) (*vaultapi.Config, error) {
 
 func secret(keyName string) string {
 	return fmt.Sprintf("%s/%s", "secret", keyName)
+}
+
+func valueMap(value string) map[string]interface{} {
+	return map[string]interface{}{
+		"value": value,
+	}
+}
+
+func (c *VaultKeyValueStoreClient) PutValue(key string, value string) error {
+	return c.Put(key, valueMap(value))
+}
+
+func (c *VaultKeyValueStoreClient) GetValue(key string) (string, error) {
+	secretValues, err := c.Get(key)
+	if err != nil {
+		return "", nil
+	}
+	value, ok := secretValues["value"].(string)
+	if !ok {
+		return "", errors.New("Value is not available for key: " + key)
+	}
+	return value, nil
 }
