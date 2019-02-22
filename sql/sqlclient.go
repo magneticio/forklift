@@ -9,10 +9,11 @@ import (
 
 type SqlClient interface {
 	SetupOrganization() error
-	Insert(name string, description string) error
-	Query(name string) (string, error)
-	Update(name string, description string) error
-	Delete(name string) error
+	Insert(organization string, id int, record string) error
+	FindById(name string) (string, error)
+	List(organization string) ([]Organization, error)
+	Update(organization string, id int, record string) error
+	Delete(organization string, id int) error
 	Close() error
 }
 
@@ -22,6 +23,11 @@ type MySqlClient struct {
 	Host     string
 	DbName   string
 	Db       *sql.DB
+}
+
+type Organization struct {
+	Id     int
+	Record string
 }
 
 func NewMySqlClient(user string, password string, host string, dbName string) (*MySqlClient, error) {
@@ -78,7 +84,7 @@ func (client *MySqlClient) SetupOrganization(name string) error {
 		return stmtSchemaErr
 	}
 
-	stmtIns, tableErr := client.Db.Prepare("CREATE TABLE ? (`ID` int(11) NOT NULL AUTO_INCREMENT, `Record` mediumtext, PRIMARY KEY (`ID`) ENGINE=InnoDB DEFAULT CHARSET=utf8")
+	stmtIns, tableErr := client.Db.Prepare("CREATE TABLE ?.? (`ID` int(11) NOT NULL AUTO_INCREMENT, `Record` mediumtext, PRIMARY KEY (`ID`) ENGINE=InnoDB DEFAULT CHARSET=utf8")
 	if tableErr != nil {
 		_ = tx.Rollback()
 		fmt.Printf("Error: %v\n", tableErr.Error())
@@ -87,7 +93,7 @@ func (client *MySqlClient) SetupOrganization(name string) error {
 
 	defer stmtIns.Close()
 
-	_, stmtInsErr := stmtIns.Exec(name)
+	_, stmtInsErr := stmtIns.Exec(name, name)
 	if stmtInsErr != nil {
 		fmt.Printf("Error: %v\n", stmtInsErr.Error())
 		return stmtInsErr
@@ -101,9 +107,9 @@ func (client *MySqlClient) SetupOrganization(name string) error {
 	return nil
 }
 
-func (client *MySqlClient) Insert(name string, description string) error {
+func (client *MySqlClient) Insert(organization string, id int, record string) error {
 
-	stmtIns, err := client.Db.Prepare("INSERT INTO ENVIRONMENT VALUES( ?, ? )")
+	stmtIns, err := client.Db.Prepare("INSERT INTO ?.? VALUES( ?, ? )")
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
 		return err
@@ -111,7 +117,7 @@ func (client *MySqlClient) Insert(name string, description string) error {
 
 	defer stmtIns.Close()
 
-	_, err = stmtIns.Exec(name, description)
+	_, err = stmtIns.Exec(organization, organization, id, record)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
 		return err
@@ -120,30 +126,73 @@ func (client *MySqlClient) Insert(name string, description string) error {
 	return nil
 }
 
-func (client *MySqlClient) Query(name string) (string, error) {
+func (client *MySqlClient) FindById(organization string, id int) (*Organization, error) {
 
-	stmtOut, err := client.Db.Prepare("SELECT DESCRIPTION FROM ENVIRONMENT WHERE NAME = ?")
+	stmtOut, err := client.Db.Prepare("SELECT * FROM ?.? WHERE ID = ?")
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
-		return "", err
+		return nil, err
 	}
 
 	defer stmtOut.Close()
 
-	var result string
+	var resultId int
+	var resultRecord string
 
-	err = stmtOut.QueryRow(name).Scan(&result)
+	err = stmtOut.QueryRow(organization, organization, id).Scan(&resultId, &resultRecord)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
-		return "", err
+		return nil, err
+	}
+
+	return &Organization{
+		Id:     resultId,
+		Record: resultRecord,
+	}, nil
+}
+
+func (client *MySqlClient) List(organization string) ([]Organization, error) {
+
+	stmtOut, listErr := client.Db.Prepare("SELECT * FROM ?.?")
+	if listErr != nil {
+		fmt.Printf("Error: %v\n", listErr.Error())
+		return []Organization{}, listErr
+	}
+
+	defer stmtOut.Close()
+
+	var resultId int
+	var resultRecord string
+
+	rows, err := stmtOut.Query(organization, organization)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err.Error())
+		return []Organization{}, err
+	}
+	defer rows.Close()
+
+	var result []Organization
+
+	for rows.Next() {
+		err := rows.Scan(&resultId, &resultRecord)
+		if err != nil {
+			fmt.Printf("Error: %v\n", err.Error())
+			return []Organization{}, err
+		}
+
+		result = append(result, Organization{
+			Id:     resultId,
+			Record: resultRecord,
+		})
+
 	}
 
 	return result, nil
 }
 
-func (client *MySqlClient) Update(name string, description string) error {
+func (client *MySqlClient) Update(organization string, id int, record string) error {
 
-	stmtIns, err := client.Db.Prepare("UPDATE ENVIRONMENT SET DESCRIPTION = ? WHERE NAME = ?")
+	stmtIns, err := client.Db.Prepare("UPDATE ?.? SET `Record` = ? WHERE ID = ?")
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
 		return err
@@ -151,7 +200,7 @@ func (client *MySqlClient) Update(name string, description string) error {
 
 	defer stmtIns.Close()
 
-	_, err = stmtIns.Exec(description, name)
+	_, err = stmtIns.Exec(organization, organization, record, id)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
 		return err
@@ -160,9 +209,9 @@ func (client *MySqlClient) Update(name string, description string) error {
 	return nil
 }
 
-func (client *MySqlClient) Delete(name string) error {
+func (client *MySqlClient) Delete(organization string, id int) error {
 
-	stmtIns, err := client.Db.Prepare("DELETE FROM ENVIRONMENT WHERE NAME = ?")
+	stmtIns, err := client.Db.Prepare("DELETE FROM ?.? WHERE ID = ?")
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
 		return err
@@ -170,7 +219,7 @@ func (client *MySqlClient) Delete(name string) error {
 
 	defer stmtIns.Close()
 
-	_, err = stmtIns.Exec(name)
+	_, err = stmtIns.Exec(organization, organization, id)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
 		return err
