@@ -36,31 +36,40 @@ type Configuration struct {
 }
 
 type VampConfiguration struct {
-	Persistence persistence `yaml:"persistence,omitempty" json:"persistence,omitempty"`
-	Model       model       `yaml:"model,omitempty" json:"model,omitempty"`
+	Persistence Persistence `yaml:"persistence,omitempty" json:"persistence,omitempty"`
+	Model       Model       `yaml:"model,omitempty" json:"model,omitempty"`
 }
 
 type Database struct {
-	Type          string                     `yaml:"type,omitempty" json:"type,omitempty"`
-	Sql           SqlConfiguration           `yaml:"sql,omitempty" json:"sql,omitempty"`
+	Type string           `yaml:"type,omitempty" json:"type,omitempty"`
+	Sql  SqlConfiguration `yaml:"sql,omitempty" json:"sql,omitempty"`
 }
 
 type Persistence struct {
-	Database Database `yaml:"database,omitempty" json:"database,omitempty"`
-  KeyValueStore KeyValueStoreConfiguration `yaml:"key-value-store,omitempty" json:"key-value-store,omitempty"`
-  Transformers transformers `yaml:"transformers,omitempty" json:"transformers,omitempty"`
+	Database      Database                   `yaml:"database,omitempty" json:"database,omitempty"`
+	KeyValueStore KeyValueStoreConfiguration `yaml:"key-value-store,omitempty" json:"key-value-store,omitempty"`
+	Transformers  Transformers               `yaml:"transformers,omitempty" json:"transformers,omitempty"`
 }
 
 type Resolvers struct {
-  []string namespace `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+	namespace []string `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 }
 
 type Transformers struct {
-  []string classes `yaml:"classes,omitempty" json:"classes,omitempty"`
+	classes []string `yaml:"classes,omitempty" json:"classes,omitempty"`
 }
 
 type Model struct {
-  Resolvers resolvers `yaml:"resolvers,omitempty" json:"resolvers,omitempty"`
+	Resolvers Resolvers `yaml:"resolvers,omitempty" json:"resolvers,omitempty"`
+}
+
+type Security struct {
+	LookupHashSalt        string `yaml:"lookup-hash-salt,omitempty" json:"lookup-hash-salt,omitempty"`
+	LookupHashAlgorithm   string `yaml:"lookup-hash-algorithm,omitempty" json:"lookup-hash-algorithm,omitempty"`
+	SessionIdLength       int    `yaml:"session-id-length,omitempty" json:"session-id-length,omitempty"`
+	PasswordHashAlgorithm string `yaml:"password-hash-algorithm,omitempty" json:"password-hash-algorithm,omitempty"`
+	PasswordHashSalt      string `yaml:"password-hash-salt,omitempty" json:"password-hash-salt,omitempty"`
+	TokenValueLength      int    `yaml:"token-value-length,omitempty" json:"token-value-length,omitempty"`
 }
 
 type Core struct {
