@@ -21,10 +21,10 @@
 package cmd
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 
-	hocon "github.com/go-akka/configuration"
 	"github.com/magneticio/forklift/core"
 	"github.com/magneticio/forklift/util"
 	"github.com/spf13/cobra"
@@ -54,32 +54,28 @@ var organizationCmd = &cobra.Command{
 			return readErr
 		}
 		configText := string(configBtye)
-		conf := hocon.ParseString(configText)
+		configJson, convertErr := util.Convert(configFileType, "json", configText)
+		if convertErr != nil {
+			return convertErr
+		}
+		var vampConfig core.Configuration
+		unmarshallError := json.Unmarshal([]byte(configJson), &vampConfig)
+		if unmarshallError != nil {
+			return unmarshallError
+		}
+		/*
+			    TODO: Add validation
+					validatedConfig, configError := core.VampConfigValidateAndSetupDefaults(&config)
+					if configError != nil {
+						return configError
+					}
+					fmt.Printf("Vamp Configuration validated.\n")
+		*/
+		configAsString, _ := json.Marshal(vampConfig)
 
-		basePathSql := "vamp.persistence.database.sql."
-		sqlConfiguration := core.SqlConfiguration{
-			Database:          conf.GetString(basePathSql + "database"),
-			Table:             conf.GetString(basePathSql + "table"),
-			User:              conf.GetString(basePathSql + "user"),
-			Password:          conf.GetString(basePathSql + "password"),
-			Url:               conf.GetString(basePathSql + "url"),
-			DatabaseServerUrl: conf.GetString(basePathSql + "database-server-url"),
-		}
-		basePathKeyValueStore := "vamp.persistence.key-value-store."
-		KeyValueStoreConfiguration := core.KeyValueStoreConfiguration{
-			Type:     conf.GetString(basePathKeyValueStore + "type"),
-			BasePath: conf.GetString(basePathKeyValueStore + "base-path"),
-			Vault: core.VaultKeyValueStoreConfiguration{
-				Url:   conf.GetString(basePathKeyValueStore + "vault.url"),
-				Token: conf.GetString(basePathKeyValueStore + "vault.token"),
-			},
-		}
-		config := core.Configuration{
-			Sql:           sqlConfiguration,
-			KeyValueStore: KeyValueStoreConfiguration,
-			Hocon:         configText,
-		}
-		core, coreError := core.NewCore(config)
+		fmt.Printf("Vamp Configuration: %v.\n", util.PrettyJson(string(configAsString)))
+
+		core, coreError := core.NewCore(vampConfig)
 		if coreError != nil {
 			return coreError
 		}
@@ -97,5 +93,5 @@ func init() {
 
 	organizationCmd.Flags().StringVarP(&configPath, "configuration", "", "", "Organization configuration file path")
 	organizationCmd.MarkFlagRequired("configuration")
-	organizationCmd.Flags().StringVarP(&configFileType, "input", "i", "hocon", "Configuration file type yaml or json, hocon")
+	organizationCmd.Flags().StringVarP(&configFileType, "input", "i", "yaml", "Configuration file type yaml or json")
 }

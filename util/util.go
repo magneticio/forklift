@@ -209,3 +209,13 @@ func RandomString(n int) string {
 
 	return string(b)
 }
+
+func PrettyJson(input string) string {
+	var prettyJSON bytes.Buffer
+	error := json.Indent(&prettyJSON, []byte(input), "", "    ")
+	if error != nil {
+		fmt.Printf("Error: %v\n", error.Error())
+		return ""
+	}
+	return string(prettyJSON.Bytes())
+}
