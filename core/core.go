@@ -31,17 +31,11 @@ func NewCore(conf Configuration) (*Core, error) {
 func (c *Core) CreateOrganization(namespace string) error {
 
 	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(namespace)
-	// TODO: add params
-	params := map[string]string{
-		"cert":   "",
-		"key":    "",
-		"caCert": "",
-	}
-	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewVaultKeyValueStoreClient(keyValueStoreConfig.Vault.Url, keyValueStoreConfig.Vault.Token, params)
+	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
 	if keyValueStoreClientError != nil {
 		return keyValueStoreClientError
 	}
-	key := "secret/vamp/" + namespace // this should be fixed
+	key := keyValueStoreConfig.BasePath
 	value := c.Conf.Hocon
 	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, value)
 	if keyValueStoreClientPutError != nil {
