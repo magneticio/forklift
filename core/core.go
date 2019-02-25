@@ -35,8 +35,37 @@ type Configuration struct {
 	Hocon         string                     `hocon:"sql,omitempty" json:"hocon,omitempty"`
 }
 
+type VampConfiguration struct {
+	Persistence persistence `yaml:"persistence,omitempty" json:"persistence,omitempty"`
+	Model       model       `yaml:"model,omitempty" json:"model,omitempty"`
+}
+
+type Database struct {
+	Type          string                     `yaml:"type,omitempty" json:"type,omitempty"`
+	Sql           SqlConfiguration           `yaml:"sql,omitempty" json:"sql,omitempty"`
+}
+
+type Persistence struct {
+	Database Database `yaml:"database,omitempty" json:"database,omitempty"`
+  KeyValueStore KeyValueStoreConfiguration `yaml:"key-value-store,omitempty" json:"key-value-store,omitempty"`
+  Transformers transformers `yaml:"transformers,omitempty" json:"transformers,omitempty"`
+}
+
+type Resolvers struct {
+  []string namespace `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+}
+
+type Transformers struct {
+  []string classes `yaml:"classes,omitempty" json:"classes,omitempty"`
+}
+
+type Model struct {
+  Resolvers resolvers `yaml:"resolvers,omitempty" json:"resolvers,omitempty"`
+}
+
 type Core struct {
-	Conf Configuration
+	VampConfiguration vampConfiguration `yaml:"vamp,omitempty" json:"vamp,omitempty"`
+	Conf              Configuration     `yaml:"forklift,omitempty" json:"forklift,omitempty"`
 }
 
 func NewCore(conf Configuration) (*Core, error) {
