@@ -47,7 +47,8 @@ var organizationCmd = &cobra.Command{
 			return errors.New("Not Enough Arguments, Organization Name needed.")
 		}
 		name := args[0]
-		fmt.Printf("name: %v , configPath: %v , configFileType %v\n", name, configPath, configFileType)
+		namespaced := Config.Namespace + "-" + name
+		fmt.Printf("name: %v , configPath: %v , configFileType %v\n", namespaced, configPath, configFileType)
 
 		configBtye, readErr := util.UseSourceUrl(configPath) // just pass the file name
 		if readErr != nil {
@@ -78,7 +79,7 @@ var organizationCmd = &cobra.Command{
 		if coreError != nil {
 			return coreError
 		}
-		createOrganizationError := core.CreateOrganization(name, vampConfig)
+		createOrganizationError := core.CreateOrganization(namespaced, vampConfig)
 		if createOrganizationError != nil {
 			return createOrganizationError
 		}

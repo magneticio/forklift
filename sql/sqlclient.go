@@ -83,7 +83,6 @@ func (client *MySqlClient) Close() error {
 }
 
 func (client *MySqlClient) SetupOrganization(dbName string, tableName string) error {
-
 	fmt.Printf("dbName %v tableName %v\n", dbName, tableName)
 	_, createSchemaErr := client.Db.Exec("CREATE SCHEMA IF NOT EXISTS `" + dbName + "`")
 	if createSchemaErr != nil {
@@ -104,12 +103,12 @@ func (client *MySqlClient) SetupOrganization(dbName string, tableName string) er
 
 	_, insertErr := client.Db.Exec("CREATE TABLE IF NOT EXISTS `" + tableName + "` (ID int(11) NOT NULL AUTO_INCREMENT, Record mediumtext, PRIMARY KEY (ID))")
 	if insertErr != nil {
+		fmt.Printf("Error during create: %v\n", insertErr.Error())
 		_, dropError := client.Db.Exec("DROP SCHEMA `" + dbName + "`")
 		if dropError != nil {
-			fmt.Printf("Error: %v\n", useDbErr.Error())
-			return useDbErr
+			fmt.Printf("Error: %v\n", dropError.Error())
+			return dropError
 		}
-		fmt.Printf("Error during create: %v\n", insertErr.Error())
 		return insertErr
 	}
 

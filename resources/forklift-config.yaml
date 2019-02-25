@@ -1,3 +1,4 @@
+namespace: vampio
 forklift:
   persistence:
     database:

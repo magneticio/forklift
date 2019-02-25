@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/magneticio/forklift/models"
@@ -70,6 +71,7 @@ func (c *VaultKeyValueStoreClient) getClient() *vaultapi.Client {
 }
 
 func (c *VaultKeyValueStoreClient) put(keyName string, secretData map[string]interface{}) error {
+	// fmt.Printf("KeyName: %v, value: %v\n", keyName, secretData)
 	_, err := c.getClient().Logical().Write(keyName, secretData)
 	if err != nil {
 		return err
@@ -86,7 +88,7 @@ func (c *VaultKeyValueStoreClient) get(keyName string) (map[string]interface{}, 
 }
 
 func (c *VaultKeyValueStoreClient) Delete(keyName string) error {
-	_, err := c.getClient().Logical().Delete(keyName)
+	_, err := c.getClient().Logical().Delete(fixPath(keyName))
 	if err != nil {
 		return err
 	}
@@ -124,6 +126,13 @@ func getConfig(address, cert, key, caCert string) (*vaultapi.Config, error) {
 	return conf, nil
 }
 
+func fixPath(path string) string {
+	if len(path) > 0 && string(path[0]) == "/" {
+		return strings.Replace(path, "/", "", 1)
+	}
+	return path
+}
+
 func secret(keyName string) string {
 	return fmt.Sprintf("%s/%s", "secret", keyName)
 }
@@ -135,11 +144,11 @@ func valueMap(value string) map[string]interface{} {
 }
 
 func (c *VaultKeyValueStoreClient) PutValue(key string, value string) error {
-	return c.put(key, valueMap(value))
+	return c.put(fixPath(key), valueMap(value))
 }
 
 func (c *VaultKeyValueStoreClient) GetValue(key string) (string, error) {
-	secretValues, err := c.get(key)
+	secretValues, err := c.get(fixPath(key))
 	if err != nil {
 		return "", nil
 	}

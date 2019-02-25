@@ -32,11 +32,12 @@ func (c *Core) CreateOrganization(namespace string, configuration Configuration)
 	if keyValueStoreClientError != nil {
 		return keyValueStoreClientError
 	}
-	key := keyValueStoreConfig.BasePath
+	key := keyValueStoreConfig.BasePath + "/configuration/applied"
 	value, jsonMarshallError := json.Marshal(configuration)
 	if jsonMarshallError != nil {
 		return jsonMarshallError
 	}
+	fmt.Printf("Vault store at key: %v\n", key)
 	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, string(value))
 	if keyValueStoreClientPutError != nil {
 		return keyValueStoreClientPutError

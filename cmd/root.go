@@ -51,6 +51,7 @@ var cfgFile string
 var Config ForkliftConfig
 
 type ForkliftConfig struct {
+	Namespace         string                   `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	VampConfiguration models.VampConfiguration `yaml:"forklift,omitempty" json:"forklift,omitempty"`
 }
 
