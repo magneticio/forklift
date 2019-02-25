@@ -25,9 +25,11 @@ import (
 	"os"
 	"strings"
 
+	"github.com/magneticio/forklift/models"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	yaml "gopkg.in/yaml.v2"
 )
 
 // version should be in format d.d.d where d is a decimal number
@@ -45,6 +47,12 @@ func AddAppName(str string) string {
 }
 
 var cfgFile string
+
+var Config ForkliftConfig
+
+type ForkliftConfig struct {
+	VampConfiguration models.VampConfiguration `yaml:"forklift,omitempty" json:"forklift,omitempty"`
+}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -104,4 +112,16 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
+	// unmarshal config
+	c := viper.AllSettings()
+	bs, err := yaml.Marshal(c)
+	if err != nil {
+		panic(err)
+	}
+
+	unmarshallError := yaml.Unmarshal(bs, &Config)
+	if unmarshallError != nil {
+		panic(unmarshallError)
+	}
+	fmt.Printf("Config: %v\n", Config)
 }
