@@ -25,7 +25,7 @@ type VaultKeyValueStoreClient struct {
 	Client *vaultapi.Client
 }
 
-func NewKeyValueStoreClient(config models.KeyValueStoreConfiguration) (*KeyValueStoreClient, error) {
+func NewKeyValueStoreClient(config models.KeyValueStoreConfiguration) (KeyValueStoreClient, error) {
 	if config.Type == "vault" {
 		// TODO: add params
 		params := map[string]string{
@@ -37,9 +37,7 @@ func NewKeyValueStoreClient(config models.KeyValueStoreConfiguration) (*KeyValue
 		if vaultKVclientError != nil {
 			return nil, vaultKVclientError
 		}
-		var kvStore KeyValueStoreClient
-		kvStore = vaultKVclient
-		return &kvStore, nil
+		return vaultKVclient, nil
 	}
 	return nil, errors.New("Unsupported Key Value Store Client: " + config.Type)
 }
