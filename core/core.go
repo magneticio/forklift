@@ -30,9 +30,10 @@ type KeyValueStoreConfiguration struct {
 }
 
 type Configuration struct {
-	Sql           SqlConfiguration           `yaml:"sql,omitempty" json:"sql,omitempty"`
-	KeyValueStore KeyValueStoreConfiguration `yaml:"key-value-store,omitempty" json:"key-value-store,omitempty"`
-	Hocon         string                     `hocon:"sql,omitempty" json:"hocon,omitempty"`
+	VampConfiguration VampConfiguration          `yaml:"vamp,omitempty" json:"vamp,omitempty"`
+	Sql               SqlConfiguration           `yaml:"sql,omitempty" json:"sql,omitempty"`
+	KeyValueStore     KeyValueStoreConfiguration `yaml:"key-value-store,omitempty" json:"key-value-store,omitempty"`
+	Hocon             string                     `hocon:"sql,omitempty" json:"hocon,omitempty"`
 }
 
 type VampConfiguration struct {
@@ -97,8 +98,7 @@ type Metadata struct {
 }
 
 type Core struct {
-	VampConfiguration VampConfiguration `yaml:"vamp,omitempty" json:"vamp,omitempty"`
-	Conf              Configuration     `yaml:"forklift,omitempty" json:"forklift,omitempty"`
+	Conf Configuration `yaml:"forklift,omitempty" json:"forklift,omitempty"`
 }
 
 func NewCore(conf Configuration) (*Core, error) {
