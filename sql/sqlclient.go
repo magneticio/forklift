@@ -34,7 +34,7 @@ type Organization struct {
 }
 
 func NewSqlClient(config models.Database) (SqlClient, error) {
-	if config.Type == "mySql" {
+	if config.Type == "mysql" {
 		// TODO: add params
 
 		host, hostError := util.GetHostFromUrl(config.Sql.Url)
