@@ -139,6 +139,8 @@ func GetHostFromUrl(resourceUrl string) (string, error) {
 		return "", err_url
 	}
 
+	fmt.Printf("U: %v\n", u)
+
 	return u.Host, nil
 }
 

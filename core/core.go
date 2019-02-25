@@ -1,6 +1,7 @@
 package core
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -10,10 +11,7 @@ import (
 )
 
 type Configuration struct {
-	VampConfiguration models.VampConfiguration          `yaml:"vamp,omitempty" json:"vamp,omitempty"`
-	Sql               models.SqlConfiguration           `yaml:"sql,omitempty" json:"sql,omitempty"`
-	KeyValueStore     models.KeyValueStoreConfiguration `yaml:"key-value-store,omitempty" json:"key-value-store,omitempty"`
-	Hocon             string                            `hocon:"sql,omitempty" json:"hocon,omitempty"`
+	VampConfiguration models.VampConfiguration `yaml:"vamp,omitempty" json:"vamp,omitempty"`
 }
 
 type Core struct {
@@ -27,7 +25,7 @@ func NewCore(conf Configuration) (*Core, error) {
 	}, nil
 }
 
-func (c *Core) CreateOrganization(namespace string) error {
+func (c *Core) CreateOrganization(namespace string, configuration Configuration) error {
 
 	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(namespace)
 	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
@@ -35,8 +33,11 @@ func (c *Core) CreateOrganization(namespace string) error {
 		return keyValueStoreClientError
 	}
 	key := keyValueStoreConfig.BasePath
-	value := c.Conf.Hocon
-	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, value)
+	value, jsonMarshallError := json.Marshal(configuration)
+	if jsonMarshallError != nil {
+		return jsonMarshallError
+	}
+	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, string(value))
 	if keyValueStoreClientPutError != nil {
 		return keyValueStoreClientPutError
 	}
@@ -71,11 +72,11 @@ func (c *Core) GetNamespaceDatabaseConfiguration(namespace string) models.Databa
 
 func (c *Core) GetNamespaceKeyValueStoreConfiguration(namespace string) *models.KeyValueStoreConfiguration {
 	return &models.KeyValueStoreConfiguration{
-		Type:     c.Conf.KeyValueStore.Type,
-		BasePath: Namespaced(namespace, c.Conf.KeyValueStore.BasePath),
+		Type:     c.Conf.VampConfiguration.Persistence.KeyValueStore.Type,
+		BasePath: Namespaced(namespace, c.Conf.VampConfiguration.Persistence.KeyValueStore.BasePath),
 		Vault: models.VaultKeyValueStoreConfiguration{
-			Url:   Namespaced(namespace, c.Conf.KeyValueStore.Vault.Url),
-			Token: Namespaced(namespace, c.Conf.KeyValueStore.Vault.Token),
+			Url:   Namespaced(namespace, c.Conf.VampConfiguration.Persistence.KeyValueStore.Vault.Url),
+			Token: Namespaced(namespace, c.Conf.VampConfiguration.Persistence.KeyValueStore.Vault.Token),
 		},
 	}
 }

@@ -71,15 +71,14 @@ var organizationCmd = &cobra.Command{
 					}
 					fmt.Printf("Vamp Configuration validated.\n")
 		*/
-		// configAsString, _ := json.Marshal(vampConfig)
-
-		// fmt.Printf("Vamp Configuration: %v.\n", util.PrettyJson(string(configAsString)))
-
-		core, coreError := core.NewCore(vampConfig)
+		coreConfig := core.Configuration{
+			VampConfiguration: Config.VampConfiguration,
+		}
+		core, coreError := core.NewCore(coreConfig)
 		if coreError != nil {
 			return coreError
 		}
-		createOrganizationError := core.CreateOrganization(name)
+		createOrganizationError := core.CreateOrganization(name, vampConfig)
 		if createOrganizationError != nil {
 			return createOrganizationError
 		}

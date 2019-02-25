@@ -123,5 +123,5 @@ func initConfig() {
 	if unmarshallError != nil {
 		panic(unmarshallError)
 	}
-	fmt.Printf("Config: %v\n", Config)
+	// fmt.Printf("Config: %v\n", Config)
 }

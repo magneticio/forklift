@@ -36,7 +36,7 @@ type Organization struct {
 func NewSqlClient(config models.Database) (SqlClient, error) {
 	if config.Type == "mysql" {
 		// TODO: add params
-
+		fmt.Printf("host: %v\n", config.Sql.Url)
 		host, hostError := util.GetHostFromUrl(config.Sql.Url)
 		if hostError != nil {
 			return nil, hostError
@@ -54,11 +54,11 @@ func NewSqlClient(config models.Database) (SqlClient, error) {
 
 func NewMySqlClient(user string, password string, host string, dbName string) (*MySqlClient, error) {
 
-	//"zEXmohRjfa:zaqT1JkXil@tcp(remotemysql.com)/zEXmohRjfa"
+	fmt.Printf("%v\n", fmt.Sprint(user, ":", password, "@tcp(", host, ")/"))
 
 	db, connectionErr := sql.Open("mysql", fmt.Sprint(user, ":", password, "@tcp(", host, ")/"))
 	if connectionErr != nil {
-		fmt.Printf("Error: %v\n", connectionErr.Error())
+		fmt.Printf("Error in mysql client creation: %v\n", connectionErr.Error())
 		return nil, connectionErr
 	}
 
@@ -75,7 +75,7 @@ func (client *MySqlClient) Close() error {
 
 	err := client.Db.Close()
 	if err != nil {
-		fmt.Printf("Error: %v\n", err.Error())
+		fmt.Printf("Error in client close: %v\n", err.Error())
 		return err
 	}
 
@@ -84,26 +84,27 @@ func (client *MySqlClient) Close() error {
 
 func (client *MySqlClient) SetupOrganization(dbName string, tableName string) error {
 
-	_, createSchemaErr := client.Db.Exec("CREATE SCHEMA IF NOT EXISTS " + dbName)
+	fmt.Printf("dbName %v tableName %v\n", dbName, tableName)
+	_, createSchemaErr := client.Db.Exec("CREATE SCHEMA IF NOT EXISTS `" + dbName + "`")
 	if createSchemaErr != nil {
-		fmt.Printf("Error: %v\n", createSchemaErr.Error())
+		fmt.Printf("Error in Setup Organization: %v\n", createSchemaErr.Error())
 		return createSchemaErr
 	}
 
-	_, useDbErr := client.Db.Exec("USE " + dbName)
+	_, useDbErr := client.Db.Exec("USE `" + dbName + "`")
 	if useDbErr != nil {
-		_, dropError := client.Db.Exec("DROP SCHEMA " + dbName)
-		if dropError != nil {
-			fmt.Printf("Error: %v\n", useDbErr.Error())
-			return useDbErr
-		}
 		fmt.Printf("Error: %v\n", useDbErr.Error())
+		_, dropError := client.Db.Exec("DROP SCHEMA `" + dbName + "`")
+		if dropError != nil {
+			fmt.Printf("Error in table drop: %v\n", dropError.Error())
+			return dropError
+		}
 		return useDbErr
 	}
 
-	_, insertErr := client.Db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + " (ID int(11) NOT NULL AUTO_INCREMENT, Record mediumtext, PRIMARY KEY (ID))")
+	_, insertErr := client.Db.Exec("CREATE TABLE IF NOT EXISTS `" + tableName + "` (ID int(11) NOT NULL AUTO_INCREMENT, Record mediumtext, PRIMARY KEY (ID))")
 	if insertErr != nil {
-		_, dropError := client.Db.Exec("DROP SCHEMA " + dbName)
+		_, dropError := client.Db.Exec("DROP SCHEMA `" + dbName + "`")
 		if dropError != nil {
 			fmt.Printf("Error: %v\n", useDbErr.Error())
 			return useDbErr
