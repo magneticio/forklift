@@ -10,7 +10,7 @@ import (
 type SqlClient interface {
 	SetupOrganization(dbName string, tableName string) error
 	Insert(dbName string, tableName string, id int, record string) error
-	FindById(dbName string, tableName string, id int) (string, error)
+	FindById(dbName string, tableName string, id int) (*Organization, error)
 	List(dbName string, tableName string) ([]Organization, error)
 	Update(dbName string, tableName string, id int, record string) error
 	Delete(dbName string, tableName string, id int) error
