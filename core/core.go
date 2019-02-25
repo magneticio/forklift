@@ -48,7 +48,7 @@ func NewCore(conf Configuration) (*Core, error) {
 
 func (c *Core) CreateOrganization(namespace string) error {
 
-	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(namespacedOrganization)
+	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(namespace)
 	// TODO: add params
 	params := map[string]string{
 		"cert":   "???",
@@ -59,7 +59,7 @@ func (c *Core) CreateOrganization(namespace string) error {
 	if keyValueStoreClientError != nil {
 		return keyValueStoreClientError
 	}
-	key := "vamp/" + namespacedOrganization // this should be fixed
+	key := "vamp/" + namespace // this should be fixed
 	value := map[string]interface{}{
 		"value": c.Conf.Hocon,
 	}
