@@ -7,7 +7,6 @@ import (
 	"github.com/magneticio/forklift/keyvaluestoreclient"
 	"github.com/magneticio/forklift/models"
 	"github.com/magneticio/forklift/sql"
-	"github.com/magneticio/forklift/util"
 )
 
 type Configuration struct {
@@ -42,32 +41,31 @@ func (c *Core) CreateOrganization(namespace string) error {
 		return keyValueStoreClientPutError
 	}
 
-	sqlConfig := c.GetNamespaceSqlConfiguration(namespace)
+	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
 
-	host, hostError := util.GetHostFromUrl(sqlConfig.Url)
-	if hostError != nil {
-		fmt.Printf("Error: %v\n", hostError.Error())
-		return hostError
-	}
-
-	client, clientError := sql.NewMySqlClient(sqlConfig.User, sqlConfig.Password, host, sqlConfig.Database)
+	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
 		fmt.Printf("Error: %v\n", clientError.Error())
 		return clientError
 	}
 
-	return client.SetupOrganization(sqlConfig.Database, sqlConfig.Table)
+	return client.SetupOrganization(databaseConfig.Sql.Database, databaseConfig.Sql.Table)
 
 }
 
-func (c *Core) GetNamespaceSqlConfiguration(namespace string) *models.SqlConfiguration {
-	return &models.SqlConfiguration{
-		Database:          Namespaced(namespace, c.Conf.Sql.Database),
-		Table:             Namespaced(namespace, c.Conf.Sql.Table),
-		User:              Namespaced(namespace, c.Conf.Sql.User),
-		Password:          Namespaced(namespace, c.Conf.Sql.Password),
-		Url:               Namespaced(namespace, c.Conf.Sql.Url),
-		DatabaseServerUrl: Namespaced(namespace, c.Conf.Sql.DatabaseServerUrl),
+func (c *Core) GetNamespaceDatabaseConfiguration(namespace string) models.Database {
+	databaseConf := c.Conf.VampConfiguration.Persistence.Database
+
+	return models.Database{
+		Sql: models.SqlConfiguration{
+			Database:          Namespaced(namespace, databaseConf.Sql.Database),
+			Table:             Namespaced(namespace, databaseConf.Sql.Table),
+			User:              Namespaced(namespace, databaseConf.Sql.User),
+			Password:          Namespaced(namespace, databaseConf.Sql.Password),
+			Url:               Namespaced(namespace, databaseConf.Sql.Url),
+			DatabaseServerUrl: Namespaced(namespace, databaseConf.Sql.DatabaseServerUrl),
+		},
+		Type: databaseConf.Type,
 	}
 }
 
