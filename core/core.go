@@ -46,7 +46,7 @@ func NewCore(conf Configuration) (*Core, error) {
 	}, nil
 }
 
-func (c *Core) CreateOrganization(namespacedOrganization string) error {
+func (c *Core) CreateOrganization(namespace string) error {
 
 	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(namespacedOrganization)
 	// TODO: add params
@@ -68,7 +68,7 @@ func (c *Core) CreateOrganization(namespacedOrganization string) error {
 		return keyValueStoreClientPutError
 	}
 
-	sqlConfig := c.GetNamespaceSqlConfiguration(namespacedOrganization)
+	sqlConfig := c.GetNamespaceSqlConfiguration(namespace)
 
 	host, hostError := util.GetHostFromUrl(sqlConfig.Url)
 	if hostError != nil {
@@ -82,7 +82,7 @@ func (c *Core) CreateOrganization(namespacedOrganization string) error {
 		return clientError
 	}
 
-	return client.SetupOrganization(namespacedOrganization)
+	return client.SetupOrganization(sqlConfig.Database, sqlConfig.Table)
 
 }
 
