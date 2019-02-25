@@ -9,11 +9,12 @@ import (
 	"net/http"
 
 	vaultapi "github.com/hashicorp/vault/api"
+	"github.com/magneticio/forklift/models"
 )
 
 type KeyValueStoreClient interface {
-	Get(string) (map[string]interface{}, error)
-	Put(string, map[string]interface{}) error
+	GetValue(string) (string, error)
+	PutValue(string, string) error
 	Delete(string) error
 }
 
@@ -22,6 +23,25 @@ type VaultKeyValueStoreClient struct {
 	Token  string
 	Params map[string]string
 	Client *vaultapi.Client
+}
+
+func NewKeyValueStoreClient(config models.KeyValueStoreConfiguration) (*KeyValueStoreClient, error) {
+	if config.Type == "vault" {
+		// TODO: add params
+		params := map[string]string{
+			"cert":   "",
+			"key":    "",
+			"caCert": "",
+		}
+		vaultKVclient, vaultKVclientError := NewVaultKeyValueStoreClient(config.Vault.Url, config.Vault.Token, params)
+		if vaultKVclientError != nil {
+			return nil, vaultKVclientError
+		}
+		var kvStore KeyValueStoreClient
+		kvStore = vaultKVclient
+		return &kvStore, nil
+	}
+	return nil, errors.New("Unsupported Key Value Store Client: " + config.Type)
 }
 
 func NewVaultKeyValueStoreClient(address string, token string, params map[string]string) (*VaultKeyValueStoreClient, error) {
@@ -46,21 +66,21 @@ func NewVaultKeyValueStoreClient(address string, token string, params map[string
 	}, nil
 }
 
-func (c *VaultKeyValueStoreClient) GetClient() *vaultapi.Client {
+func (c *VaultKeyValueStoreClient) getClient() *vaultapi.Client {
 	// This will check for token renewal
 	return c.Client
 }
 
-func (c *VaultKeyValueStoreClient) Put(keyName string, secretData map[string]interface{}) error {
-	_, err := c.GetClient().Logical().Write(keyName, secretData)
+func (c *VaultKeyValueStoreClient) put(keyName string, secretData map[string]interface{}) error {
+	_, err := c.getClient().Logical().Write(keyName, secretData)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *VaultKeyValueStoreClient) Get(keyName string) (map[string]interface{}, error) {
-	secretValues, err := c.GetClient().Logical().Read(keyName)
+func (c *VaultKeyValueStoreClient) get(keyName string) (map[string]interface{}, error) {
+	secretValues, err := c.getClient().Logical().Read(keyName)
 	if err != nil {
 		return nil, nil
 	}
@@ -68,7 +88,7 @@ func (c *VaultKeyValueStoreClient) Get(keyName string) (map[string]interface{}, 
 }
 
 func (c *VaultKeyValueStoreClient) Delete(keyName string) error {
-	_, err := c.GetClient().Logical().Delete(keyName)
+	_, err := c.getClient().Logical().Delete(keyName)
 	if err != nil {
 		return err
 	}
@@ -117,11 +137,11 @@ func valueMap(value string) map[string]interface{} {
 }
 
 func (c *VaultKeyValueStoreClient) PutValue(key string, value string) error {
-	return c.Put(key, valueMap(value))
+	return c.put(key, valueMap(value))
 }
 
 func (c *VaultKeyValueStoreClient) GetValue(key string) (string, error) {
-	secretValues, err := c.Get(key)
+	secretValues, err := c.get(key)
 	if err != nil {
 		return "", nil
 	}

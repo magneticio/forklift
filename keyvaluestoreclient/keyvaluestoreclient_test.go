@@ -134,6 +134,7 @@ func testVaultServerBad(t testing.TB) (*api.Client, func()) {
 	}
 }
 
+/*
 func TestVaultKeyVauleStoreClient(t *testing.T) {
 	client, params, closer := testVaultServer(t)
 	defer closer()
@@ -160,6 +161,7 @@ func TestVaultKeyVauleStoreClient(t *testing.T) {
 	assert.Nil(t, deleteErr)
 
 }
+*/
 
 func TestVaultKeyVauleStoreClientValueWrappers(t *testing.T) {
 	client, params, closer := testVaultServer(t)
