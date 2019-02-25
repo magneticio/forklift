@@ -41,11 +41,9 @@ func (c *Core) CreateOrganization(namespace string) error {
 	if keyValueStoreClientError != nil {
 		return keyValueStoreClientError
 	}
-	key := "vamp/" + namespace // this should be fixed
-	value := map[string]interface{}{
-		"value": c.Conf.Hocon,
-	}
-	keyValueStoreClientPutError := keyValueStoreClient.Put(key, value)
+	key := "secret/vamp/" + namespace // this should be fixed
+	value := c.Conf.Hocon
+	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, value)
 	if keyValueStoreClientPutError != nil {
 		return keyValueStoreClientPutError
 	}
