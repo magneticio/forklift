@@ -38,6 +38,9 @@ type Configuration struct {
 type VampConfiguration struct {
 	Persistence Persistence `yaml:"persistence,omitempty" json:"persistence,omitempty"`
 	Model       Model       `yaml:"model,omitempty" json:"model,omitempty"`
+	Security    Security    `yaml:"security,omitempty" json:"security,omitempty"`
+	Pulse       Pulse       `yaml:"pulse,omitempty" json:"pulse,omitempty"`
+	Metadata    Metadata    `yaml:"metadata,omitempty" json:"metadata,omitempty"`
 }
 
 type Database struct {
@@ -72,8 +75,29 @@ type Security struct {
 	TokenValueLength      int    `yaml:"token-value-length,omitempty" json:"token-value-length,omitempty"`
 }
 
+type Index struct {
+	Name string `yaml:"name,omitempty" json:"name,omitempty"`
+}
+type Elasticsearch struct {
+	Index Index  `yaml:"index,omitempty" json:"index,omitempty"`
+	Url   string `yaml:"url,omitempty" json:"url,omitempty"`
+}
+
+type Pulse struct {
+	Type          string        `yaml:"type,omitempty" json:"type,omitempty"`
+	Elasticsearch Elasticsearch `yaml:"elasticsearch,omitempty" json:"elasticsearch,omitempty"`
+}
+
+type Namespace struct {
+	Title string `yaml:"title,omitempty" json:"title,omitempty"`
+}
+
+type Metadata struct {
+	Namespace Namespace `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+}
+
 type Core struct {
-	VampConfiguration vampConfiguration `yaml:"vamp,omitempty" json:"vamp,omitempty"`
+	VampConfiguration VampConfiguration `yaml:"vamp,omitempty" json:"vamp,omitempty"`
 	Conf              Configuration     `yaml:"forklift,omitempty" json:"forklift,omitempty"`
 }
 
