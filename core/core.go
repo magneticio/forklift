@@ -108,9 +108,9 @@ func NewCore(conf Configuration) (*Core, error) {
 	}, nil
 }
 
-func (c *Core) CreateOrganization(namespacedOrganization string) error {
+func (c *Core) CreateOrganization(namespace string) error {
 
-	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(namespacedOrganization)
+	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(namespace)
 	// TODO: add params
 	params := map[string]string{
 		"cert":   "???",
@@ -121,7 +121,7 @@ func (c *Core) CreateOrganization(namespacedOrganization string) error {
 	if keyValueStoreClientError != nil {
 		return keyValueStoreClientError
 	}
-	key := "vamp/" + namespacedOrganization // this should be fixed
+	key := "vamp/" + namespace // this should be fixed
 	value := map[string]interface{}{
 		"value": c.Conf.Hocon,
 	}
@@ -130,7 +130,7 @@ func (c *Core) CreateOrganization(namespacedOrganization string) error {
 		return keyValueStoreClientPutError
 	}
 
-	sqlConfig := c.GetNamespaceSqlConfiguration(namespacedOrganization)
+	sqlConfig := c.GetNamespaceSqlConfiguration(namespace)
 
 	host, hostError := util.GetHostFromUrl(sqlConfig.Url)
 	if hostError != nil {
@@ -144,7 +144,7 @@ func (c *Core) CreateOrganization(namespacedOrganization string) error {
 		return clientError
 	}
 
-	return client.SetupOrganization(namespacedOrganization)
+	return client.SetupOrganization(sqlConfig.Database, sqlConfig.Table)
 
 }
 

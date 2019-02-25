@@ -8,6 +8,34 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// Should be used with a local database
+// func TestSetupOrganizationOnLocal(t *testing.T) {
+//
+// 	client, _ := NewMySqlClient("root", "root", "localhost", "organization")
+//
+// 	createError := client.SetupOrganization("testdb", "organization")
+// 	assert.Nil(t, createError, fmt.Sprintf("Create resulted in error %v \n", createError))
+//
+// 	insertError := client.Insert("testdb", "organization", 1, "ciao")
+// 	assert.Nil(t, insertError, fmt.Sprintf("Insert resulted in error %v \n", createError))
+//
+// 	insertError2 := client.Insert("testdb", "organization", 2, "ciao2")
+// 	assert.Nil(t, insertError2, fmt.Sprintf("Insert resulted in error %v \n", createError))
+//
+// 	_, findError := client.FindById("testdb", "organization", 1)
+// 	assert.Nil(t, findError, fmt.Sprintf("Find resulted in error %v \n", findError))
+//
+// 	_, listError := client.List("testdb", "organization")
+// 	assert.Nil(t, listError, fmt.Sprintf("List resulted in error %v \n", createError))
+//
+// 	deleteError := client.Delete("testdb", "organization", 1)
+// 	assert.Nil(t, deleteError, fmt.Sprintf("Delete resulted in error %v \n", createError))
+//
+// 	deleteError2 := client.Delete("testdb", "organization", 2)
+// 	assert.Nil(t, deleteError2, fmt.Sprintf("Delete resulted in error %v \n", deleteError2))
+//
+// }
+
 func TestSetupOrganization(t *testing.T) {
 
 	db, mock, err := sqlmock.New()
@@ -24,25 +52,25 @@ func TestSetupOrganization(t *testing.T) {
 		Db:       db,
 	}
 
-	createSchemaStatement := "CREATE SCHEMA IF NOT EXISTS \\?"
+	createSchemaStatement := "CREATE SCHEMA IF NOT EXISTS testdb"
 
-	mock.ExpectBegin()
-
-	mock.ExpectPrepare(createSchemaStatement).
-		ExpectExec().
-		WithArgs("organization").
+	mock.
+		ExpectExec(createSchemaStatement).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	createTableStatement := "CREATE TABLE \\?.\\? \\(`ID` int\\(11\\) NOT NULL AUTO_INCREMENT, `Record` mediumtext, PRIMARY KEY \\(`ID`\\) ENGINE=InnoDB DEFAULT CHARSET=utf8"
+	useDbStatement := "USE testdb"
 
-	mock.ExpectPrepare(createTableStatement).
-		ExpectExec().
-		WithArgs("organization", "organization").
+	mock.
+		ExpectExec(useDbStatement).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	mock.ExpectCommit()
+	createTableStatement := "CREATE TABLE IF NOT EXISTS organization \\(ID int\\(11\\) NOT NULL AUTO_INCREMENT, Record mediumtext, PRIMARY KEY \\(ID\\)\\)"
 
-	createError := client.SetupOrganization("organization")
+	mock.
+		ExpectExec(createTableStatement).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	createError := client.SetupOrganization("testdb", "organization")
 
 	assert.Nil(t, createError, fmt.Sprintf("Create resulted in error %v \n", createError))
 
@@ -64,14 +92,20 @@ func TestInsert(t *testing.T) {
 		Db:       db,
 	}
 
-	insertStatement := "INSERT INTO \\?.\\? VALUES\\( \\?, \\? \\)"
+	useDbStatement := "USE testdb"
+
+	mock.
+		ExpectExec(useDbStatement).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	insertStatement := "INSERT INTO organization VALUES\\( \\?, \\? \\)"
 
 	mock.ExpectPrepare(insertStatement).
 		ExpectExec().
-		WithArgs("organization", "organization", 1, "just a test").
+		WithArgs(1, "just a test").
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	insertError := client.Insert("organization", 1, "just a test")
+	insertError := client.Insert("testdb", "organization", 1, "just a test")
 
 	assert.Nil(t, insertError, fmt.Sprintf("Insert resulted in error %v \n", insertError))
 
@@ -93,17 +127,23 @@ func TestQuery(t *testing.T) {
 		Db:       db,
 	}
 
-	queryStatement := "SELECT \\* FROM \\?.\\? WHERE ID = \\?"
+	useDbStatement := "USE testdb"
+
+	mock.
+		ExpectExec(useDbStatement).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	queryStatement := "SELECT \\* FROM organization WHERE ID = \\?"
 
 	rows := sqlmock.NewRows([]string{"ID", "Record"}).
 		AddRow(1, "just a test")
 
 	mock.ExpectPrepare(queryStatement).
 		ExpectQuery().
-		WithArgs("organization", "organization", 1).
+		WithArgs(1).
 		WillReturnRows(rows)
 
-	result, queryError := client.FindById("organization", 1)
+	result, queryError := client.FindById("testdb", "organization", 1)
 
 	expected := &Organization{
 		Id:     1,
@@ -132,7 +172,13 @@ func TestList(t *testing.T) {
 		Db:       db,
 	}
 
-	queryStatement := "SELECT \\* FROM \\?.\\?"
+	useDbStatement := "USE testdb"
+
+	mock.
+		ExpectExec(useDbStatement).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	queryStatement := "SELECT \\* FROM organization"
 
 	rows := sqlmock.NewRows([]string{"ID", "Record"}).
 		AddRow(1, "just a test").
@@ -141,10 +187,9 @@ func TestList(t *testing.T) {
 
 	mock.ExpectPrepare(queryStatement).
 		ExpectQuery().
-		WithArgs("organization", "organization").
 		WillReturnRows(rows)
 
-	result, queryError := client.List("organization")
+	result, queryError := client.List("testdb", "organization")
 
 	expected := []Organization{
 		Organization{
@@ -182,14 +227,20 @@ func TestUpdate(t *testing.T) {
 		Db:       db,
 	}
 
-	updateStatement := "UPDATE \\?.\\? SET `Record` = \\? WHERE ID = \\?"
+	useDbStatement := "USE testdb"
+
+	mock.
+		ExpectExec(useDbStatement).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	updateStatement := "UPDATE organization SET `Record` = \\? WHERE ID = \\?"
 
 	mock.ExpectPrepare(updateStatement).
 		ExpectExec().
-		WithArgs("organization", "organization", "just a test2", 1).
+		WithArgs("just a test2", 1).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	updateError := client.Update("organization", 1, "just a test2")
+	updateError := client.Update("testdb", "organization", 1, "just a test2")
 
 	assert.Nil(t, updateError, fmt.Sprintf("Update resulted in error %v \n", updateError))
 
@@ -211,14 +262,20 @@ func TestDelete(t *testing.T) {
 		Db:       db,
 	}
 
-	deleteStatement := "DELETE FROM \\?.\\? WHERE ID = \\?"
+	useDbStatement := "USE testdb"
+
+	mock.
+		ExpectExec(useDbStatement).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	deleteStatement := "DELETE FROM organization WHERE ID = \\?"
 
 	mock.ExpectPrepare(deleteStatement).
 		ExpectExec().
-		WithArgs("organization", "organization", 1).
+		WithArgs(1).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	deleteError := client.Delete("organization", 1)
+	deleteError := client.Delete("testdb", "organization", 1)
 
 	assert.Nil(t, deleteError, fmt.Sprintf("Delete resulted in error %v \n", deleteError))
 
