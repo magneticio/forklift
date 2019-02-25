@@ -134,38 +134,13 @@ func testVaultServerBad(t testing.TB) (*api.Client, func()) {
 	}
 }
 
-func TestVaultKeyVauleStoreClient(t *testing.T) {
-	client, params, closer := testVaultServer(t)
-	defer closer()
-	url := client.Address()
-	token := client.Token()
-
-	vaultKeyValueStoreClient, clientErr := keyvaluestoreclient.NewVaultKeyValueStoreClient(url, token, params)
-	assert.Nil(t, clientErr)
-	assert.NotNil(t, vaultKeyValueStoreClient)
-
-	keyName := "secret/test"
-	values := map[string]interface{}{
-		"a": "b",
-		"c": "d",
-	}
-	putErr := vaultKeyValueStoreClient.Put(keyName, values)
-	assert.Nil(t, putErr)
-
-	values2, getErr := vaultKeyValueStoreClient.Get(keyName)
-	assert.Nil(t, getErr)
-	assert.Equal(t, values, values2)
-
-	deleteErr := vaultKeyValueStoreClient.Delete(keyName)
-	assert.Nil(t, deleteErr)
-
-}
-
 func TestVaultKeyVauleStoreClientValueWrappers(t *testing.T) {
 	client, params, closer := testVaultServer(t)
 	defer closer()
 	url := client.Address()
 	token := client.Token()
+
+	// TODO: Update this test when certs is added to the config
 
 	vaultKeyValueStoreClient, clientErr := keyvaluestoreclient.NewVaultKeyValueStoreClient(url, token, params)
 	assert.Nil(t, clientErr)

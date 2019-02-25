@@ -3,6 +3,7 @@ package core
 import (
 	"testing"
 
+	"github.com/magneticio/forklift/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -10,7 +11,7 @@ func TestGetNamespaceSqlConfiguration(t *testing.T) {
 
 	c := Core{
 		Conf: Configuration{
-			Sql: SqlConfiguration{
+			Sql: models.SqlConfiguration{
 				Database:          "database-${namespace}",
 				Table:             "table-${namespace}",
 				User:              "user-${namespace}",
