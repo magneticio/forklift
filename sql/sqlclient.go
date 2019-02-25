@@ -2,9 +2,12 @@ package sql
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/magneticio/forklift/models"
+	"github.com/magneticio/forklift/util"
 )
 
 type SqlClient interface {
@@ -28,6 +31,25 @@ type MySqlClient struct {
 type Organization struct {
 	Id     int
 	Record string
+}
+
+func NewSqlClient(config models.Database) (SqlClient, error) {
+	if config.Type == "mySql" {
+		// TODO: add params
+
+		host, hostError := util.GetHostFromUrl(config.Sql.Url)
+		if hostError != nil {
+			return nil, hostError
+		}
+
+		sqlClient, mySqlError := NewMySqlClient(config.Sql.User, config.Sql.Password, host, config.Sql.Database)
+		if mySqlError != nil {
+			return nil, mySqlError
+		}
+
+		return sqlClient, nil
+	}
+	return nil, errors.New("Unsupported Key Value Store Client: " + config.Type)
 }
 
 func NewMySqlClient(user string, password string, host string, dbName string) (*MySqlClient, error) {
