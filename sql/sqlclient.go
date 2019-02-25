@@ -8,12 +8,12 @@ import (
 )
 
 type SqlClient interface {
-	SetupOrganization() error
-	Insert(organization string, id int, record string) error
-	FindById(name string) (string, error)
-	List(organization string) ([]Organization, error)
-	Update(organization string, id int, record string) error
-	Delete(organization string, id int) error
+	SetupOrganization(dbName string, tableName string) error
+	Insert(dbName string, tableName string, id int, record string) error
+	FindById(dbName string, tableName string, id int) (string, error)
+	List(dbName string, tableName string) ([]Organization, error)
+	Update(dbName string, tableName string, id int, record string) error
+	Delete(dbName string, tableName string, id int) error
 	Close() error
 }
 
@@ -34,7 +34,7 @@ func NewMySqlClient(user string, password string, host string, dbName string) (*
 
 	//"zEXmohRjfa:zaqT1JkXil@tcp(remotemysql.com)/zEXmohRjfa"
 
-	db, connectionErr := sql.Open("mysql", fmt.Sprint(user, ":", password, "@tcp(", host, ")/", dbName))
+	db, connectionErr := sql.Open("mysql", fmt.Sprint(user, ":", password, "@tcp(", host, ")/"))
 	if connectionErr != nil {
 		fmt.Printf("Error: %v\n", connectionErr.Error())
 		return nil, connectionErr
@@ -60,56 +60,48 @@ func (client *MySqlClient) Close() error {
 	return nil
 }
 
-func (client *MySqlClient) SetupOrganization(name string) error {
+func (client *MySqlClient) SetupOrganization(dbName string, tableName string) error {
 
-	tx, txErr := client.Db.Begin()
-	if txErr != nil {
-		fmt.Printf("Error: %v\n", txErr.Error())
-		return txErr
+	_, createSchemaErr := client.Db.Exec("CREATE SCHEMA IF NOT EXISTS " + dbName)
+	if createSchemaErr != nil {
+		fmt.Printf("Error: %v\n", createSchemaErr.Error())
+		return createSchemaErr
 	}
 
-	stmtSchema, schemaErr := client.Db.Prepare("CREATE SCHEMA IF NOT EXISTS ?")
-	if schemaErr != nil {
-		_ = tx.Rollback()
-		fmt.Printf("Error: %v\n", schemaErr.Error())
-		return schemaErr
+	_, useDbErr := client.Db.Exec("USE " + dbName)
+	if useDbErr != nil {
+		_, dropError := client.Db.Exec("DROP SCHEMA " + dbName)
+		if dropError != nil {
+			fmt.Printf("Error: %v\n", useDbErr.Error())
+			return useDbErr
+		}
+		fmt.Printf("Error: %v\n", useDbErr.Error())
+		return useDbErr
 	}
 
-	defer stmtSchema.Close()
-
-	_, stmtSchemaErr := stmtSchema.Exec(name)
-	if stmtSchemaErr != nil {
-		_ = tx.Rollback()
-		fmt.Printf("Error: %v\n", stmtSchemaErr.Error())
-		return stmtSchemaErr
-	}
-
-	stmtIns, tableErr := client.Db.Prepare("CREATE TABLE ?.? (`ID` int(11) NOT NULL AUTO_INCREMENT, `Record` mediumtext, PRIMARY KEY (`ID`) ENGINE=InnoDB DEFAULT CHARSET=utf8")
-	if tableErr != nil {
-		_ = tx.Rollback()
-		fmt.Printf("Error: %v\n", tableErr.Error())
-		return tableErr
-	}
-
-	defer stmtIns.Close()
-
-	_, stmtInsErr := stmtIns.Exec(name, name)
-	if stmtInsErr != nil {
-		fmt.Printf("Error: %v\n", stmtInsErr.Error())
-		return stmtInsErr
-	}
-
-	if commitError := tx.Commit(); commitError != nil {
-		fmt.Printf("Error: %v\n", commitError.Error())
-		return commitError
+	_, insertErr := client.Db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + " (ID int(11) NOT NULL AUTO_INCREMENT, Record mediumtext, PRIMARY KEY (ID))")
+	if insertErr != nil {
+		_, dropError := client.Db.Exec("DROP SCHEMA " + dbName)
+		if dropError != nil {
+			fmt.Printf("Error: %v\n", useDbErr.Error())
+			return useDbErr
+		}
+		fmt.Printf("Error during create: %v\n", insertErr.Error())
+		return insertErr
 	}
 
 	return nil
 }
 
-func (client *MySqlClient) Insert(organization string, id int, record string) error {
+func (client *MySqlClient) Insert(dbName string, tableName string, id int, record string) error {
 
-	stmtIns, err := client.Db.Prepare("INSERT INTO ?.? VALUES( ?, ? )")
+	_, useDbErr := client.Db.Exec("USE " + dbName)
+	if useDbErr != nil {
+		fmt.Printf("Error: %v\n", useDbErr.Error())
+		return useDbErr
+	}
+
+	stmtIns, err := client.Db.Prepare("INSERT INTO " + tableName + " VALUES( ?, ? )")
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
 		return err
@@ -117,7 +109,7 @@ func (client *MySqlClient) Insert(organization string, id int, record string) er
 
 	defer stmtIns.Close()
 
-	_, err = stmtIns.Exec(organization, organization, id, record)
+	_, err = stmtIns.Exec(id, record)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
 		return err
@@ -126,9 +118,15 @@ func (client *MySqlClient) Insert(organization string, id int, record string) er
 	return nil
 }
 
-func (client *MySqlClient) FindById(organization string, id int) (*Organization, error) {
+func (client *MySqlClient) FindById(dbName string, tableName string, id int) (*Organization, error) {
 
-	stmtOut, err := client.Db.Prepare("SELECT * FROM ?.? WHERE ID = ?")
+	_, useDbErr := client.Db.Exec("USE " + dbName)
+	if useDbErr != nil {
+		fmt.Printf("Error: %v\n", useDbErr.Error())
+		return nil, useDbErr
+	}
+
+	stmtOut, err := client.Db.Prepare("SELECT * FROM " + tableName + " WHERE ID = ?")
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
 		return nil, err
@@ -139,7 +137,7 @@ func (client *MySqlClient) FindById(organization string, id int) (*Organization,
 	var resultId int
 	var resultRecord string
 
-	err = stmtOut.QueryRow(organization, organization, id).Scan(&resultId, &resultRecord)
+	err = stmtOut.QueryRow(id).Scan(&resultId, &resultRecord)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
 		return nil, err
@@ -151,9 +149,15 @@ func (client *MySqlClient) FindById(organization string, id int) (*Organization,
 	}, nil
 }
 
-func (client *MySqlClient) List(organization string) ([]Organization, error) {
+func (client *MySqlClient) List(dbName string, tableName string) ([]Organization, error) {
 
-	stmtOut, listErr := client.Db.Prepare("SELECT * FROM ?.?")
+	_, useDbErr := client.Db.Exec("USE " + dbName)
+	if useDbErr != nil {
+		fmt.Printf("Error: %v\n", useDbErr.Error())
+		return []Organization{}, useDbErr
+	}
+
+	stmtOut, listErr := client.Db.Prepare("SELECT * FROM " + tableName)
 	if listErr != nil {
 		fmt.Printf("Error: %v\n", listErr.Error())
 		return []Organization{}, listErr
@@ -164,7 +168,7 @@ func (client *MySqlClient) List(organization string) ([]Organization, error) {
 	var resultId int
 	var resultRecord string
 
-	rows, err := stmtOut.Query(organization, organization)
+	rows, err := stmtOut.Query()
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
 		return []Organization{}, err
@@ -190,9 +194,15 @@ func (client *MySqlClient) List(organization string) ([]Organization, error) {
 	return result, nil
 }
 
-func (client *MySqlClient) Update(organization string, id int, record string) error {
+func (client *MySqlClient) Update(dbName string, tableName string, id int, record string) error {
 
-	stmtIns, err := client.Db.Prepare("UPDATE ?.? SET `Record` = ? WHERE ID = ?")
+	_, useDbErr := client.Db.Exec("USE " + dbName)
+	if useDbErr != nil {
+		fmt.Printf("Error: %v\n", useDbErr.Error())
+		return useDbErr
+	}
+
+	stmtIns, err := client.Db.Prepare("UPDATE " + tableName + " SET `Record` = ? WHERE ID = ?")
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
 		return err
@@ -200,7 +210,7 @@ func (client *MySqlClient) Update(organization string, id int, record string) er
 
 	defer stmtIns.Close()
 
-	_, err = stmtIns.Exec(organization, organization, record, id)
+	_, err = stmtIns.Exec(record, id)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
 		return err
@@ -209,9 +219,15 @@ func (client *MySqlClient) Update(organization string, id int, record string) er
 	return nil
 }
 
-func (client *MySqlClient) Delete(organization string, id int) error {
+func (client *MySqlClient) Delete(dbName string, tableName string, id int) error {
 
-	stmtIns, err := client.Db.Prepare("DELETE FROM ?.? WHERE ID = ?")
+	_, useDbErr := client.Db.Exec("USE " + dbName)
+	if useDbErr != nil {
+		fmt.Printf("Error: %v\n", useDbErr.Error())
+		return useDbErr
+	}
+
+	stmtIns, err := client.Db.Prepare("DELETE FROM " + tableName + " WHERE ID = ?")
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
 		return err
@@ -219,7 +235,7 @@ func (client *MySqlClient) Delete(organization string, id int) error {
 
 	defer stmtIns.Close()
 
-	_, err = stmtIns.Exec(organization, organization, id)
+	_, err = stmtIns.Exec(id)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
 		return err
