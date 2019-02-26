@@ -1,0 +1,19 @@
+name    : quantification
+kind    : workflows
+breed   : quantification
+schedule: daemon
+scale:
+  cpu      : 0.1
+  memory   : 256MB
+  instances: 1
+health_checks:
+  initial_delay: 30s
+  port         : webport
+  timeout      : 10s
+  interval     : 30s
+  failures     : 10
+dialects:
+  marathon:
+    fetch:
+    - uri: https://s3.eu-central-1.amazonaws.com/dcos-ecr-df/docker.tar.gz
+      extract: true
