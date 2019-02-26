@@ -36,6 +36,24 @@ import (
 //
 // }
 
+// func TestConnection(t *testing.T) {
+//
+// 	_, connectionErr := sql.Open("mysql", "root:secret@tcp(api.dev.vamp.merapar.net:32401)/")
+//
+// 	assert.Nil(t, connectionErr, fmt.Sprintf("Could not connect due to %v \n", connectionErr))
+//
+// }
+
+// func TestRemoteInsert(t *testing.T) {
+//
+// 	client, _ := NewMySqlClient("root", "secret", "api.dev.vamp.merapar.net:32401", "")
+//
+// 	insertError := client.Insert("vamp-neworg", "neworg", 2, "ciao-test")
+//
+// 	assert.Nil(t, insertError, fmt.Sprintf("Insert resulted in error %v \n", insertError))
+//
+// }
+
 func TestSetupOrganization(t *testing.T) {
 
 	db, mock, err := sqlmock.New()
@@ -52,19 +70,19 @@ func TestSetupOrganization(t *testing.T) {
 		Db:       db,
 	}
 
-	createSchemaStatement := "CREATE SCHEMA IF NOT EXISTS testdb"
+	createSchemaStatement := "CREATE SCHEMA IF NOT EXISTS `testdb`"
 
 	mock.
 		ExpectExec(createSchemaStatement).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	useDbStatement := "USE testdb"
+	useDbStatement := "USE `testdb`"
 
 	mock.
 		ExpectExec(useDbStatement).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	createTableStatement := "CREATE TABLE IF NOT EXISTS organization \\(ID int\\(11\\) NOT NULL AUTO_INCREMENT, Record mediumtext, PRIMARY KEY \\(ID\\)\\)"
+	createTableStatement := "CREATE TABLE IF NOT EXISTS `organization` \\(ID int\\(11\\) NOT NULL AUTO_INCREMENT, Record mediumtext, PRIMARY KEY \\(ID\\)\\)"
 
 	mock.
 		ExpectExec(createTableStatement).
@@ -92,13 +110,13 @@ func TestInsert(t *testing.T) {
 		Db:       db,
 	}
 
-	useDbStatement := "USE testdb"
+	useDbStatement := "USE `testdb`"
 
 	mock.
 		ExpectExec(useDbStatement).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	insertStatement := "INSERT INTO organization VALUES\\( \\?, \\? \\)"
+	insertStatement := "INSERT INTO `organization` VALUES\\( \\?, \\? \\)"
 
 	mock.ExpectPrepare(insertStatement).
 		ExpectExec().
@@ -127,13 +145,13 @@ func TestQuery(t *testing.T) {
 		Db:       db,
 	}
 
-	useDbStatement := "USE testdb"
+	useDbStatement := "USE `testdb`"
 
 	mock.
 		ExpectExec(useDbStatement).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	queryStatement := "SELECT \\* FROM organization WHERE ID = \\?"
+	queryStatement := "SELECT \\* FROM `organization` WHERE ID = \\?"
 
 	rows := sqlmock.NewRows([]string{"ID", "Record"}).
 		AddRow(1, "just a test")
@@ -172,13 +190,13 @@ func TestList(t *testing.T) {
 		Db:       db,
 	}
 
-	useDbStatement := "USE testdb"
+	useDbStatement := "USE `testdb`"
 
 	mock.
 		ExpectExec(useDbStatement).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	queryStatement := "SELECT \\* FROM organization"
+	queryStatement := "SELECT \\* FROM `organization`"
 
 	rows := sqlmock.NewRows([]string{"ID", "Record"}).
 		AddRow(1, "just a test").
@@ -227,13 +245,13 @@ func TestUpdate(t *testing.T) {
 		Db:       db,
 	}
 
-	useDbStatement := "USE testdb"
+	useDbStatement := "USE `testdb`"
 
 	mock.
 		ExpectExec(useDbStatement).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	updateStatement := "UPDATE organization SET `Record` = \\? WHERE ID = \\?"
+	updateStatement := "UPDATE `organization` SET `Record` = \\? WHERE ID = \\?"
 
 	mock.ExpectPrepare(updateStatement).
 		ExpectExec().
@@ -262,13 +280,13 @@ func TestDelete(t *testing.T) {
 		Db:       db,
 	}
 
-	useDbStatement := "USE testdb"
+	useDbStatement := "USE `testdb`"
 
 	mock.
 		ExpectExec(useDbStatement).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	deleteStatement := "DELETE FROM organization WHERE ID = \\?"
+	deleteStatement := "DELETE FROM `organization` WHERE ID = \\?"
 
 	mock.ExpectPrepare(deleteStatement).
 		ExpectExec().
