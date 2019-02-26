@@ -48,13 +48,86 @@ import (
 //
 // 	client, _ := NewMySqlClient("root", "secret", "api.dev.vamp.merapar.net:32401", "")
 //
-// 	insertError := client.Insert("vamp-neworg", "neworg", 2, "ciao-test")
+// 	insertError := client.Insert("vamp-neworg", "neworg", "ciao-test")
+//
+// 	assert.Nil(t, insertError, fmt.Sprintf("Insert resulted in error %v \n", insertError))
+//
+// }
+
+// func TestCreateEnv(t *testing.T) {
+//
+// 	client, _ := NewMySqlClient("root", "secret", "api.dev.vamp.merapar.net:32401", "")
+//
+// 	insertError := client.SetupEnvironment("vamp-neworg", "newenv", map[string]string{"test1": "test1 value", "test2": "test2 value", "test3": "test3 value"})
 //
 // 	assert.Nil(t, insertError, fmt.Sprintf("Insert resulted in error %v \n", insertError))
 //
 // }
 
 func TestSetupOrganization(t *testing.T) {
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	client := MySqlClient{
+		User:     "",
+		Password: "",
+		Host:     "",
+		DbName:   "",
+		Db:       db,
+	}
+
+	useDbStatement := "USE `testdb`"
+
+	mock.
+		ExpectExec(useDbStatement).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	createTableStatement := "CREATE TABLE IF NOT EXISTS `environment` \\(ID int\\(11\\) NOT NULL AUTO_INCREMENT, Record mediumtext, PRIMARY KEY \\(ID\\)\\)"
+
+	mock.
+		ExpectExec(createTableStatement).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	insertStatement := "INSERT INTO `environment` \\( Record \\) VALUES\\( \\? \\)"
+
+	mock.
+		ExpectExec(useDbStatement).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	mock.ExpectPrepare(insertStatement).
+		ExpectExec().
+		WithArgs("test1 value").
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	mock.
+		ExpectExec(useDbStatement).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	mock.ExpectPrepare(insertStatement).
+		ExpectExec().
+		WithArgs("test2 value").
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	mock.
+		ExpectExec(useDbStatement).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	mock.ExpectPrepare(insertStatement).
+		ExpectExec().
+		WithArgs("test3 value").
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	createError := client.SetupEnvironment("testdb", "environment", map[string]string{"test1": "test1 value", "test2": "test2 value", "test3": "test3 value"})
+
+	assert.Nil(t, createError, fmt.Sprintf("Create resulted in error %v \n", createError))
+
+}
+
+func TestSetupEvironment(t *testing.T) {
 
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -116,14 +189,14 @@ func TestInsert(t *testing.T) {
 		ExpectExec(useDbStatement).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	insertStatement := "INSERT INTO `organization` VALUES\\( \\?, \\? \\)"
+	insertStatement := "INSERT INTO `organization` \\( Record \\) VALUES\\( \\? \\)"
 
 	mock.ExpectPrepare(insertStatement).
 		ExpectExec().
-		WithArgs(1, "just a test").
+		WithArgs("just a test").
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	insertError := client.Insert("testdb", "organization", 1, "just a test")
+	insertError := client.Insert("testdb", "organization", "just a test")
 
 	assert.Nil(t, insertError, fmt.Sprintf("Insert resulted in error %v \n", insertError))
 

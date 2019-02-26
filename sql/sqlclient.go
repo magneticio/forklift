@@ -12,7 +12,8 @@ import (
 
 type SqlClient interface {
 	SetupOrganization(dbName string, tableName string) error
-	Insert(dbName string, tableName string, id int, record string) error
+	SetupEnvironment(dbName string, tableName string, elements map[string]string) error
+	Insert(dbName string, tableName string, record string) error
 	FindById(dbName string, tableName string, id int) (*Organization, error)
 	List(dbName string, tableName string) ([]Organization, error)
 	Update(dbName string, tableName string, id int, record string) error
@@ -95,7 +96,7 @@ func (client *MySqlClient) SetupOrganization(dbName string, tableName string) er
 		fmt.Printf("Error: %v\n", useDbErr.Error())
 		_, dropError := client.Db.Exec("DROP SCHEMA `" + dbName + "`")
 		if dropError != nil {
-			fmt.Printf("Error in table drop: %v\n", dropError.Error())
+			fmt.Printf("Error in schema drop: %v\n", dropError.Error())
 			return dropError
 		}
 		return useDbErr
@@ -115,7 +116,7 @@ func (client *MySqlClient) SetupOrganization(dbName string, tableName string) er
 	return nil
 }
 
-func (client *MySqlClient) Insert(dbName string, tableName string, id int, record string) error {
+func (client *MySqlClient) SetupEnvironment(dbName string, tableName string, elements map[string]string) error {
 
 	_, useDbErr := client.Db.Exec("USE `" + dbName + "`")
 	if useDbErr != nil {
@@ -123,7 +124,39 @@ func (client *MySqlClient) Insert(dbName string, tableName string, id int, recor
 		return useDbErr
 	}
 
-	stmtIns, err := client.Db.Prepare("INSERT INTO `" + tableName + "` VALUES( ?, ? )")
+	_, createErr := client.Db.Exec("CREATE TABLE IF NOT EXISTS `" + tableName + "` (ID int(11) NOT NULL AUTO_INCREMENT, Record mediumtext, PRIMARY KEY (ID))")
+	if createErr != nil {
+		fmt.Printf("Error during create: %v\n", createErr.Error())
+		return createErr
+	}
+
+	for key, value := range elements {
+
+		insertErr := client.Insert(dbName, tableName, value)
+		if insertErr != nil {
+			fmt.Printf("Error during insert of %v - %v\n", key, insertErr.Error())
+			_, dropError := client.Db.Exec("DROP TABLE `" + tableName + "`")
+			if dropError != nil {
+				fmt.Printf("Error in table drop: %v\n", dropError.Error())
+				return dropError
+			}
+			return insertErr
+		}
+
+	}
+
+	return nil
+}
+
+func (client *MySqlClient) Insert(dbName string, tableName string, record string) error {
+
+	_, useDbErr := client.Db.Exec("USE `" + dbName + "`")
+	if useDbErr != nil {
+		fmt.Printf("Error: %v\n", useDbErr.Error())
+		return useDbErr
+	}
+
+	stmtIns, err := client.Db.Prepare("INSERT INTO `" + tableName + "` ( Record ) VALUES( ? )")
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
 		return err
@@ -131,7 +164,7 @@ func (client *MySqlClient) Insert(dbName string, tableName string, id int, recor
 
 	defer stmtIns.Close()
 
-	_, err = stmtIns.Exec(id, record)
+	_, err = stmtIns.Exec(record)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
 		return err

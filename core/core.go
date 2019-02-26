@@ -55,6 +55,36 @@ func (c *Core) CreateOrganization(namespace string, configuration Configuration)
 
 }
 
+func (c *Core) CreateEnvironment(namespace string, organization string, elements map[string]string, configuration Configuration) error {
+
+	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(namespace)
+	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
+	if keyValueStoreClientError != nil {
+		return keyValueStoreClientError
+	}
+	key := keyValueStoreConfig.BasePath + "/configuration/applied"
+	value, jsonMarshallError := json.Marshal(configuration)
+	if jsonMarshallError != nil {
+		return jsonMarshallError
+	}
+	fmt.Printf("Vault store at key: %v\n", key)
+	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, string(value))
+	if keyValueStoreClientPutError != nil {
+		return keyValueStoreClientPutError
+	}
+
+	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
+
+	client, clientError := sql.NewSqlClient(databaseConfig)
+	if clientError != nil {
+		fmt.Printf("Error: %v\n", clientError.Error())
+		return clientError
+	}
+
+	return client.SetupEnvironment(organization, databaseConfig.Sql.Table, elements)
+
+}
+
 func (c *Core) GetNamespaceDatabaseConfiguration(namespace string) models.Database {
 	databaseConf := c.Conf.VampConfiguration.Persistence.Database
 
