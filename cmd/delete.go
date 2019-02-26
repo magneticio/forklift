@@ -24,13 +24,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// createCmd represents the create command
-var createCmd = &cobra.Command{
-	Use:   "create",
-	Short: "Create an organization or environment",
-	Long: AddAppName(`Create an organization or environment
+// deleteCmd represents the delete command
+var deleteCmd = &cobra.Command{
+	Use:   "delete",
+	Short: "Delete an organization or environment",
+	Long: AddAppName(`Delete an organization or environment
     Example:
-    $AppName create organization organization1`),
+    $AppName delete organization organization1`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -38,5 +38,5 @@ var createCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(createCmd)
+	rootCmd.AddCommand(deleteCmd)
 }
