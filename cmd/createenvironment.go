@@ -30,8 +30,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var organization string
-
 // environmentCmd represents the environment command
 var environmentCmd = &cobra.Command{
 	Use:   "environment",

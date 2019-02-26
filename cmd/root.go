@@ -53,6 +53,7 @@ var Config ForkliftConfig
 // Common code parameters
 var configPath string
 var configFileType string
+var organization string
 
 type ForkliftConfig struct {
 	Namespace         string                   `yaml:"namespace,omitempty" json:"namespace,omitempty"`

@@ -23,29 +23,43 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/magneticio/forklift/core"
 	"github.com/spf13/cobra"
+	yaml "gopkg.in/yaml.v2"
 )
 
 // environmentsCmd represents the environments command
 var environmentsCmd = &cobra.Command{
 	Use:   "environments",
 	Short: "list environments in an organization",
-	Long:  AddAppName(``),
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("environments called")
+	Long: AddAppName(`List organizations
+    Example:
+    $AppName list environment --organization organizaionname`),
+	SilenceUsage:  true,
+	SilenceErrors: true,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		coreConfig := core.Configuration{
+			VampConfiguration: Config.VampConfiguration,
+		}
+		core, coreError := core.NewCore(coreConfig)
+		if coreError != nil {
+			return coreError
+		}
+		environmentList, listOrganizationsError := core.ListEnvironments(Config.Namespace, organization)
+		if listOrganizationsError != nil {
+			return listOrganizationsError
+		}
+		output, marshallError := yaml.Marshal(environmentList)
+		if marshallError != nil {
+			return marshallError
+		}
+		fmt.Print(string(output))
+		return nil
 	},
 }
 
 func init() {
 	listCmd.AddCommand(environmentsCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// environmentsCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// environmentsCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	environmentsCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the environment")
+	environmentsCmd.MarkFlagRequired("organization")
 }
