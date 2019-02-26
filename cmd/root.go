@@ -50,6 +50,10 @@ var cfgFile string
 
 var Config ForkliftConfig
 
+// Common code parameters
+var configPath string
+var configFileType string
+
 type ForkliftConfig struct {
 	Namespace         string                   `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	VampConfiguration models.VampConfiguration `yaml:"forklift,omitempty" json:"forklift,omitempty"`
