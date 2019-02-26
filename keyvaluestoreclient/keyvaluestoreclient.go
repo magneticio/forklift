@@ -17,6 +17,7 @@ type KeyValueStoreClient interface {
 	GetValue(string) (string, error)
 	PutValue(string, string) error
 	Delete(string) error
+	List(string) ([]string, error)
 }
 
 type VaultKeyValueStoreClient struct {
@@ -126,11 +127,16 @@ func getConfig(address, cert, key, caCert string) (*vaultapi.Config, error) {
 	return conf, nil
 }
 
+// TODO: use trimPrefix
 func fixPath(path string) string {
 	if len(path) > 0 && string(path[0]) == "/" {
 		return strings.Replace(path, "/", "", 1)
 	}
 	return path
+}
+
+func fixPathSuffix(path string) string {
+	return strings.TrimSuffix(path, "/")
 }
 
 func secret(keyName string) string {
@@ -157,4 +163,24 @@ func (c *VaultKeyValueStoreClient) GetValue(key string) (string, error) {
 		return "", errors.New("Value is not available for key: " + key)
 	}
 	return value, nil
+}
+
+func (c *VaultKeyValueStoreClient) List(key string) ([]string, error) {
+	secret, err := c.getClient().Logical().List(fixPath(key))
+	if err != nil {
+		return nil, err
+	}
+	if val, ok := secret.Data["keys"]; ok {
+		if keysTemp, castOk := val.([]interface{}); castOk {
+			keys := make([]string, len(keysTemp))
+			for index, k := range keysTemp {
+				if str, strCastOk := k.(string); strCastOk {
+					keys[index] = fixPathSuffix(str)
+				}
+			}
+			return keys, nil
+		}
+	}
+	return nil, errors.New("List is not available for path: " + key)
+
 }

@@ -158,4 +158,18 @@ func TestVaultKeyVauleStoreClientValueWrappers(t *testing.T) {
 	deleteErr := vaultKeyValueStoreClient.Delete(key)
 	assert.Nil(t, deleteErr)
 
+	basePath := "/secret/vamp"
+	key1 := basePath + "/key1/subpath"
+	valueKey1 := "test1"
+	putErr1 := vaultKeyValueStoreClient.PutValue(key1, valueKey1)
+	assert.Nil(t, putErr1)
+	key2 := basePath + "/key2/subpath"
+	valueKey2 := "test2"
+	putErr2 := vaultKeyValueStoreClient.PutValue(key2, valueKey2)
+	assert.Nil(t, putErr2)
+
+	list, listError := vaultKeyValueStoreClient.List(basePath)
+	assert.Nil(t, listError)
+	listExpected := []string{"key1", "key2"}
+	assert.Equal(t, listExpected, list)
 }
