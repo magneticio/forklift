@@ -75,13 +75,15 @@ func (c *Core) CreateEnvironment(namespace string, organization string, elements
 
 	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
 
+	namespacedOrganizationName := c.GetNamespaceDatabaseConfiguration(organization).Sql.Database
+
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
 		fmt.Printf("Error: %v\n", clientError.Error())
 		return clientError
 	}
 
-	return client.SetupEnvironment(organization, databaseConfig.Sql.Table, elements)
+	return client.SetupEnvironment(namespacedOrganizationName, databaseConfig.Sql.Table, elements)
 
 }
 
