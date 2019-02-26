@@ -117,13 +117,13 @@ func (client *MySqlClient) SetupOrganization(dbName string, tableName string) er
 
 func (client *MySqlClient) Insert(dbName string, tableName string, id int, record string) error {
 
-	_, useDbErr := client.Db.Exec("USE " + dbName)
+	_, useDbErr := client.Db.Exec("USE `" + dbName + "`")
 	if useDbErr != nil {
 		fmt.Printf("Error: %v\n", useDbErr.Error())
 		return useDbErr
 	}
 
-	stmtIns, err := client.Db.Prepare("INSERT INTO " + tableName + " VALUES( ?, ? )")
+	stmtIns, err := client.Db.Prepare("INSERT INTO `" + tableName + "` VALUES( ?, ? )")
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
 		return err
@@ -142,13 +142,13 @@ func (client *MySqlClient) Insert(dbName string, tableName string, id int, recor
 
 func (client *MySqlClient) FindById(dbName string, tableName string, id int) (*Organization, error) {
 
-	_, useDbErr := client.Db.Exec("USE " + dbName)
+	_, useDbErr := client.Db.Exec("USE `" + dbName + "`")
 	if useDbErr != nil {
 		fmt.Printf("Error: %v\n", useDbErr.Error())
 		return nil, useDbErr
 	}
 
-	stmtOut, err := client.Db.Prepare("SELECT * FROM " + tableName + " WHERE ID = ?")
+	stmtOut, err := client.Db.Prepare("SELECT * FROM `" + tableName + "` WHERE ID = ?")
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
 		return nil, err
@@ -173,13 +173,13 @@ func (client *MySqlClient) FindById(dbName string, tableName string, id int) (*O
 
 func (client *MySqlClient) List(dbName string, tableName string) ([]Organization, error) {
 
-	_, useDbErr := client.Db.Exec("USE " + dbName)
+	_, useDbErr := client.Db.Exec("USE `" + dbName + "`")
 	if useDbErr != nil {
 		fmt.Printf("Error: %v\n", useDbErr.Error())
 		return []Organization{}, useDbErr
 	}
 
-	stmtOut, listErr := client.Db.Prepare("SELECT * FROM " + tableName)
+	stmtOut, listErr := client.Db.Prepare("SELECT * FROM `" + tableName + "`")
 	if listErr != nil {
 		fmt.Printf("Error: %v\n", listErr.Error())
 		return []Organization{}, listErr
@@ -218,13 +218,13 @@ func (client *MySqlClient) List(dbName string, tableName string) ([]Organization
 
 func (client *MySqlClient) Update(dbName string, tableName string, id int, record string) error {
 
-	_, useDbErr := client.Db.Exec("USE " + dbName)
+	_, useDbErr := client.Db.Exec("USE `" + dbName + "`")
 	if useDbErr != nil {
 		fmt.Printf("Error: %v\n", useDbErr.Error())
 		return useDbErr
 	}
 
-	stmtIns, err := client.Db.Prepare("UPDATE " + tableName + " SET `Record` = ? WHERE ID = ?")
+	stmtIns, err := client.Db.Prepare("UPDATE `" + tableName + "` SET `Record` = ? WHERE ID = ?")
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
 		return err
@@ -243,13 +243,13 @@ func (client *MySqlClient) Update(dbName string, tableName string, id int, recor
 
 func (client *MySqlClient) Delete(dbName string, tableName string, id int) error {
 
-	_, useDbErr := client.Db.Exec("USE " + dbName)
+	_, useDbErr := client.Db.Exec("USE `" + dbName + "`")
 	if useDbErr != nil {
 		fmt.Printf("Error: %v\n", useDbErr.Error())
 		return useDbErr
 	}
 
-	stmtIns, err := client.Db.Prepare("DELETE FROM " + tableName + " WHERE ID = ?")
+	stmtIns, err := client.Db.Prepare("DELETE FROM `" + tableName + "` WHERE ID = ?")
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
 		return err
