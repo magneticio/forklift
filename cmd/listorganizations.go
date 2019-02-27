@@ -21,22 +21,43 @@
 package cmd
 
 import (
+	"fmt"
+
+	"github.com/magneticio/forklift/core"
 	"github.com/spf13/cobra"
+	yaml "gopkg.in/yaml.v2"
 )
 
-// createCmd represents the create command
-var createCmd = &cobra.Command{
-	Use:   "create",
-	Short: "Create an organization or environment",
-	Long: AddAppName(`Create an organization or environment
+// organizationsCmd represents the organizations command
+var organizationsCmd = &cobra.Command{
+	Use:   "organizations",
+	Short: "list organizations",
+	Long: AddAppName(`List organizations
     Example:
-    $AppName create organization organization1`),
+    $AppName list organizations`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		coreConfig := core.Configuration{
+			VampConfiguration: Config.VampConfiguration,
+		}
+		core, coreError := core.NewCore(coreConfig)
+		if coreError != nil {
+			return coreError
+		}
+		organizationList, listOrganizationsError := core.ListOrganizations(Config.Namespace)
+		if listOrganizationsError != nil {
+			return listOrganizationsError
+		}
+		output, marshallError := yaml.Marshal(organizationList)
+		if marshallError != nil {
+			return marshallError
+		}
+		fmt.Print(string(output))
+		return nil
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(createCmd)
+	listCmd.AddCommand(organizationsCmd)
 }

@@ -30,16 +30,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var configPath string
-var configFileType string
-
-// organizationCmd represents the organization command
-var organizationCmd = &cobra.Command{
-	Use:   "organization",
-	Short: "Create a new organization",
-	Long: AddAppName(`Create a new organization
+// environmentCmd represents the environment command
+var environmentCmd = &cobra.Command{
+	Use:   "environment",
+	Short: "Create a new environment",
+	Long: AddAppName(`Create a new environment
     Example:
-    $AppName create organization org1 --configuration ./somepath.json`),
+    $AppName create environment env1 --organization org --configuration ./somepath.json`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -47,7 +44,8 @@ var organizationCmd = &cobra.Command{
 			return errors.New("Not Enough Arguments, Organization Name needed.")
 		}
 		name := args[0]
-		namespaced := Config.Namespace + "-" + name
+		namespaced := Config.Namespace + "-" + organization + "-" + name
+		namespacedOrganization := Config.Namespace + "-" + organization
 		fmt.Printf("name: %v , configPath: %v , configFileType %v\n", namespaced, configPath, configFileType)
 
 		configBtye, readErr := util.UseSourceUrl(configPath) // just pass the file name
@@ -64,14 +62,6 @@ var organizationCmd = &cobra.Command{
 		if unmarshallError != nil {
 			return unmarshallError
 		}
-		/*
-			    TODO: Add validation
-					validatedConfig, configError := core.VampConfigValidateAndSetupDefaults(&config)
-					if configError != nil {
-						return configError
-					}
-					fmt.Printf("Vamp Configuration validated.\n")
-		*/
 		coreConfig := core.Configuration{
 			VampConfiguration: Config.VampConfiguration,
 		}
@@ -79,19 +69,23 @@ var organizationCmd = &cobra.Command{
 		if coreError != nil {
 			return coreError
 		}
-		createOrganizationError := core.CreateOrganization(namespaced, vampConfig)
+		params := []string{}
+
+		createOrganizationError := core.CreateEnvironment(namespaced, namespacedOrganization, params, vampConfig)
 		if createOrganizationError != nil {
 			return createOrganizationError
 		}
-		fmt.Printf("Organization %v is created\n", name)
+		fmt.Printf("Environment %v is created\n", name)
 		return nil
 	},
 }
 
 func init() {
-	createCmd.AddCommand(organizationCmd)
+	createCmd.AddCommand(environmentCmd)
 
-	organizationCmd.Flags().StringVarP(&configPath, "configuration", "", "", "Organization configuration file path")
-	organizationCmd.MarkFlagRequired("configuration")
-	organizationCmd.Flags().StringVarP(&configFileType, "input", "i", "yaml", "Configuration file type yaml or json")
+	environmentCmd.Flags().StringVarP(&configPath, "configuration", "", "", "Environment configuration file path")
+	environmentCmd.MarkFlagRequired("configuration")
+	environmentCmd.Flags().StringVarP(&configFileType, "input", "i", "yaml", "Configuration file type yaml or json")
+	environmentCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the environment")
+	environmentCmd.MarkFlagRequired("organization")
 }

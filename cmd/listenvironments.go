@@ -21,22 +21,45 @@
 package cmd
 
 import (
+	"fmt"
+
+	"github.com/magneticio/forklift/core"
 	"github.com/spf13/cobra"
+	yaml "gopkg.in/yaml.v2"
 )
 
-// createCmd represents the create command
-var createCmd = &cobra.Command{
-	Use:   "create",
-	Short: "Create an organization or environment",
-	Long: AddAppName(`Create an organization or environment
+// environmentsCmd represents the environments command
+var environmentsCmd = &cobra.Command{
+	Use:   "environments",
+	Short: "list environments in an organization",
+	Long: AddAppName(`List organizations
     Example:
-    $AppName create organization organization1`),
+    $AppName list environment --organization organizaionname`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		coreConfig := core.Configuration{
+			VampConfiguration: Config.VampConfiguration,
+		}
+		core, coreError := core.NewCore(coreConfig)
+		if coreError != nil {
+			return coreError
+		}
+		environmentList, listOrganizationsError := core.ListEnvironments(Config.Namespace, organization)
+		if listOrganizationsError != nil {
+			return listOrganizationsError
+		}
+		output, marshallError := yaml.Marshal(environmentList)
+		if marshallError != nil {
+			return marshallError
+		}
+		fmt.Print(string(output))
+		return nil
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(createCmd)
+	listCmd.AddCommand(environmentsCmd)
+	environmentsCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the environment")
+	environmentsCmd.MarkFlagRequired("organization")
 }
