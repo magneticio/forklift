@@ -116,8 +116,8 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err != nil {
-		panic(err)
-		//fmt.Println("Using config file:", viper.ConfigFileUsed())
+		// For some commands config is not needed so don't panic
+		fmt.Println("Configuration file not found:", viper.ConfigFileUsed())
 	}
 	// unmarshal config
 	c := viper.AllSettings()
