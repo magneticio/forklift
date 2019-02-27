@@ -115,10 +115,7 @@ func initConfig() {
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err != nil {
-		// For some commands config is not needed so don't panic
-		fmt.Println("Configuration file not found:", viper.ConfigFileUsed())
-	}
+	viper.ReadInConfig() // TODO: handle config file autocreation
 	// unmarshal config
 	c := viper.AllSettings()
 	bs, err := yaml.Marshal(c)
