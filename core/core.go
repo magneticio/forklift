@@ -55,7 +55,7 @@ func (c *Core) CreateOrganization(namespace string, configuration Configuration)
 
 }
 
-func (c *Core) CreateEnvironment(namespace string, organization string, elements map[string]string, configuration Configuration) error {
+func (c *Core) CreateEnvironment(namespace string, organization string, elements []string, configuration Configuration) error {
 
 	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(namespace)
 	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)

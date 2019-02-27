@@ -58,7 +58,7 @@ import (
 //
 // 	client, _ := NewMySqlClient("root", "secret", "api.dev.vamp.merapar.net:32401", "")
 //
-// 	insertError := client.SetupEnvironment("vamp-neworg", "newenv", map[string]string{"test1": "test1 value", "test2": "test2 value", "test3": "test3 value"})
+// 	insertError := client.SetupEnvironment("vamp-neworg", "newenv", []string{"test1 value", "test2 value", "test3 value"})
 //
 // 	assert.Nil(t, insertError, fmt.Sprintf("Insert resulted in error %v \n", insertError))
 //
@@ -121,7 +121,7 @@ func TestSetupOrganization(t *testing.T) {
 		WithArgs("test3 value").
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	createError := client.SetupEnvironment("testdb", "environment", map[string]string{"test1": "test1 value", "test2": "test2 value", "test3": "test3 value"})
+	createError := client.SetupEnvironment("testdb", "environment", []string{"test1 value", "test2 value", "test3 value"})
 
 	assert.Nil(t, createError, fmt.Sprintf("Create resulted in error %v \n", createError))
 

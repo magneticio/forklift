@@ -12,7 +12,7 @@ import (
 
 type SqlClient interface {
 	SetupOrganization(dbName string, tableName string) error
-	SetupEnvironment(dbName string, tableName string, elements map[string]string) error
+	SetupEnvironment(dbName string, tableName string, elements []string) error
 	Insert(dbName string, tableName string, record string) error
 	FindById(dbName string, tableName string, id int) (*Organization, error)
 	List(dbName string, tableName string) ([]Organization, error)
@@ -116,7 +116,7 @@ func (client *MySqlClient) SetupOrganization(dbName string, tableName string) er
 	return nil
 }
 
-func (client *MySqlClient) SetupEnvironment(dbName string, tableName string, elements map[string]string) error {
+func (client *MySqlClient) SetupEnvironment(dbName string, tableName string, elements []string) error {
 
 	_, useDbErr := client.Db.Exec("USE `" + dbName + "`")
 	if useDbErr != nil {
@@ -130,11 +130,13 @@ func (client *MySqlClient) SetupEnvironment(dbName string, tableName string, ele
 		return createErr
 	}
 
-	for key, value := range elements {
+	for _, value := range elements {
+
+		fmt.Println("Value:", value)
 
 		insertErr := client.Insert(dbName, tableName, value)
 		if insertErr != nil {
-			fmt.Printf("Error during insert of %v - %v\n", key, insertErr.Error())
+			fmt.Printf("Error during insert of %v - %v\n", value, insertErr.Error())
 			_, dropError := client.Db.Exec("DROP TABLE `" + tableName + "`")
 			if dropError != nil {
 				fmt.Printf("Error in table drop: %v\n", dropError.Error())

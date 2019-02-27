@@ -1,11 +1,110 @@
 package models
 
 type VampConfiguration struct {
-	Persistence Persistence `yaml:"persistence,omitempty" json:"persistence,omitempty"`
-	Model       Model       `yaml:"model,omitempty" json:"model,omitempty"`
-	Security    Security    `yaml:"security,omitempty" json:"security,omitempty"`
-	Pulse       Pulse       `yaml:"pulse,omitempty" json:"pulse,omitempty"`
-	Metadata    Metadata    `yaml:"metadata,omitempty" json:"metadata,omitempty"`
+	Persistence     Persistence     `yaml:"persistence,omitempty" json:"persistence,omitempty"`
+	Model           Model           `yaml:"model,omitempty" json:"model,omitempty"`
+	Security        Security        `yaml:"security,omitempty" json:"security,omitempty"`
+	Pulse           Pulse           `yaml:"pulse,omitempty" json:"pulse,omitempty"`
+	Metadata        Metadata        `yaml:"metadata,omitempty" json:"metadata,omitempty"`
+	ContainerDriver ContainerDriver `yaml:"container-driver,omitempty" json:"container-driver,omitempty"`
+	Lifter          Lifter          `yaml:"lifter,omitempty" json:"lifter,omitempty"`
+	GatewayDriver   GatewayDriver   `yaml:"gateway-driver,omitempty" json:"gateway-driver,omitempty"`
+	WorkflowDriver  WorkflowDriver  `yaml:"workflow-driver,omitempty" json:"workflow-driver,omitempty"`
+}
+
+type WorkflowDriver struct {
+	Workflow Workflow `yaml:"workflow,omitempty" json:"workflow,omitempty"`
+	Type     string   `yaml:"type,omitempty" json:"type,omitempty"`
+}
+
+type Workflow struct {
+	VampKeyValueStoreType        string       `yaml:"vamp-key-value-store-type,omitempty" json:"vamp-key-value-store-type,omitempty"`
+	Deployables                  []Deployable `yaml:"deployables,omitempty" json:"deployables,omitempty"`
+	Scale                        Scale        `yaml:"scale,omitempty" json:"scale,omitempty"`
+	VampKeyValueStoreConnection  string       `yaml:"vamp-key-value-store-connection,omitempty" json:"vamp-key-value-store-connection,omitempty"`
+	VampWorkflowExecutionPeriod  int          `yaml:"vamp-workflow-execution-period,omitempty" json:"vamp-workflow-execution-period,omitempty"`
+	VampKeyValueStoreToken       string       `yaml:"vamp-key-value-store-token,omitempty" json:"vamp-key-value-store-token,omitempty"`
+	VampWorkflowExecutionTimeout int          `yaml:"vamp-workflow-execution-timeout,omitempty" json:"vamp-workflow-execution-timeout,omitempty"`
+	VampElasticsearchUrl         string       `yaml:"vamp-elasticsearch-url,omitempty" json:"vamp-elasticsearch-url,omitempty"`
+	VampKeyValueStorePath        string       `yaml:"vamp-key-value-store-path,omitempty" json:"vamp-key-value-store-path,omitempty"`
+	VampUrl                      string       `yaml:"vamp-url,omitempty" json:"vamp-url,omitempty"`
+}
+
+type Operation struct {
+}
+
+type Synchronization struct {
+	Period     int                       `yaml:"period,omitempty" json:"period,omitempty"`
+	Check      Check                     `yaml:"check,omitempty" json:"check,omitempty"`
+	Deployment SynchronizationDeployment `yaml:"deployment,omitempty" json:"deployment,omitempty"`
+}
+
+type Check struct {
+	HealthChecks         bool `yaml:"health-checks,omitempty" json:"health-checks,omitempty"`
+	Deployable           bool `yaml:"deployable,omitempty" json:"deployable,omitempty"`
+	Instances            bool `yaml:"instances,omitempty" json:"instances,omitempty"`
+	Ports                bool `yaml:"ports,omitempty" json:"ports,omitempty"`
+	Cpu                  bool `yaml:"cpu,omitempty" json:"cpu,omitempty"`
+	EnvironmentVariables bool `yaml:"environment-variables,omitempty" json:"environment-variables,omitempty"`
+	Memory               bool `yaml:"memory,omitempty" json:"memory,omitempty"`
+}
+
+type SynchronizationDeployment struct {
+	RefetchBreedOnUpdate string `yaml:"refetch-breed-on-update,omitempty" json:"refetch-breed-on-update,omitempty"`
+}
+
+type Deployment struct {
+	Scale     Scale    `yaml:"scale,omitempty" json:"scale,omitempty"`
+	Arguments []string `yaml:"arguments,omitempty" json:"arguments,omitempty"`
+}
+
+type Scale struct {
+	CPU       float32 `yaml:"cpu,omitempty" json:"cpu,omitempty"`
+	Instances int     `yaml:"instances,omitempty" json:"instances,omitempty"`
+	Memory    string  `yaml:"memory,omitempty" json:"memory,omitempty"`
+}
+
+type Gateway struct {
+	VirtualHosts VirtualHosts `yaml:"virtual-hosts,omitempty" json:"virtual-hosts,omitempty"`
+	Selector     string       `yaml:"selector,omitempty" json:"selector,omitempty"`
+}
+
+type VirtualHosts struct {
+	Enabled bool `yaml:"enabled,omitempty" json:"enabled,omitempty"`
+}
+
+type Deployable struct {
+	Type  string `yaml:"type,omitempty" json:"type,omitempty"`
+	Breed string `yaml:"breed,omitempty" json:"breed,omitempty"`
+}
+
+type GatewayDriver struct {
+	Marshallers []Marshaller `yaml:"marshaller,omitempty" json:"marshaller,omitempty"`
+}
+
+type Marshaller struct {
+	Type     string   `yaml:"type,omitempty" json:"type,omitempty"`
+	Name     string   `yaml:"name,omitempty" json:"name,omitempty"`
+	Template Template `yaml:"template,omitempty" json:"template,omitempty"`
+}
+
+type Template struct {
+	Resource string `yaml:"resource,omitempty" json:"resource,omitempty"`
+}
+
+type Lifter struct {
+	Artifacts []string `yaml:"artifacts,omitempty" json:"artifacts,omitempty"`
+}
+
+type ContainerDriver struct {
+	Type       string     `yaml:"type,omitempty" json:"type,omitempty"`
+	Kubernetes Kubernetes `yaml:"kubernetes,omitempty" json:"kubernetes,omitempty"`
+}
+
+type Kubernetes struct {
+	Url                string `yaml:"url,omitempty" json:"url,omitempty"`
+	VampGatewayAgentId string `yaml:"vamp-gateway-agent-id,omitempty" json:"vamp-gateway-agent-id,omitempty"`
+	TlsCheck           bool   `yaml:"tls-check,omitempty" json:"tls-check,omitempty"`
 }
 
 type Database struct {
@@ -20,11 +119,13 @@ type Persistence struct {
 }
 
 type Resolvers struct {
-	namespace []string `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+	Deployment []string `yaml:"deployment,omitempty" json:"deployment,omitempty"`
+	Namespace  []string `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+	Workflow   []string `yaml:"workflow,omitempty" json:"workflow,omitempty"`
 }
 
 type Transformers struct {
-	classes []string `yaml:"classes,omitempty" json:"classes,omitempty"`
+	Classes []string `yaml:"classes,omitempty" json:"classes,omitempty"`
 }
 
 type Model struct {
