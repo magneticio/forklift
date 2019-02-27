@@ -64,7 +64,17 @@ import (
 //
 // }
 
-func TestSetupOrganization(t *testing.T) {
+// func TestUpdateEnv(t *testing.T) {
+//
+// 	client, _ := NewMySqlClient("root", "secret", "api.dev.vamp.merapar.net:32401", "")
+//
+// 	insertError := client.UpdateEnvironment("vamp-neworg", "newenv", []string{"test1-2 value", "test2-2 value", "test3-2 value"})
+//
+// 	assert.Nil(t, insertError, fmt.Sprintf("Insert resulted in error %v \n", insertError))
+//
+// }
+
+func TestSetupEvironment(t *testing.T) {
 
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -127,7 +137,62 @@ func TestSetupOrganization(t *testing.T) {
 
 }
 
-func TestSetupEvironment(t *testing.T) {
+func TestUpdateEvironment(t *testing.T) {
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	client := MySqlClient{
+		User:     "",
+		Password: "",
+		Host:     "",
+		DbName:   "",
+		Db:       db,
+	}
+
+	useDbStatement := "USE `testdb`"
+
+	mock.
+		ExpectExec(useDbStatement).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	deleteFromTableStatement := "DELETE FROM `environment`"
+
+	mock.ExpectBegin()
+
+	mock.
+		ExpectExec(deleteFromTableStatement).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	insertStatement := "INSERT INTO `environment` \\( Record \\) VALUES\\( \\? \\)"
+
+	mock.ExpectPrepare(insertStatement).
+		ExpectExec().
+		WithArgs("test1 value").
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	mock.ExpectPrepare(insertStatement).
+		ExpectExec().
+		WithArgs("test2 value").
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	mock.ExpectPrepare(insertStatement).
+		ExpectExec().
+		WithArgs("test3 value").
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	mock.ExpectCommit()
+
+	createError := client.UpdateEnvironment("testdb", "environment", []string{"test1 value", "test2 value", "test3 value"})
+
+	assert.Nil(t, createError, fmt.Sprintf("Create resulted in error %v \n", createError))
+
+}
+
+func TestSetupOrganization(t *testing.T) {
 
 	db, mock, err := sqlmock.New()
 	if err != nil {

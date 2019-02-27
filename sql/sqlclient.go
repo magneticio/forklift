@@ -13,6 +13,7 @@ import (
 type SqlClient interface {
 	SetupOrganization(dbName string, tableName string) error
 	SetupEnvironment(dbName string, tableName string, elements []string) error
+	UpdateEnvironment(dbName string, tableName string, elements []string) error
 	Insert(dbName string, tableName string, record string) error
 	FindById(dbName string, tableName string, id int) (*Organization, error)
 	List(dbName string, tableName string) ([]Organization, error)
@@ -145,6 +146,57 @@ func (client *MySqlClient) SetupEnvironment(dbName string, tableName string, ele
 			return insertErr
 		}
 
+	}
+
+	return nil
+}
+
+func (client *MySqlClient) UpdateEnvironment(dbName string, tableName string, elements []string) error {
+
+	_, useDbErr := client.Db.Exec("USE `" + dbName + "`")
+	if useDbErr != nil {
+		fmt.Printf("Error: %v\n", useDbErr.Error())
+		return useDbErr
+	}
+
+	tx, startTransactionError := client.Db.Begin()
+	if startTransactionError != nil {
+		fmt.Printf("Error: %v\n", startTransactionError.Error())
+		return startTransactionError
+	}
+
+	_, deleteErr := tx.Exec("DELETE FROM `" + tableName + "`")
+	if deleteErr != nil {
+		tx.Rollback()
+		fmt.Printf("Error: %v\n", deleteErr.Error())
+		return deleteErr
+	}
+
+	for _, value := range elements {
+
+		stmtIns, stmtInsErr := tx.Prepare("INSERT INTO `" + tableName + "` ( Record ) VALUES( ? )")
+		if stmtInsErr != nil {
+			tx.Rollback()
+			fmt.Printf("Error: %v\n", stmtInsErr.Error())
+			return stmtInsErr
+		}
+
+		defer stmtIns.Close()
+
+		_, insErr := stmtIns.Exec(value)
+		if insErr != nil {
+			tx.Rollback()
+			fmt.Printf("Error: %v\n", insErr.Error())
+			return insErr
+		}
+
+	}
+
+	commitError := tx.Commit()
+	if commitError != nil {
+		tx.Rollback()
+		fmt.Printf("Error: %v\n", commitError.Error())
+		return commitError
 	}
 
 	return nil
