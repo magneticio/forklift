@@ -8,6 +8,7 @@ import (
 	"github.com/magneticio/forklift/keyvaluestoreclient"
 	"github.com/magneticio/forklift/models"
 	"github.com/magneticio/forklift/sql"
+	"github.com/magneticio/forklift/util"
 )
 
 type Configuration struct {
@@ -142,7 +143,16 @@ func (c *Core) CreateEnvironment(namespace string, organization string, elements
 		return clientError
 	}
 
-	return client.SetupEnvironment(namespacedOrganizationName, databaseConfig.Sql.Table, elements)
+	sqlElements := make([]string, len(elements))
+	for i, element := range elements {
+		sqlElement, convertError := ConvertToSqlElement(element)
+		if convertError != nil {
+			return convertError
+		}
+		sqlElements[i] = sqlElement
+	}
+
+	return client.SetupEnvironment(namespacedOrganizationName, databaseConfig.Sql.Table, sqlElements)
 
 }
 
@@ -175,4 +185,26 @@ func (c *Core) GetNamespaceKeyValueStoreConfiguration(namespace string) *models.
 
 func Namespaced(namespace string, text string) string {
 	return strings.Replace(text, "${namespace}", namespace, -1)
+}
+
+func ConvertToSqlElement(artifactAsJsonString string) (string, error) {
+	var artifact models.Artifact
+	unmarshallError := json.Unmarshal([]byte(artifactAsJsonString), &artifact)
+	if unmarshallError != nil {
+		return "", unmarshallError
+	}
+	version := "1.0.4" // TODO: this should be a constant
+	sqlElement := models.SqlElement{
+		Version:    version,
+		Instance:   util.UUID(),
+		Timestance: util.Timestamp(),
+		Name:       artifact.Name,
+		Kind:       artifact.Kind,
+		Artifact:   artifactAsJsonString,
+	}
+	sqlElementString, jsonMarshallError := json.Marshal(sqlElement)
+	if jsonMarshallError != nil {
+		return "", jsonMarshallError
+	}
+	return string(sqlElementString), nil
 }

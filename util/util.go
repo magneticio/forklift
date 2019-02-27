@@ -14,11 +14,13 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
 
 	"github.com/ghodss/yaml"
+	"github.com/google/uuid"
 	"github.com/yalp/jsonpath"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -220,4 +222,39 @@ func PrettyJson(input string) string {
 		return ""
 	}
 	return string(prettyJSON.Bytes())
+}
+
+func ReadFilesIndirectory(root string) (map[string]string, error) {
+	var files []string
+	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if !info.IsDir() {
+			files = append(files, path)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, nil
+	}
+	contents := make(map[string]string, 0)
+	for _, file := range files {
+		content, readError := UseSourceUrl(file)
+		if readError == nil {
+			contents[file] = content
+		} else {
+			fmt.Printf("Warning: File %v can not be read with error: %v\n", file, readError.Error())
+		}
+
+	}
+	return contents, nil
+}
+
+func UUID() string {
+	id := uuid.New()
+	return id.String()
+}
+
+func Timestamp() string {
+	// example: "2019-02-05T13:19:06.978Z"
+	// TODO: fix the format
+	return time.Now().String()
 }

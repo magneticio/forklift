@@ -30,6 +30,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var artficatsPath string
+
 // environmentCmd represents the environment command
 var environmentCmd = &cobra.Command{
 	Use:   "environment",
@@ -70,7 +72,20 @@ var environmentCmd = &cobra.Command{
 			return coreError
 		}
 		params := []string{}
-
+		if artficatsPath != "" {
+			artifacts, artifactsReadError := util.ReadFilesIndirectory(artficatsPath)
+			if artifactsReadError != nil && artficatsPath != "" {
+				return artifactsReadError
+			}
+			for file, content := range artifacts {
+				fmt.Printf("Using file as artifact %v\n", file)
+				contentJson, jsonError := util.Convert("yaml", "json", contents)
+				if jsonError != nil {
+					return jsonError
+				}
+				params = append(params, contentJson)
+			}
+		}
 		createOrganizationError := core.CreateEnvironment(namespaced, namespacedOrganization, params, vampConfig)
 		if createOrganizationError != nil {
 			return createOrganizationError
@@ -88,4 +103,6 @@ func init() {
 	environmentCmd.Flags().StringVarP(&configFileType, "input", "i", "yaml", "Configuration file type yaml or json")
 	environmentCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the environment")
 	environmentCmd.MarkFlagRequired("organization")
+	environmentCmd.Flags().StringVarP(&artficatsPath, "artifacts", "", "", "Path to the folder containing artifacts")
+
 }
