@@ -69,9 +69,8 @@ var environmentCmd = &cobra.Command{
 		if coreError != nil {
 			return coreError
 		}
-		params := map[string]string{
-			"": "",
-		}
+		params := []string{}
+
 		createOrganizationError := core.CreateEnvironment(namespaced, namespacedOrganization, params, vampConfig)
 		if createOrganizationError != nil {
 			return createOrganizationError

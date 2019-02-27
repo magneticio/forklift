@@ -114,7 +114,7 @@ func (c *Core) ListEnvironments(baseNamespace string, organization string) ([]st
 	return filteredReducedList, nil
 }
 
-func (c *Core) CreateEnvironment(namespace string, organization string, elements map[string]string, configuration Configuration) error {
+func (c *Core) CreateEnvironment(namespace string, organization string, elements []string, configuration Configuration) error {
 
 	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(namespace)
 	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
