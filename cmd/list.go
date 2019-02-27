@@ -24,11 +24,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// createCmd represents the create command
-var createCmd = &cobra.Command{
-	Use:   "create",
-	Short: "Create an organization or environment",
-	Long: AddAppName(`Create an organization or environment
+// listCmd represents the list command
+var listCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List an organization or environment",
+	Long: AddAppName(`List an organization or environment
     Example:
     $AppName create organization organization1`),
 	SilenceUsage:  true,
@@ -38,5 +38,5 @@ var createCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(createCmd)
+	rootCmd.AddCommand(listCmd)
 }

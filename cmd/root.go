@@ -50,6 +50,11 @@ var cfgFile string
 
 var Config ForkliftConfig
 
+// Common code parameters
+var configPath string
+var configFileType string
+var organization string
+
 type ForkliftConfig struct {
 	Namespace         string                   `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 	VampConfiguration models.VampConfiguration `yaml:"forklift,omitempty" json:"forklift,omitempty"`
@@ -110,8 +115,9 @@ func initConfig() {
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	if err := viper.ReadInConfig(); err != nil {
+		panic(err)
+		//fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
 	// unmarshal config
 	c := viper.AllSettings()

@@ -37,7 +37,7 @@ func (c *Core) CreateOrganization(namespace string, configuration Configuration)
 	if jsonMarshallError != nil {
 		return jsonMarshallError
 	}
-	fmt.Printf("Vault store at key: %v\n", key)
+	// fmt.Printf("Vault store at key: %v\n", key)
 	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, string(value))
 	if keyValueStoreClientPutError != nil {
 		return keyValueStoreClientPutError
@@ -55,6 +55,65 @@ func (c *Core) CreateOrganization(namespace string, configuration Configuration)
 
 }
 
+func (c *Core) ListOrganizations(baseNamespace string) ([]string, error) {
+	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration("")
+	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
+	if keyValueStoreClientError != nil {
+		return nil, keyValueStoreClientError
+	}
+	key := keyValueStoreConfig.BasePath
+	list, keyValueStoreClientListError := keyValueStoreClient.List(key)
+	if keyValueStoreClientListError != nil {
+		return nil, keyValueStoreClientListError
+	}
+	filteredMap := make(map[string]bool)
+	for _, name := range list {
+		if strings.HasPrefix(name, baseNamespace) {
+			filteredName := strings.Split(name, "-")
+			if len(filteredName) == 2 {
+				filteredMap[filteredName[1]] = true
+			}
+		}
+	}
+	filteredReducedList := make([]string, len(filteredMap))
+	i := 0
+	for k, _ := range filteredMap {
+		filteredReducedList[i] = k
+		i++
+	}
+	return filteredReducedList, nil
+}
+
+func (c *Core) ListEnvironments(baseNamespace string, organization string) ([]string, error) {
+	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration("")
+	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
+	if keyValueStoreClientError != nil {
+		return nil, keyValueStoreClientError
+	}
+	key := keyValueStoreConfig.BasePath
+	list, keyValueStoreClientListError := keyValueStoreClient.List(key)
+	if keyValueStoreClientListError != nil {
+		return nil, keyValueStoreClientListError
+	}
+	filteredMap := make(map[string]bool)
+	filterPrefix := baseNamespace + "-" + organization
+	for _, name := range list {
+		if strings.HasPrefix(name, filterPrefix) {
+			filteredName := strings.Split(name, "-")
+			if len(filteredName) == 3 {
+				filteredMap[filteredName[2]] = true
+			}
+		}
+	}
+	filteredReducedList := make([]string, len(filteredMap))
+	i := 0
+	for k, _ := range filteredMap {
+		filteredReducedList[i] = k
+		i++
+	}
+	return filteredReducedList, nil
+}
+
 func (c *Core) CreateEnvironment(namespace string, organization string, elements map[string]string, configuration Configuration) error {
 
 	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(namespace)
@@ -67,7 +126,7 @@ func (c *Core) CreateEnvironment(namespace string, organization string, elements
 	if jsonMarshallError != nil {
 		return jsonMarshallError
 	}
-	fmt.Printf("Vault store at key: %v\n", key)
+	// fmt.Printf("Vault store at key: %v\n", key)
 	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, string(value))
 	if keyValueStoreClientPutError != nil {
 		return keyValueStoreClientPutError
