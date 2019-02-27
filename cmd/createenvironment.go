@@ -79,7 +79,7 @@ var environmentCmd = &cobra.Command{
 			}
 			for file, content := range artifacts {
 				fmt.Printf("Using file as artifact %v\n", file)
-				contentJson, jsonError := util.Convert("yaml", "json", contents)
+				contentJson, jsonError := util.Convert("yaml", "json", content)
 				if jsonError != nil {
 					return jsonError
 				}
