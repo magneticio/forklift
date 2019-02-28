@@ -192,6 +192,9 @@ type SqlElement struct {
 }
 
 type Artifact struct {
-	Name string `yaml:"name,omitempty" json:"name,omitempty"`
-	Kind string `yaml:"kind,omitempty" json:"kind,omitempty"`
+	Name     string            `yaml:"name,omitempty" json:"name,omitempty"`
+	Password string            `yaml:"password,omitempty" json:"password,omitempty"`
+	Kind     string            `yaml:"kind,omitempty" json:"kind,omitempty"`
+	Roles    []string          `yaml:"roles,omitempty" json:"roles,omitempty"`
+	Metadata map[string]string `yaml:"metadata,omitempty" json:"metadata,omitempty"`
 }

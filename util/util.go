@@ -2,11 +2,15 @@ package util
 
 import (
 	"bytes"
+	"crypto/sha1"
+	"crypto/sha512"
 	"crypto/x509"
+	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"hash"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -184,6 +188,7 @@ func GetParameterFromTerminalAsSecret(text1 string, text2 string, errorText stri
 	if input1 != input2 {
 		return "", errors.New(errorText)
 	}
+
 	return input1, nil
 }
 
@@ -257,4 +262,22 @@ func Timestamp() string {
 	// example: "2019-02-05T13:19:06.978Z"
 	// TODO: fix the format
 	return time.Now().String()
+}
+
+func EncodeString(value string, algorithm string, salt string) string {
+
+	text := value + salt
+
+	var h hash.Hash
+
+	switch algorithm {
+	case "SHA-512":
+		h = sha512.New()
+	default:
+		h = sha1.New()
+	}
+
+	h.Write([]byte(text))
+
+	return hex.EncodeToString(h.Sum(nil))
 }

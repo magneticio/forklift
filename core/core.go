@@ -26,6 +26,73 @@ func NewCore(conf Configuration) (*Core, error) {
 	}, nil
 }
 
+func (c *Core) CreateAdmin(namespace string, name string, password string) error {
+
+	version := "1.0.4" // TODO: this should be a constant
+	kind := "admin"    // TODO: this should be a constant
+
+	encodedPassword := util.EncodeString(password, c.Conf.VampConfiguration.Security.PasswordHashAlgorithm, c.Conf.VampConfiguration.Security.PasswordHashSalt)
+
+	artifact := models.Artifact{
+		Name:     name,
+		Password: encodedPassword,
+		Kind:     kind,
+	}
+
+	artifactAsJson, artifactJsonError := json.Marshal(artifact)
+	if artifactJsonError != nil {
+		return artifactJsonError
+	}
+
+	artifactAsJsonString := string(artifactAsJson)
+
+	sqlElement := models.SqlElement{
+		Version:    version,
+		Instance:   util.UUID(),
+		Timestance: util.Timestamp(),
+		Name:       name,
+		Kind:       kind,
+		Artifact:   artifactAsJsonString,
+	}
+
+	sqlElementAsJson, sqlElementJsonError := json.Marshal(sqlElement)
+	if sqlElementJsonError != nil {
+		return sqlElementJsonError
+	}
+
+	sqlElementAsJsonString := string(sqlElementAsJson)
+
+	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
+
+	client, clientError := sql.NewSqlClient(databaseConfig)
+	if clientError != nil {
+		fmt.Printf("Error: %v\n", clientError.Error())
+		return clientError
+	}
+
+	return client.Insert(databaseConfig.Sql.Database, databaseConfig.Sql.Table, sqlElementAsJsonString)
+
+}
+
+func (c *Core) AddAdmin(namespace string, admin string) error {
+
+	sqlElement, convertError := ConvertToSqlElement(admin)
+	if convertError != nil {
+		return convertError
+	}
+
+	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
+
+	client, clientError := sql.NewSqlClient(databaseConfig)
+	if clientError != nil {
+		fmt.Printf("Error: %v\n", clientError.Error())
+		return clientError
+	}
+
+	return client.Insert(databaseConfig.Sql.Database, databaseConfig.Sql.Table, sqlElement)
+
+}
+
 func (c *Core) CreateOrganization(namespace string, configuration Configuration) error {
 
 	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(namespace)
