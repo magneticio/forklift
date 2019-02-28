@@ -30,13 +30,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// environmentCmd represents the environment command
-var environmentCmd = &cobra.Command{
-	Use:   "environment",
-	Short: "Create a new environment",
-	Long: AddAppName(`Create a new environment
+// updateorganizationCmd represents the organization command
+var updateorganizationCmd = &cobra.Command{
+	Use:   "organization",
+	Short: "Update a new organization",
+	Long: AddAppName(`Update a new organization
     Example:
-    $AppName create environment env1 --organization org --configuration ./somepath.json`),
+    $AppName update organization org1 --configuration ./somepath.json`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -44,8 +44,7 @@ var environmentCmd = &cobra.Command{
 			return errors.New("Not Enough Arguments, Organization Name needed.")
 		}
 		name := args[0]
-		namespaced := Config.Namespace + "-" + organization + "-" + name
-		namespacedOrganization := Config.Namespace + "-" + organization
+		namespaced := Config.Namespace + "-" + name
 
 		configBtye, readErr := util.UseSourceUrl(configPath) // just pass the file name
 		if readErr != nil {
@@ -68,38 +67,19 @@ var environmentCmd = &cobra.Command{
 		if coreError != nil {
 			return coreError
 		}
-		params := []string{}
-		if artficatsPath != "" {
-			artifacts, artifactsReadError := util.ReadFilesIndirectory(artficatsPath)
-			if artifactsReadError != nil && artficatsPath != "" {
-				return artifactsReadError
-			}
-			for file, content := range artifacts {
-				fmt.Printf("Using file as artifact %v\n", file)
-				contentJson, jsonError := util.Convert("yaml", "json", content)
-				if jsonError != nil {
-					return jsonError
-				}
-				params = append(params, contentJson)
-			}
-		}
-		createOrganizationError := core.CreateEnvironment(namespaced, namespacedOrganization, params, vampConfig)
+		createOrganizationError := core.UpdateOrganization(namespaced, vampConfig)
 		if createOrganizationError != nil {
 			return createOrganizationError
 		}
-		fmt.Printf("Environment %v is created\n", name)
+		fmt.Printf("Organization %v is created\n", name)
 		return nil
 	},
 }
 
 func init() {
-	createCmd.AddCommand(environmentCmd)
+	updateCmd.AddCommand(updateorganizationCmd)
 
-	environmentCmd.Flags().StringVarP(&configPath, "configuration", "", "", "Environment configuration file path")
-	environmentCmd.MarkFlagRequired("configuration")
-	environmentCmd.Flags().StringVarP(&configFileType, "input", "i", "yaml", "Configuration file type yaml or json")
-	environmentCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the environment")
-	environmentCmd.MarkFlagRequired("organization")
-	environmentCmd.Flags().StringVarP(&artficatsPath, "artifacts", "", "", "Path to the folder containing artifacts")
-
+	updateorganizationCmd.Flags().StringVarP(&configPath, "configuration", "", "", "Organization configuration file path")
+	updateorganizationCmd.MarkFlagRequired("configuration")
+	updateorganizationCmd.Flags().StringVarP(&configFileType, "input", "i", "yaml", "Configuration file type yaml or json")
 }
