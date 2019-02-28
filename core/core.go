@@ -215,6 +215,34 @@ func (c *Core) GetNamespaceKeyValueStoreConfiguration(namespace string) *models.
 	}
 }
 
+func (c *Core) DeleteOrganization(namespace string) error {
+	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(namespace)
+	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
+	if keyValueStoreClientError != nil {
+		return keyValueStoreClientError
+	}
+	key := keyValueStoreConfig.BasePath + "/configuration/applied"
+	keyValueStoreClientPutError := keyValueStoreClient.Delete(key)
+	if keyValueStoreClientPutError != nil {
+		return keyValueStoreClientPutError
+	}
+	return nil
+}
+
+func (c *Core) DeleteEnvironment(namespace string) error {
+	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(namespace)
+	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
+	if keyValueStoreClientError != nil {
+		return keyValueStoreClientError
+	}
+	key := keyValueStoreConfig.BasePath + "/configuration/applied"
+	keyValueStoreClientPutError := keyValueStoreClient.Delete(key)
+	if keyValueStoreClientPutError != nil {
+		return keyValueStoreClientPutError
+	}
+	return nil
+}
+
 func Namespaced(namespace string, text string) string {
 	return strings.Replace(text, "${namespace}", namespace, -1)
 }

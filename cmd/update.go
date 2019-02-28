@@ -21,6 +21,8 @@
 package cmd
 
 import (
+	"errors"
+
 	"github.com/spf13/cobra"
 )
 
@@ -33,7 +35,8 @@ var updateCmd = &cobra.Command{
     $AppName update organization organization1`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return errors.New("A resource type expected.")
 	},
 }
 

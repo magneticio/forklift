@@ -22,24 +22,44 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 
+	"github.com/magneticio/forklift/core"
 	"github.com/spf13/cobra"
 )
 
-// listCmd represents the list command
-var listCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List an organization or environment",
-	Long: AddAppName(`List an organization or environment
+// deleteenvironmentCmd represents the deleteenvironment command
+var deleteenvironmentCmd = &cobra.Command{
+	Use:   "environment",
+	Short: "Delete an environment",
+	Long: AddAppName(`Delete an environment
     Example:
-    $AppName create organization organization1`),
-	SilenceUsage:  true,
-	SilenceErrors: true,
+    $AppName delete environment environment1`),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return errors.New("A resource type expected.")
+		if len(args) < 1 {
+			return errors.New("Not Enough Arguments, Environment Name needed.")
+		}
+		name := args[0]
+		namespacedOrganization := Config.Namespace + "-" + organization
+		namespacedEnvironment := namespacedOrganization + "-" + name
+		coreConfig := core.Configuration{
+			VampConfiguration: Config.VampConfiguration,
+		}
+		core, coreError := core.NewCore(coreConfig)
+		if coreError != nil {
+			return coreError
+		}
+		deleteError := core.DeleteEnvironment(namespacedEnvironment)
+		if deleteError != nil {
+			return deleteError
+		}
+		fmt.Printf("Environment %v deleted.\n", name)
+		return nil
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(listCmd)
+	deleteCmd.AddCommand(deleteenvironmentCmd)
+	deleteenvironmentCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the environment")
+	deleteenvironmentCmd.MarkFlagRequired("organization")
 }
