@@ -259,9 +259,10 @@ func UUID() string {
 }
 
 func Timestamp() string {
-	// example: "2019-02-05T13:19:06.978Z"
-	// TODO: fix the format
-	return time.Now().String()
+
+	t := time.Now()
+
+	return t.Format("2006-01-02T15:04:05.000Z")
 }
 
 func EncodeString(value string, algorithm string, salt string) string {
