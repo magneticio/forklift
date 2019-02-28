@@ -30,13 +30,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// environmentCmd represents the environment command
-var environmentCmd = &cobra.Command{
+// updateenvironmentCmd represents the environment command
+var updateenvironmentCmd = &cobra.Command{
 	Use:   "environment",
-	Short: "Create a new environment",
-	Long: AddAppName(`Create a new environment
+	Short: "Update a new environment",
+	Long: AddAppName(`Update a new environment
     Example:
-    $AppName create environment env1 --organization org --configuration ./somepath.json`),
+    $AppName update environment env1 --organization org --configuration ./somepath.json`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -83,7 +83,7 @@ var environmentCmd = &cobra.Command{
 				params = append(params, contentJson)
 			}
 		}
-		createOrganizationError := core.CreateEnvironment(namespaced, namespacedOrganization, params, vampConfig)
+		createOrganizationError := core.UpdateEnvironment(namespaced, namespacedOrganization, params, vampConfig)
 		if createOrganizationError != nil {
 			return createOrganizationError
 		}
@@ -93,13 +93,13 @@ var environmentCmd = &cobra.Command{
 }
 
 func init() {
-	createCmd.AddCommand(environmentCmd)
+	updateCmd.AddCommand(updateenvironmentCmd)
 
-	environmentCmd.Flags().StringVarP(&configPath, "configuration", "", "", "Environment configuration file path")
-	environmentCmd.MarkFlagRequired("configuration")
-	environmentCmd.Flags().StringVarP(&configFileType, "input", "i", "yaml", "Configuration file type yaml or json")
-	environmentCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the environment")
-	environmentCmd.MarkFlagRequired("organization")
-	environmentCmd.Flags().StringVarP(&artficatsPath, "artifacts", "", "", "Path to the folder containing artifacts")
+	updateenvironmentCmd.Flags().StringVarP(&configPath, "configuration", "", "", "Environment configuration file path")
+	updateenvironmentCmd.MarkFlagRequired("configuration")
+	updateenvironmentCmd.Flags().StringVarP(&configFileType, "input", "i", "yaml", "Configuration file type yaml or json")
+	updateenvironmentCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the environment")
+	updateenvironmentCmd.MarkFlagRequired("organization")
+	updateenvironmentCmd.Flags().StringVarP(&artficatsPath, "artifacts", "", "", "Path to the folder containing artifacts")
 
 }

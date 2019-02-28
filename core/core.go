@@ -94,21 +94,9 @@ func (c *Core) AddAdmin(namespace string, admin string) error {
 }
 
 func (c *Core) CreateOrganization(namespace string, configuration Configuration) error {
-
-	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(namespace)
-	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
-	if keyValueStoreClientError != nil {
-		return keyValueStoreClientError
-	}
-	key := keyValueStoreConfig.BasePath + "/configuration/applied"
-	value, jsonMarshallError := json.Marshal(configuration)
-	if jsonMarshallError != nil {
-		return jsonMarshallError
-	}
-	// fmt.Printf("Vault store at key: %v\n", key)
-	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, string(value))
-	if keyValueStoreClientPutError != nil {
-		return keyValueStoreClientPutError
+	putConfigError := c.putConfig(namespace, configuration)
+	if putConfigError != nil {
+		return putConfigError
 	}
 
 	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
@@ -121,6 +109,10 @@ func (c *Core) CreateOrganization(namespace string, configuration Configuration)
 
 	return client.SetupOrganization(databaseConfig.Sql.Database, databaseConfig.Sql.Table)
 
+}
+
+func (c *Core) UpdateOrganization(namespace string, configuration Configuration) error {
+	return c.putConfig(namespace, configuration)
 }
 
 func (c *Core) ListOrganizations(baseNamespace string) ([]string, error) {
@@ -183,21 +175,9 @@ func (c *Core) ListEnvironments(baseNamespace string, organization string) ([]st
 }
 
 func (c *Core) CreateEnvironment(namespace string, organization string, elements []string, configuration Configuration) error {
-
-	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(namespace)
-	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
-	if keyValueStoreClientError != nil {
-		return keyValueStoreClientError
-	}
-	key := keyValueStoreConfig.BasePath + "/configuration/applied"
-	value, jsonMarshallError := json.Marshal(configuration)
-	if jsonMarshallError != nil {
-		return jsonMarshallError
-	}
-	// fmt.Printf("Vault store at key: %v\n", key)
-	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, string(value))
-	if keyValueStoreClientPutError != nil {
-		return keyValueStoreClientPutError
+	putConfigError := c.putConfig(namespace, configuration)
+	if putConfigError != nil {
+		return putConfigError
 	}
 
 	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
@@ -225,20 +205,9 @@ func (c *Core) CreateEnvironment(namespace string, organization string, elements
 
 func (c *Core) UpdateEnvironment(namespace string, organization string, elements []string, configuration Configuration) error {
 
-	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(namespace)
-	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
-	if keyValueStoreClientError != nil {
-		return keyValueStoreClientError
-	}
-	key := keyValueStoreConfig.BasePath + "/configuration/applied"
-	value, jsonMarshallError := json.Marshal(configuration)
-	if jsonMarshallError != nil {
-		return jsonMarshallError
-	}
-	// fmt.Printf("Vault store at key: %v\n", key)
-	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, string(value))
-	if keyValueStoreClientPutError != nil {
-		return keyValueStoreClientPutError
+	putConfigError := c.putConfig(namespace, configuration)
+	if putConfigError != nil {
+		return putConfigError
 	}
 
 	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
@@ -283,20 +252,32 @@ func (c *Core) GetNamespaceKeyValueStoreConfiguration(namespace string) *models.
 }
 
 func (c *Core) DeleteOrganization(namespace string) error {
+	return c.deleteConfig(namespace)
+}
+
+func (c *Core) DeleteEnvironment(namespace string) error {
+	return c.deleteConfig(namespace)
+}
+
+func (c *Core) putConfig(namespace string, configuration Configuration) error {
 	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(namespace)
 	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
 	if keyValueStoreClientError != nil {
 		return keyValueStoreClientError
 	}
 	key := keyValueStoreConfig.BasePath + "/configuration/applied"
-	keyValueStoreClientPutError := keyValueStoreClient.Delete(key)
+	value, jsonMarshallError := json.Marshal(configuration)
+	if jsonMarshallError != nil {
+		return jsonMarshallError
+	}
+	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, string(value))
 	if keyValueStoreClientPutError != nil {
 		return keyValueStoreClientPutError
 	}
 	return nil
 }
 
-func (c *Core) DeleteEnvironment(namespace string) error {
+func (c *Core) deleteConfig(namespace string) error {
 	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(namespace)
 	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
 	if keyValueStoreClientError != nil {
