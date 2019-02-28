@@ -48,7 +48,6 @@ var environmentCmd = &cobra.Command{
 		name := args[0]
 		namespaced := Config.Namespace + "-" + organization + "-" + name
 		namespacedOrganization := Config.Namespace + "-" + organization
-		fmt.Printf("name: %v , configPath: %v , configFileType %v\n", namespaced, configPath, configFileType)
 
 		configBtye, readErr := util.UseSourceUrl(configPath) // just pass the file name
 		if readErr != nil {

@@ -22,24 +22,43 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 
+	"github.com/magneticio/forklift/core"
 	"github.com/spf13/cobra"
 )
 
-// listCmd represents the list command
-var listCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List an organization or environment",
-	Long: AddAppName(`List an organization or environment
+// deleteorganizationCmd represents the deleteorganization command
+var deleteorganizationCmd = &cobra.Command{
+	Use:   "organization",
+	Short: "Delete an organization",
+	Long: AddAppName(`Delete an organizaton
     Example:
-    $AppName create organization organization1`),
+    $AppName delete organizaton organization1`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return errors.New("A resource type expected.")
+		if len(args) < 1 {
+			return errors.New("Not Enough Arguments, Organization Name needed.")
+		}
+		name := args[0]
+		namespacedOrganization := Config.Namespace + "-" + name
+		coreConfig := core.Configuration{
+			VampConfiguration: Config.VampConfiguration,
+		}
+		core, coreError := core.NewCore(coreConfig)
+		if coreError != nil {
+			return coreError
+		}
+		deleteError := core.DeleteOrganization(namespacedOrganization)
+		if deleteError != nil {
+			return deleteError
+		}
+		fmt.Printf("Organization %v deleted.\n", name)
+		return nil
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(listCmd)
+	deleteCmd.AddCommand(deleteorganizationCmd)
 }
