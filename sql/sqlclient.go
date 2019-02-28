@@ -51,7 +51,7 @@ func NewSqlClient(config models.Database) (SqlClient, error) {
 
 		return sqlClient, nil
 	}
-	return nil, errors.New("Unsupported Key Value Store Client: " + config.Type)
+	return nil, errors.New("Unsupported Sql Client: " + config.Type)
 }
 
 func NewMySqlClient(user string, password string, host string, dbName string) (*MySqlClient, error) {
