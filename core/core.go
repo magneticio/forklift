@@ -103,7 +103,7 @@ func (c *Core) DeleteAdmin(namespace string, admin string) error {
 		return clientError
 	}
 
-	return client.DeleteByName(databaseConfig.Sql.Database, databaseConfig.Sql.Table, admin)
+	return client.DeleteByNameAndKind(databaseConfig.Sql.Database, databaseConfig.Sql.Table, admin, "admin") //TODO admin should be a constant
 
 }
 

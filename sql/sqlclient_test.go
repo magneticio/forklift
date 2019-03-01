@@ -371,7 +371,7 @@ func TestDelete(t *testing.T) {
 
 }
 
-func TestDeleteByName(t *testing.T) {
+func TestDeleteByNameAndKind(t *testing.T) {
 
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -393,13 +393,13 @@ func TestDeleteByName(t *testing.T) {
 		ExpectExec(useDbStatement).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	deleteStatement := "DELETE FROM `organization` WHERE Record LIKE '%\"name\":\"name\"%'"
+	deleteStatement := "DELETE FROM `organization` WHERE Record LIKE '%\"name\":\"name\"%' AND '%\"kind\":\"admin\"%'"
 
 	mock.ExpectPrepare(deleteStatement).
 		ExpectExec().
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	deleteError := client.DeleteByName("testdb", "organization", "name")
+	deleteError := client.DeleteByNameAndKind("testdb", "organization", "name", "admin")
 
 	assert.Nil(t, deleteError, fmt.Sprintf("Delete resulted in error %v \n", deleteError))
 
