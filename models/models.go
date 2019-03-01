@@ -183,12 +183,12 @@ type KeyValueStoreConfiguration struct {
 }
 
 type SqlElement struct {
-	Version    string `yaml:"version,omitempty" json:"version,omitempty"`
-	Instance   string `yaml:"instance,omitempty" json:"instance,omitempty"`
-	Timestance string `yaml:"timestamap,omitempty" json:"timestamap,omitempty"`
-	Name       string `yaml:"name,omitempty" json:"name,omitempty"`
-	Kind       string `yaml:"kind,omitempty" json:"kind,omitempty"`
-	Artifact   string `yaml:"artifact,omitempty" json:"artifact,omitempty"`
+	Version   string `yaml:"version,omitempty" json:"version,omitempty"`
+	Instance  string `yaml:"instance,omitempty" json:"instance,omitempty"`
+	Timestamp string `yaml:"timestamp,omitempty" json:"timestamp,omitempty"`
+	Name      string `yaml:"name,omitempty" json:"name,omitempty"`
+	Kind      string `yaml:"kind,omitempty" json:"kind,omitempty"`
+	Artifact  string `yaml:"artifact,omitempty" json:"artifact,omitempty"`
 }
 
 type Artifact struct {

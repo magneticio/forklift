@@ -29,7 +29,7 @@ func NewCore(conf Configuration) (*Core, error) {
 func (c *Core) CreateAdmin(namespace string, name string, password string) error {
 
 	version := "1.0.4" // TODO: this should be a constant
-	kind := "admin"    // TODO: this should be a constant
+	kind := "users"    // TODO: this should be a constant
 
 	encodedPassword := util.EncodeString(password, c.Conf.VampConfiguration.Security.PasswordHashAlgorithm, c.Conf.VampConfiguration.Security.PasswordHashSalt)
 
@@ -37,6 +37,8 @@ func (c *Core) CreateAdmin(namespace string, name string, password string) error
 		Name:     name,
 		Password: encodedPassword,
 		Kind:     kind,
+		Roles:    []string{"admin"},
+		Metadata: map[string]string{},
 	}
 
 	artifactAsJson, artifactJsonError := json.Marshal(artifact)
@@ -47,12 +49,12 @@ func (c *Core) CreateAdmin(namespace string, name string, password string) error
 	artifactAsJsonString := string(artifactAsJson)
 
 	sqlElement := models.SqlElement{
-		Version:    version,
-		Instance:   util.UUID(),
-		Timestance: util.Timestamp(),
-		Name:       name,
-		Kind:       kind,
-		Artifact:   artifactAsJsonString,
+		Version:   version,
+		Instance:  util.UUID(),
+		Timestamp: util.Timestamp(),
+		Name:      name,
+		Kind:      kind,
+		Artifact:  artifactAsJsonString,
 	}
 
 	sqlElementAsJson, sqlElementJsonError := json.Marshal(sqlElement)
@@ -103,7 +105,7 @@ func (c *Core) DeleteAdmin(namespace string, admin string) error {
 		return clientError
 	}
 
-	return client.DeleteByNameAndKind(databaseConfig.Sql.Database, databaseConfig.Sql.Table, admin, "admin") //TODO admin should be a constant
+	return client.DeleteByNameAndKind(databaseConfig.Sql.Database, databaseConfig.Sql.Table, admin, "users") //TODO admin should be a constant
 
 }
 
@@ -317,12 +319,12 @@ func ConvertToSqlElement(artifactAsJsonString string) (string, error) {
 	}
 	version := "1.0.4" // TODO: this should be a constant
 	sqlElement := models.SqlElement{
-		Version:    version,
-		Instance:   util.UUID(),
-		Timestance: util.Timestamp(),
-		Name:       artifact.Name,
-		Kind:       artifact.Kind,
-		Artifact:   artifactAsJsonString,
+		Version:   version,
+		Instance:  util.UUID(),
+		Timestamp: util.Timestamp(),
+		Name:      artifact.Name,
+		Kind:      artifact.Kind,
+		Artifact:  artifactAsJsonString,
 	}
 	sqlElementString, jsonMarshallError := json.Marshal(sqlElement)
 	if jsonMarshallError != nil {
