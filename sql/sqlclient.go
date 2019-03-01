@@ -337,7 +337,7 @@ func (client *MySqlClient) DeleteByNameAndKind(dbName string, tableName string, 
 		return useDbErr
 	}
 
-	stmtIns, err := client.Db.Prepare("DELETE FROM `" + tableName + "` WHERE Record LIKE '%\"name\":\"" + name + "\"%' AND '%\"kind\":\"" + kind + "\"%'")
+	stmtIns, err := client.Db.Prepare("DELETE FROM `" + tableName + "` WHERE Record LIKE '%\"name\":\"" + name + "\"%' AND Record LIKE '%\"kind\":\"" + kind + "\"%'")
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
 		return err
