@@ -93,6 +93,20 @@ func (c *Core) AddAdmin(namespace string, admin string) error {
 
 }
 
+func (c *Core) DeleteAdmin(namespace string, admin string) error {
+
+	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
+
+	client, clientError := sql.NewSqlClient(databaseConfig)
+	if clientError != nil {
+		fmt.Printf("Error: %v\n", clientError.Error())
+		return clientError
+	}
+
+	return client.DeleteByNameAndKind(databaseConfig.Sql.Database, databaseConfig.Sql.Table, admin, "admin") //TODO admin should be a constant
+
+}
+
 func (c *Core) CreateOrganization(namespace string, configuration Configuration) error {
 	putConfigError := c.putConfig(namespace, configuration)
 	if putConfigError != nil {

@@ -25,27 +25,26 @@ import (
 	"fmt"
 
 	"github.com/magneticio/forklift/core"
-	"github.com/magneticio/forklift/util"
 	"github.com/spf13/cobra"
 )
 
 // adminCmd represents the admin command
-var createAdminCmd = &cobra.Command{
+var deleteAdminCmd = &cobra.Command{
 	Use:   "admin",
-	Short: "Create a new admin",
-	Long: AddAppName(`Create a new admin
+	Short: "Delete an admin",
+	Long: AddAppName(`Delete an admin
     Example:
-    $AppName create admin name --organization org`),
+    $AppName delete admin name --organization org`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
-			return errors.New("Not Enough Arguments, Organization Name needed.")
+			return errors.New("Not Enough Arguments, Admin Name needed.")
 		}
 		name := args[0]
 
 		namespaced := Config.Namespace + "-" + organization
-		fmt.Printf("name: %v , organization %v configPath: %v , configFileType %v\n", name, namespaced, configPath, configFileType)
+		fmt.Printf("name: %v , configPath: %v\n", name, namespaced)
 
 		coreConfig := core.Configuration{
 			VampConfiguration: Config.VampConfiguration,
@@ -55,32 +54,20 @@ var createAdminCmd = &cobra.Command{
 			return coreError
 		}
 
-		passwd, passwdError := util.GetParameterFromTerminalAsSecret(
-			"Enter your password (password will not be visible):",
-			"Enter your password again (password will not be visible):",
-			"Passwords do not match.")
-		if passwdError != nil {
-			return passwdError
+		deleteAdminError := core.DeleteAdmin(namespaced, name)
+		if deleteAdminError != nil {
+			return deleteAdminError
 		}
-
-		if len(passwd) < 6 {
-			return errors.New("Password should be 6 or more characters")
-		}
-
-		createAdminError := core.CreateAdmin(namespaced, name, passwd)
-		if createAdminError != nil {
-			return createAdminError
-		}
-		fmt.Printf("Admin is created\n")
+		fmt.Printf("Admin is deleted\n")
 
 		return nil
 	},
 }
 
 func init() {
-	createCmd.AddCommand(createAdminCmd)
+	deleteCmd.AddCommand(deleteAdminCmd)
 
-	createAdminCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the environment")
-	createAdminCmd.MarkFlagRequired("organization")
+	deleteAdminCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the environment")
+	deleteAdminCmd.MarkFlagRequired("organization")
 
 }

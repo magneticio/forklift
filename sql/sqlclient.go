@@ -19,6 +19,7 @@ type SqlClient interface {
 	List(dbName string, tableName string) ([]Organization, error)
 	Update(dbName string, tableName string, id int, record string) error
 	Delete(dbName string, tableName string, id int) error
+	DeleteByNameAndKind(dbName string, tableName string, name string, kind string) error
 	Close() error
 }
 
@@ -320,6 +321,31 @@ func (client *MySqlClient) Update(dbName string, tableName string, id int, recor
 	defer stmtIns.Close()
 
 	_, err = stmtIns.Exec(record, id)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (client *MySqlClient) DeleteByNameAndKind(dbName string, tableName string, name string, kind string) error {
+
+	_, useDbErr := client.Db.Exec("USE `" + dbName + "`")
+	if useDbErr != nil {
+		fmt.Printf("Error: %v\n", useDbErr.Error())
+		return useDbErr
+	}
+
+	stmtIns, err := client.Db.Prepare("DELETE FROM `" + tableName + "` WHERE Record LIKE '%\"name\":\"" + name + "\"%' AND '%\"kind\":\"" + kind + "\"%'")
+	if err != nil {
+		fmt.Printf("Error: %v\n", err.Error())
+		return err
+	}
+
+	defer stmtIns.Close()
+
+	_, err = stmtIns.Exec()
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
 		return err
