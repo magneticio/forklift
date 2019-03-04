@@ -16,8 +16,8 @@ func TestReadFilesIndirectory(t *testing.T) {
 			fmt.Printf("File :%v size: %v\n", file, len(content))
 		}
 	*/
-	assert.Equal(t, 1762, len(contents["../resources/artifacts/breeds/quantification.yml"]))
-	assert.Equal(t, 395, len(contents["../resources/artifacts/workflows/quantification.yml"]))
+	assert.Equal(t, 1761, len(contents["../resources/artifacts/breeds/quantification.yml"]))
+	assert.Equal(t, 194, len(contents["../resources/artifacts/workflows/quantification.yml"]))
 
 }
 
