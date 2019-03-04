@@ -104,13 +104,12 @@ type Lifter struct {
 type ContainerDriver struct {
 	Type       string     `yaml:"type,omitempty" json:"type,omitempty"`
 	Kubernetes Kubernetes `yaml:"kubernetes,omitempty" json:"kubernetes,omitempty"`
-	TlsCheck   bool       `yaml:"tls-check" json:"tls-check"`
 }
 
 type Kubernetes struct {
 	Url                string `yaml:"url,omitempty" json:"url,omitempty"`
 	VampGatewayAgentId string `yaml:"vamp-gateway-agent-id,omitempty" json:"vamp-gateway-agent-id,omitempty"`
-	TlsCheck           bool   `yaml:"tls-check,omitempty" json:"tls-check,omitempty"`
+	TlsCheck           bool   `yaml:"tls-check" json:"tls-check"`
 }
 
 type Database struct {
