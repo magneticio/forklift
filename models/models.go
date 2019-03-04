@@ -10,6 +10,8 @@ type VampConfiguration struct {
 	Lifter          Lifter          `yaml:"lifter,omitempty" json:"lifter,omitempty"`
 	GatewayDriver   GatewayDriver   `yaml:"gateway-driver,omitempty" json:"gateway-driver,omitempty"`
 	WorkflowDriver  WorkflowDriver  `yaml:"workflow-driver,omitempty" json:"workflow-driver,omitempty"`
+	Operation       Operation       `yaml:"operation,omitempty" json:"operation,omitempty"`
+	Namespace       string          `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 }
 
 type WorkflowDriver struct {
@@ -31,10 +33,13 @@ type Workflow struct {
 }
 
 type Operation struct {
+	Synchronization Synchronization `yaml:"synchronization,omitempty" json:"synchronization,omitempty"`
+	Deployment      Deployment      `yaml:"deployment,omitempty" json:"deployment,omitempty"`
+	Gateway         Gateway         `yaml:"gateway,omitempty" json:"gateway,omitempty"`
 }
 
 type Synchronization struct {
-	Period     int                       `yaml:"period,omitempty" json:"period,omitempty"`
+	Period     string                    `yaml:"period,omitempty" json:"period,omitempty"`
 	Check      Check                     `yaml:"check,omitempty" json:"check,omitempty"`
 	Deployment SynchronizationDeployment `yaml:"deployment,omitempty" json:"deployment,omitempty"`
 }
@@ -50,12 +55,12 @@ type Check struct {
 }
 
 type SynchronizationDeployment struct {
-	RefetchBreedOnUpdate string `yaml:"refetch-breed-on-update,omitempty" json:"refetch-breed-on-update,omitempty"`
+	RefetchBreedOnUpdate bool `yaml:"refetch-breed-on-update,omitempty" json:"refetch-breed-on-update,omitempty"`
 }
 
 type Deployment struct {
 	Scale     Scale    `yaml:"scale,omitempty" json:"scale,omitempty"`
-	Arguments []string `yaml:"arguments,omitempty" json:"arguments,omitempty"`
+	Arguments []string `yaml:"arguments" json:"arguments"`
 }
 
 type Scale struct {
@@ -79,10 +84,10 @@ type Deployable struct {
 }
 
 type GatewayDriver struct {
-	Marshallers []Marshaller `yaml:"marshaller,omitempty" json:"marshaller,omitempty"`
+	Marshallers []Marshallers `yaml:"marshallers,omitempty" json:"marshallers,omitempty"`
 }
 
-type Marshaller struct {
+type Marshallers struct {
 	Type     string   `yaml:"type,omitempty" json:"type,omitempty"`
 	Name     string   `yaml:"name,omitempty" json:"name,omitempty"`
 	Template Template `yaml:"template,omitempty" json:"template,omitempty"`
@@ -99,6 +104,7 @@ type Lifter struct {
 type ContainerDriver struct {
 	Type       string     `yaml:"type,omitempty" json:"type,omitempty"`
 	Kubernetes Kubernetes `yaml:"kubernetes,omitempty" json:"kubernetes,omitempty"`
+	TlsCheck   bool       `yaml:"tls-check" json:"tls-check"`
 }
 
 type Kubernetes struct {
@@ -115,7 +121,7 @@ type Database struct {
 type Persistence struct {
 	Database      Database                   `yaml:"database,omitempty" json:"database,omitempty"`
 	KeyValueStore KeyValueStoreConfiguration `yaml:"key-value-store,omitempty" json:"key-value-store,omitempty"`
-	Transformers  Transformers               `yaml:"transformers,omitempty" json:"transformers,omitempty"`
+	Transformers  Transformers               `yaml:"transformers" json:"transformers"`
 }
 
 type Resolvers struct {
@@ -125,7 +131,7 @@ type Resolvers struct {
 }
 
 type Transformers struct {
-	Classes []string `yaml:"classes,omitempty" json:"classes,omitempty"`
+	Classes []string `yaml:"classes" json:"classes"`
 }
 
 type Model struct {
