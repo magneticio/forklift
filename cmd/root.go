@@ -90,7 +90,7 @@ func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.forklift.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.forklift/config.yaml)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -123,7 +123,7 @@ func initConfig() {
 		}
 
 		viper.AddConfigPath(path)
-		viper.SetConfigName(".forklift")
+		viper.SetConfigName("config")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
@@ -141,5 +141,56 @@ func initConfig() {
 	if unmarshallError != nil {
 		panic(unmarshallError)
 	}
+
+	// TODO: Setup Defaults for Config
+	SetupConfigurationEnvrionmentVariables()
+	// For Checking during development:
 	// fmt.Printf("Config: %v\n", Config)
+}
+
+func SetupConfigurationEnvrionmentVariables() {
+	// VAMP_FORKLIFT_VAULT_ADDR
+	viper.BindEnv("vault_addr", "VAMP_FORKLIFT_VAULT_ADDR")
+	if viper.GetString("vault_addr") != "" {
+		Config.VampConfiguration.Persistence.KeyValueStore.Vault.Url = viper.GetString("vault_addr")
+	}
+	// VAMP_FORKLIFT_VAULT_TOKEN
+	viper.BindEnv("vault_token", "VAMP_FORKLIFT_VAULT_TOKEN")
+	if viper.GetString("vault_token") != "" {
+		Config.VampConfiguration.Persistence.KeyValueStore.Vault.Token = viper.GetString("vault_token")
+	}
+	// VAMP_FORKLIFT_VAULT_CACERT
+	viper.BindEnv("vault_cacert", "VAMP_FORKLIFT_VAULT_CACERT")
+	if viper.GetString("vault_cacert") != "" {
+		Config.VampConfiguration.Persistence.KeyValueStore.Vault.ServerTlsCert = viper.GetString("vault_cacert")
+	}
+	// VAMP_FORKLIFT_VAULT_CLIENT_CERT
+	viper.BindEnv("vault_cacert", "VAMP_FORKLIFT_VAULT_CLIENT_CERT")
+	if viper.GetString("vault_client_cert") != "" {
+		Config.VampConfiguration.Persistence.KeyValueStore.Vault.ClientTlsCert = viper.GetString("vault_client_cert")
+	}
+	// VAMP_FORKLIFT_VAULT_CLIENT_KEY
+	viper.BindEnv("vault_client_key", "VAMP_FORKLIFT_VAULT_CLIENT_KEY")
+	if viper.GetString("vault_client_key") != "" {
+		Config.VampConfiguration.Persistence.KeyValueStore.Vault.ClientTlsKey = viper.GetString("vault_client_key")
+	}
+
+	// VAMP_FORKLIFT_MYSQL_HOST - for example: mysql://<VAMP_FORKLIFT_MYSQL_HOST>/vamp-${namespace}?useSSL=false
+	viper.BindEnv("mysql_host", "VAMP_FORKLIFT_MYSQL_HOST")
+	if viper.GetString("mysql_host") != "" {
+		url := "mysql://" + viper.GetString("mysql_host") + "/vamp-${namespace}?useSSL=false"
+		Config.VampConfiguration.Persistence.Database.Sql.Url = url
+		databaseServerUrl := "mysql://" + viper.GetString("mysql_host") + "?useSSL=false"
+		Config.VampConfiguration.Persistence.Database.Sql.DatabaseServerUrl = databaseServerUrl
+	}
+	// VAMP_FORKLIFT_MYSQL_USER
+	viper.BindEnv("mysql_user", "VAMP_FORKLIFT_MYSQL_USER")
+	if viper.GetString("mysql_user") != "" {
+		Config.VampConfiguration.Persistence.Database.Sql.User = viper.GetString("mysql_user")
+	}
+	// VAMP_FORKLIFT_MYSQL_PASSWORD
+	viper.BindEnv("mysql_password", "VAMP_FORKLIFT_MYSQL_PASSWORD")
+	if viper.GetString("mysql_password") != "" {
+		Config.VampConfiguration.Persistence.Database.Sql.Password = viper.GetString("mysql_password")
+	}
 }
