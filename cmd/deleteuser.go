@@ -28,13 +28,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// adminCmd represents the admin command
-var deleteAdminCmd = &cobra.Command{
-	Use:   "admin",
-	Short: "Delete an admin",
-	Long: AddAppName(`Delete an admin
+var deleteUserCmd = &cobra.Command{
+	Use:   "user",
+	Short: "Delete a user",
+	Long: AddAppName(`Delete a user
     Example:
-    $AppName delete admin name --organization org`),
+    $AppName delete user name --organization org`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -54,20 +53,20 @@ var deleteAdminCmd = &cobra.Command{
 			return coreError
 		}
 
-		deleteAdminError := core.DeleteAdmin(namespaced, name)
-		if deleteAdminError != nil {
-			return deleteAdminError
+		deleteUserError := core.DeleteUser(namespaced, name)
+		if deleteUserError != nil {
+			return deleteUserError
 		}
-		fmt.Printf("Admin is deleted\n")
+		fmt.Printf("User is deleted\n")
 
 		return nil
 	},
 }
 
 func init() {
-	deleteCmd.AddCommand(deleteAdminCmd)
+	deleteCmd.AddCommand(deleteUserCmd)
 
-	deleteAdminCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the environment")
-	deleteAdminCmd.MarkFlagRequired("organization")
+	deleteUserCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the environment")
+	deleteUserCmd.MarkFlagRequired("organization")
 
 }

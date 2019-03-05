@@ -29,23 +29,22 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// adminCmd represents the admin command
-var createAdminCmd = &cobra.Command{
-	Use:   "admin",
-	Short: "Create a new admin",
-	Long: AddAppName(`Create a new admin
+var createUserCmd = &cobra.Command{
+	Use:   "user",
+	Short: "Create a new user",
+	Long: AddAppName(`Create a new user
     Example:
-    $AppName create admin name --organization org`),
+    $AppName create user name --role r --organization org`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
-			return errors.New("Not Enough Arguments, Organization Name needed.")
+			return errors.New("Not Enough Arguments, User Name needed.")
 		}
 		name := args[0]
 
 		namespaced := Config.Namespace + "-" + organization
-		fmt.Printf("name: %v , organization %v configPath: %v , configFileType %v\n", name, namespaced, configPath, configFileType)
+		fmt.Printf("name: %v, role: %v, organization %v configPath: %v , configFileType %v\n", name, role, namespaced, configPath, configFileType)
 
 		coreConfig := core.Configuration{
 			VampConfiguration: Config.VampConfiguration,
@@ -67,20 +66,22 @@ var createAdminCmd = &cobra.Command{
 			return errors.New("Password should be 6 or more characters")
 		}
 
-		createAdminError := core.CreateAdmin(namespaced, name, passwd)
-		if createAdminError != nil {
-			return createAdminError
+		createUserError := core.CreateUser(namespaced, name, role, passwd)
+		if createUserError != nil {
+			return createUserError
 		}
-		fmt.Printf("Admin is created\n")
+		fmt.Printf("User is created\n")
 
 		return nil
 	},
 }
 
 func init() {
-	createCmd.AddCommand(createAdminCmd)
+	createCmd.AddCommand(createUserCmd)
 
-	createAdminCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the environment")
-	createAdminCmd.MarkFlagRequired("organization")
+	createUserCmd.Flags().StringVarP(&role, "role", "", "", "Role of the admin")
+	createUserCmd.MarkFlagRequired("role")
+	createUserCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the environment")
+	createUserCmd.MarkFlagRequired("organization")
 
 }

@@ -191,48 +191,37 @@ and delete them with
 forklift delete organization organization-name
 ```
 
-### Admins
+### Users
 
-Through Forklift it is also possible to create Admins for each Organization.
-Admins can be created interactively by running the following command:
-
-```shell
-forklift create admin admin-name --organization organization-name
-```
-
-Upon running the command you will be asked to input a new password twice, taking care to use at least six characters, before the admin will be created.
-It is also possible to create admins not interactively by running:
+Through Forklift it is also possible to create Users for each Organization.
+Users can be created interactively by running the following command whcih specifies the user name, role and organization of belonging.
 
 ```shell
-forklift add admin --organization organization-name --configuration ./admin-configuration.json
+forklift create user user-name --role admin --organization organization-name
 ```
 
-Where admin-configuration.json is a file specifying the admin configuration and should look like this:
+Upon running the command you will be asked to input a new password twice, taking care to use at least six characters, before the user will be created.
+It is also possible to create users not interactively by running:
+
+```shell
+forklift add user --organization organization-name --configuration ./user-configuration.json
+```
+
+Where user-configuration.json is a file specifying the user configuration and should look like this:
 
 ```
 {
-  "name": "admin-name",
-  "password":"admin-password",
-  "kind":"admin"
+  "name": "user-name",
+  "password":"user-password",
+  "kind":"users",
+  "roles":["user-role"]
 }
 ```
 
-Once created, you can list Admins by running
+Once created, you can delete Users by running
 
 ```shell
-forklift list admin --organization organization-name
-```
-
-update them with
-
-```shell
-forklift update admin admin-name --organization organization-name
-```
-
-and delete them with
-
-```shell
-forklift delete admin admin-name --organization organization-name
+forklift delete user user-name --organization organization-name
 ```
 
 ### Environments
