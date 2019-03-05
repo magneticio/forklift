@@ -23,6 +23,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/magneticio/forklift/models"
@@ -33,7 +34,7 @@ import (
 )
 
 // version should be in format d.d.d where d is a decimal number
-const Version string = "0.0.6"
+const Version string = "0.0.7"
 const AppName string = "forklift"
 
 // Backend version is the version this client is tested with
@@ -109,8 +110,19 @@ func initConfig() {
 			os.Exit(1)
 		}
 
-		// Search config in home directory with name ".forklift" (without extension).
-		viper.AddConfigPath(home)
+		// Search config in home directory with name ".$AppName" (without extension).
+		path := filepath.FromSlash(home + AddAppName("/.$AppName"))
+
+		if _, pathErr := os.Stat(path); os.IsNotExist(pathErr) {
+			// path does not exist
+			err = os.MkdirAll(path, 0755)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+		}
+
+		viper.AddConfigPath(path)
 		viper.SetConfigName(".forklift")
 	}
 
