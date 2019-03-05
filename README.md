@@ -352,7 +352,7 @@ dialects:
 Once created, you can list Environment by running
 
 ```shell
-forklift list environment --organization organization-name
+forklift list environments --organization organization-name
 ```
 
 update them with
