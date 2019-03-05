@@ -189,7 +189,7 @@ type VaultKeyValueStoreConfiguration struct {
 	KvMode            string `yaml:"kv-mode,omitempty" json:"kv-mode,omitempty"`
 	FallbackKvVersion int    `yaml:"fallback-kv-versione,omitempty" json:"fallback-kv-version,omitempty"`
 	ServerTlsCert     string `yaml:"server-tls-cert,omitempty" json:"server-tls-cert,omitempty"`
-	ClientTlsLey      string `yaml:"client-tls-key,omitempty" json:"client-tls-key,omitempty"`
+	ClientTlsKey      string `yaml:"client-tls-key,omitempty" json:"client-tls-key,omitempty"`
 	ClientTlsCert     string `yaml:"client-tls-cert,omitempty" json:"client-tls-cert,omitempty"`
 }
 
