@@ -157,6 +157,13 @@ type Elasticsearch struct {
 type Pulse struct {
 	Type          string        `yaml:"type,omitempty" json:"type,omitempty"`
 	Elasticsearch Elasticsearch `yaml:"elasticsearch,omitempty" json:"elasticsearch,omitempty"`
+	Nats          Nats          `yaml:"nats,omitempty" json:"nats,omitempty"`
+}
+
+type Nats struct {
+	Url       string `yaml:"url,omitempty" json:"url,omitempty"`
+	ClusterID string `yaml:"cluster-id,omitempty" json:"cluster-id,omitempty"`
+	ClientID  string `yaml:"client-id,omitempty" json:"client-id,omitempty"`
 }
 
 type Namespace struct {
@@ -184,13 +191,6 @@ type VaultKeyValueStoreConfiguration struct {
 	ServerTlsCert     string `yaml:"server-tls-cert,omitempty" json:"server-tls-cert,omitempty"`
 	ClientTlsLey      string `yaml:"client-tls-key,omitempty" json:"client-tls-key,omitempty"`
 	ClientTlsCert     string `yaml:"client-tls-cert,omitempty" json:"client-tls-cert,omitempty"`
-	/*
-
-
-		private lazy val serverTlsCert = configString("server-tls-cert")
-		private lazy val clientTlsKey = configString("client-tls-key")
-		private lazy val clientTlsCert = configString("client-tls-cert")
-	*/
 }
 
 type KeyValueStoreConfiguration struct {

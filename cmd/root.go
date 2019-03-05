@@ -33,7 +33,7 @@ import (
 )
 
 // version should be in format d.d.d where d is a decimal number
-const Version string = "0.0.5"
+const Version string = "0.0.6"
 const AppName string = "forklift"
 
 // Backend version is the version this client is tested with
