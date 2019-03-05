@@ -28,19 +28,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// adminCmd represents the admin command
-var addAdminCmd = &cobra.Command{
-	Use:   "admin",
-	Short: "Add a new admin",
-	Long: AddAppName(`Add a new admin
+var addUserCmd = &cobra.Command{
+	Use:   "user",
+	Short: "Add a new user",
+	Long: AddAppName(`Add a new user
     Example:
-    $AppName add admin --organization org --configuration ./somepath.json`),
+    $AppName add user --role r --organization org --configuration ./somepath.json`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		namespaced := Config.Namespace + "-" + organization
-		fmt.Printf("name: %v , configPath: %v , configFileType %v\n", namespaced, configPath, configFileType)
+		fmt.Printf("organization: %v , configPath: %v , configFileType %v\n", namespaced, configPath, configFileType)
 
 		coreConfig := core.Configuration{
 			VampConfiguration: Config.VampConfiguration,
@@ -50,31 +49,31 @@ var addAdminCmd = &cobra.Command{
 			return coreError
 		}
 
-		adminBytes, adminErr := util.UseSourceUrl(configPath) // just pass the file name
-		if adminErr != nil {
-			return adminErr
+		userBytes, userErr := util.UseSourceUrl(configPath) // just pass the file name
+		if userErr != nil {
+			return userErr
 		}
 
-		adminText := string(adminBytes)
+		userText := string(userBytes)
 
-		createAdminError := core.AddAdmin(namespaced, adminText)
-		if createAdminError != nil {
-			return createAdminError
+		createUserError := core.AddUser(namespaced, userText)
+		if createUserError != nil {
+			return createUserError
 		}
-		fmt.Printf("Admin is added\n")
+		fmt.Printf("User is added\n")
 
 		return nil
 	},
 }
 
 func init() {
-	addCmd.AddCommand(addAdminCmd)
+	addCmd.AddCommand(addUserCmd)
 
-	addAdminCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the environment")
-	addAdminCmd.MarkFlagRequired("organization")
+	addUserCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the environment")
+	addUserCmd.MarkFlagRequired("organization")
 
-	addAdminCmd.Flags().StringVarP(&configPath, "configuration", "", "", "Admin configuration file path")
-	addAdminCmd.MarkFlagRequired("configuration")
-	addAdminCmd.Flags().StringVarP(&configFileType, "input", "i", "yaml", "Admin configuration file type yaml or json")
+	addUserCmd.Flags().StringVarP(&configPath, "configuration", "", "", "User configuration file path")
+	addUserCmd.MarkFlagRequired("configuration")
+	addUserCmd.Flags().StringVarP(&configFileType, "input", "i", "yaml", "User configuration file type yaml or json")
 
 }

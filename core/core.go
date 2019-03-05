@@ -26,7 +26,7 @@ func NewCore(conf Configuration) (*Core, error) {
 	}, nil
 }
 
-func (c *Core) CreateAdmin(namespace string, name string, password string) error {
+func (c *Core) CreateUser(namespace string, name string, role string, password string) error {
 
 	version := "1.0.4" // TODO: this should be a constant
 	kind := "users"    // TODO: this should be a constant
@@ -37,7 +37,7 @@ func (c *Core) CreateAdmin(namespace string, name string, password string) error
 		Name:     name,
 		Password: encodedPassword,
 		Kind:     kind,
-		Roles:    []string{"admin"},
+		Roles:    []string{role},
 		Metadata: map[string]string{},
 	}
 
@@ -76,9 +76,9 @@ func (c *Core) CreateAdmin(namespace string, name string, password string) error
 
 }
 
-func (c *Core) AddAdmin(namespace string, admin string) error {
+func (c *Core) AddUser(namespace string, user string) error {
 
-	sqlElement, convertError := ConvertToSqlElement(admin)
+	sqlElement, convertError := ConvertToSqlElement(user)
 	if convertError != nil {
 		return convertError
 	}
@@ -95,7 +95,7 @@ func (c *Core) AddAdmin(namespace string, admin string) error {
 
 }
 
-func (c *Core) DeleteAdmin(namespace string, admin string) error {
+func (c *Core) DeleteUser(namespace string, user string) error {
 
 	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
 
@@ -105,7 +105,7 @@ func (c *Core) DeleteAdmin(namespace string, admin string) error {
 		return clientError
 	}
 
-	return client.DeleteByNameAndKind(databaseConfig.Sql.Database, databaseConfig.Sql.Table, admin, "users") //TODO admin should be a constant
+	return client.DeleteByNameAndKind(databaseConfig.Sql.Database, databaseConfig.Sql.Table, user, "users") //TODO admin should be a constant
 
 }
 
