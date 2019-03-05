@@ -31,9 +31,9 @@ func NewKeyValueStoreClient(config models.KeyValueStoreConfiguration) (KeyValueS
 	if config.Type == "vault" {
 		// TODO: add params
 		params := map[string]string{
-			"cert":   "",
-			"key":    "",
-			"caCert": "",
+			"cert":   config.Vault.ClientTlsCert,
+			"key":    config.Vault.ClientTlsKey,
+			"caCert": config.Vault.ServerTlsCert,
 		}
 		vaultKVclient, vaultKVclientError := NewVaultKeyValueStoreClient(config.Vault.Url, config.Vault.Token, params)
 		if vaultKVclientError != nil {
