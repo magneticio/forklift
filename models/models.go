@@ -108,8 +108,16 @@ type ContainerDriver struct {
 
 type Kubernetes struct {
 	Url                string `yaml:"url,omitempty" json:"url,omitempty"`
+	Bearer             string `yaml:"bearer,omitempty" json:"bearer,omitempty"`
+	Token              string `yaml:"token,omitempty" json:"token,omitempty"`
+	Username           string `yaml:"username,omitempty" json:"username,omitempty"`
+	Password           string `yaml:"password,omitempty" json:"password,omitempty"`
 	VampGatewayAgentId string `yaml:"vamp-gateway-agent-id,omitempty" json:"vamp-gateway-agent-id,omitempty"`
 	TlsCheck           bool   `yaml:"tls-check" json:"tls-check"`
+	ServerCaCert       string `yaml:"server-ca-cert,omitempty" json:"server-ca-cert,omitempty"`
+	ClientCert         string `yaml:"client-cert,omitempty" json:"client-cert,omitempty"`
+	PrivateKey         string `yaml:"private-key,omitempty" json:"private-key,omitempty"`
+	Namespace          string `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 }
 
 type Database struct {
