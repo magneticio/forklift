@@ -34,11 +34,11 @@ import (
 )
 
 // version should be in format d.d.d where d is a decimal number
-const Version string = "0.0.7"
+const Version string = "0.1.0"
 const AppName string = "forklift"
 
 // Backend version is the version this client is tested with
-const BackendVersion string = "1.0.4"
+const BackendVersion string = "1.0.6"
 
 /*
 Application name can change over time so it is made parameteric
