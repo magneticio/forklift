@@ -19,6 +19,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"syscall"
 	"time"
@@ -28,6 +29,12 @@ import (
 	"github.com/yalp/jsonpath"
 	"golang.org/x/crypto/ssh/terminal"
 )
+
+func ValidateName(name string) bool {
+	re := regexp.MustCompile("^[a-z0-9]+$")
+
+	return re.MatchString(name)
+}
 
 /*
 This function allows using a filepath or http/s url to get resource from
