@@ -44,6 +44,11 @@ var environmentCmd = &cobra.Command{
 			return errors.New("Not Enough Arguments, Organization Name needed.")
 		}
 		name := args[0]
+
+		if !util.ValidateName(name) {
+			return errors.New("Environment name should be only lowercase alphanumerics")
+		}
+
 		namespaced := Config.Namespace + "-" + organization + "-" + name
 		namespacedOrganization := Config.Namespace + "-" + organization
 

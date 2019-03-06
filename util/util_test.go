@@ -7,6 +7,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestValidateName(t *testing.T) {
+
+	assert.True(t, util.ValidateName("organization1212"))
+
+	assert.False(t, util.ValidateName("organization-1212"))
+
+	assert.False(t, util.ValidateName("ORGANIZATION1212"))
+
+}
+
 func TestReadFilesIndirectory(t *testing.T) {
 	contents, error := util.ReadFilesIndirectory("../resources/artifacts")
 
