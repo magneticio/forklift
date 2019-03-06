@@ -51,7 +51,7 @@ Manual installation is recommended.
 
 Easy install for MacOS:
 ```shell
-base=base=https://github.com/magneticio/forklift/releases/download/0.0.5 &&
+base=base=https://github.com/magneticio/forklift/releases/download/0.1.0 &&
   curl -L $base/forklift-$(uname -s)-$(uname -m) >/usr/local/bin/forklift &&
   chmod +x /usr/local/bin/forklift
 ```
