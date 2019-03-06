@@ -44,7 +44,6 @@ var createUserCmd = &cobra.Command{
 		name := args[0]
 
 		namespaced := Config.Namespace + "-" + organization
-		fmt.Printf("name: %v, role: %v, organization %v configPath: %v , configFileType %v\n", name, role, namespaced, configPath, configFileType)
 
 		coreConfig := core.Configuration{
 			VampConfiguration: Config.VampConfiguration,

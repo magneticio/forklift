@@ -31,7 +31,13 @@ func (c *Core) CreateUser(namespace string, name string, role string, password s
 	version := "1.0.4" // TODO: this should be a constant
 	kind := "users"    // TODO: this should be a constant
 
-	encodedPassword := util.EncodeString(password, c.Conf.VampConfiguration.Security.PasswordHashAlgorithm, c.Conf.VampConfiguration.Security.PasswordHashSalt)
+	// get organization Configuration using namespace
+	configuration, configurationError := c.getConfig(namespace)
+	if configurationError != nil {
+		return configurationError
+	}
+
+	encodedPassword := util.EncodeString(password, configuration.VampConfiguration.Security.PasswordHashAlgorithm, configuration.VampConfiguration.Security.PasswordHashSalt)
 
 	artifact := models.Artifact{
 		Name:     name,
@@ -291,6 +297,25 @@ func (c *Core) putConfig(namespace string, configuration Configuration) error {
 		return keyValueStoreClientPutError
 	}
 	return nil
+}
+
+func (c *Core) getConfig(namespace string) (*Configuration, error) {
+	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(namespace)
+	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
+	if keyValueStoreClientError != nil {
+		return nil, keyValueStoreClientError
+	}
+	key := keyValueStoreConfig.BasePath + "/configuration/applied"
+	configJson, keyValueStoreClientPutError := keyValueStoreClient.GetValue(key)
+	if keyValueStoreClientPutError != nil {
+		return nil, keyValueStoreClientPutError
+	}
+	var configuration Configuration
+	jsonUnmarshallError := json.Unmarshal([]byte(configJson), &configuration)
+	if jsonUnmarshallError != nil {
+		return nil, jsonUnmarshallError
+	}
+	return &configuration, nil
 }
 
 func (c *Core) deleteConfig(namespace string) error {

@@ -144,9 +144,6 @@ func GetHostFromUrl(resourceUrl string) (string, error) {
 	if err_url != nil {
 		return "", err_url
 	}
-
-	fmt.Printf("U: %v\n", u)
-
 	return u.Host, nil
 }
 

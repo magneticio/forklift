@@ -39,7 +39,6 @@ type Organization struct {
 func NewSqlClient(config models.Database) (SqlClient, error) {
 	if config.Type == "mysql" {
 		// TODO: add params
-		fmt.Printf("host: %v\n", config.Sql.Url)
 		host, hostError := util.GetHostFromUrl(config.Sql.Url)
 		if hostError != nil {
 			return nil, hostError
@@ -57,7 +56,7 @@ func NewSqlClient(config models.Database) (SqlClient, error) {
 
 func NewMySqlClient(user string, password string, host string, dbName string) (*MySqlClient, error) {
 
-	fmt.Printf("%v\n", fmt.Sprint(user, ":", password, "@tcp(", host, ")/"))
+	// fmt.Printf("%v\n", fmt.Sprint(user, ":", password, "@tcp(", host, ")/"))
 
 	db, connectionErr := sql.Open("mysql", fmt.Sprint(user, ":", password, "@tcp(", host, ")/"))
 	if connectionErr != nil {

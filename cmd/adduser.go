@@ -39,7 +39,6 @@ var addUserCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		namespaced := Config.Namespace + "-" + organization
-		fmt.Printf("organization: %v , configPath: %v , configFileType %v\n", namespaced, configPath, configFileType)
 
 		coreConfig := core.Configuration{
 			VampConfiguration: Config.VampConfiguration,
