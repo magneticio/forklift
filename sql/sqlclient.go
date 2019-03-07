@@ -46,7 +46,7 @@ func NewSqlClient(config models.Database) (SqlClient, error) {
 			return nil, hostError
 		}
 
-		fmt.Printf("Accessing DB: %v - %v - %v - %v \n", config.Sql.User, config.Sql.Password, host, config.Sql.Database)
+		// fmt.Printf("Accessing DB: %v - %v - %v - %v \n", config.Sql.User, config.Sql.Password, host, config.Sql.Database)
 
 		sqlClient, mySqlError := NewMySqlClient(config.Sql.User, config.Sql.Password, host, config.Sql.Database)
 		if mySqlError != nil {
@@ -354,7 +354,7 @@ func (client *MySqlClient) FindByNameAndKind(dbName string, tableName string, na
 	queryError := stmtQuery.QueryRow().Scan(&resultId, &resultRecord)
 	if queryError != nil {
 		if queryError == sql.ErrNoRows {
-			fmt.Printf("No rows\n")
+			// fmt.Printf("No rows\n")
 			return nil, nil
 		} else {
 			fmt.Printf("Query error: %v\n", queryError.Error())
