@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -26,10 +27,50 @@ func NewCore(conf Configuration) (*Core, error) {
 	}, nil
 }
 
+func (c *Core) GetUser(namespace string, name string) (*models.SqlElement, error) {
+
+	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
+
+	client, clientError := sql.NewSqlClient(databaseConfig)
+	if clientError != nil {
+		fmt.Printf("Error: %v\n", clientError.Error())
+		return nil, clientError
+	}
+
+	result, queryError := client.FindByNameAndKind(databaseConfig.Sql.Database, databaseConfig.Sql.Table, name, "users")
+	if queryError != nil {
+		return nil, queryError
+	}
+
+	if result == nil {
+		return nil, nil
+	}
+
+	var sqlElement models.SqlElement
+
+	jsonUnmarshallError := json.Unmarshal([]byte(result.Record), &sqlElement)
+	if jsonUnmarshallError != nil {
+		return nil, jsonUnmarshallError
+	}
+	return &sqlElement, nil
+}
+
 func (c *Core) CreateUser(namespace string, name string, role string, password string) error {
 
 	version := "1.0.4" // TODO: this should be a constant
 	kind := "users"    // TODO: this should be a constant
+
+	fmt.Printf("Getting user \n")
+
+	userElement, validationError := c.GetUser(namespace, name)
+	if validationError != nil {
+
+		return validationError
+	}
+	if userElement != nil {
+
+		return errors.New(fmt.Sprintf("User %v already exists", name))
+	}
 
 	// get organization Configuration using namespace
 	configuration, configurationError := c.getConfig(namespace)
@@ -88,6 +129,13 @@ func (c *Core) AddUser(namespace string, user string) error {
 	if convertError != nil {
 		return convertError
 	}
+	userElement, validationError := c.GetUser(namespace, sqlElement.Name)
+	if validationError != nil {
+		return validationError
+	}
+	if userElement != nil {
+		return errors.New(fmt.Sprintf("User %v already exists", sqlElement.Name))
+	}
 
 	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
 
@@ -97,7 +145,12 @@ func (c *Core) AddUser(namespace string, user string) error {
 		return clientError
 	}
 
-	return client.Insert(databaseConfig.Sql.Database, databaseConfig.Sql.Table, sqlElement)
+	sqlElementString, jsonMarshallError := json.Marshal(sqlElement)
+	if jsonMarshallError != nil {
+		return jsonMarshallError
+	}
+
+	return client.Insert(databaseConfig.Sql.Database, databaseConfig.Sql.Table, string(sqlElementString))
 
 }
 
@@ -116,6 +169,7 @@ func (c *Core) DeleteUser(namespace string, user string) error {
 }
 
 func (c *Core) CreateOrganization(namespace string, configuration Configuration) error {
+
 	putConfigError := c.putConfig(namespace, configuration)
 	if putConfigError != nil {
 		return putConfigError
@@ -214,7 +268,7 @@ func (c *Core) CreateEnvironment(namespace string, organization string, elements
 
 	sqlElements := make([]string, len(elements))
 	for i, element := range elements {
-		sqlElement, convertError := ConvertToSqlElement(element)
+		sqlElement, convertError := ConvertToSqlElementJson(element)
 		if convertError != nil {
 			return convertError
 		}
@@ -344,21 +398,29 @@ func Namespaced(namespace string, text string) string {
 	return strings.Replace(text, "${namespace}", namespace, -1)
 }
 
-func ConvertToSqlElement(artifactAsJsonString string) (string, error) {
+func ConvertToSqlElement(artifactAsJsonString string) (*models.SqlElement, error) {
 	var artifact models.Artifact
 	unmarshallError := json.Unmarshal([]byte(artifactAsJsonString), &artifact)
 	if unmarshallError != nil {
-		return "", unmarshallError
+		return nil, unmarshallError
 	}
 	version := "1.0.4" // TODO: this should be a constant
-	sqlElement := models.SqlElement{
+	return &models.SqlElement{
 		Version:   version,
 		Instance:  util.UUID(),
 		Timestamp: util.Timestamp(),
 		Name:      artifact.Name,
 		Kind:      artifact.Kind,
 		Artifact:  artifactAsJsonString,
+	}, nil
+}
+
+func ConvertToSqlElementJson(artifactAsJsonString string) (string, error) {
+	sqlElement, conversionError := ConvertToSqlElement(artifactAsJsonString)
+	if conversionError != nil {
+		return "", conversionError
 	}
+
 	sqlElementString, jsonMarshallError := json.Marshal(sqlElement)
 	if jsonMarshallError != nil {
 		return "", jsonMarshallError
