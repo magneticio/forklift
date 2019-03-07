@@ -281,6 +281,14 @@ func (c *Core) DeleteEnvironment(namespace string) error {
 	return c.deleteConfig(namespace)
 }
 
+func (c *Core) ShowOrganization(namespace string) (*Configuration, error) {
+	return c.getConfig(namespace)
+}
+
+func (c *Core) ShowEnvironment(namespace string) (*Configuration, error) {
+	return c.getConfig(namespace)
+}
+
 func (c *Core) putConfig(namespace string, configuration Configuration) error {
 	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(namespace)
 	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
