@@ -172,6 +172,12 @@ and delete them with
 forklift delete organization organization-name
 ```
 
+and show current configuration with
+
+```shell
+forklift show organization organization-name
+```
+
 ### Users
 
 Through Forklift it is also possible to create Users for each Organization.
@@ -346,4 +352,10 @@ and delete them with
 
 ```shell
 forklift delete environment environment-name --organization organization-name
+```
+
+show current configuration with
+
+```shell
+forklift show environment environment-name --organization organization-name
 ```
