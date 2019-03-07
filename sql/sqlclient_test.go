@@ -201,7 +201,50 @@ func TestInsert(t *testing.T) {
 
 }
 
-func TestQuery(t *testing.T) {
+func TestFindByNameAndKind(t *testing.T) {
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	client := MySqlClient{
+		User:     "",
+		Password: "",
+		Host:     "",
+		DbName:   "",
+		Db:       db,
+	}
+
+	useDbStatement := "USE `testdb`"
+
+	mock.
+		ExpectExec(useDbStatement).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	queryStatement := "SELECT \\* FROM `testtable` WHERE Record LIKE '%\"name\":\"recordname\"%' AND Record LIKE '%\"kind\":\"recordkind\"%'"
+
+	rows := sqlmock.NewRows([]string{"ID", "Record"}).
+		AddRow(1, "just a test")
+
+	mock.ExpectPrepare(queryStatement).
+		ExpectQuery().
+		WillReturnRows(rows)
+
+	result, queryError := client.FindByNameAndKind("testdb", "testtable", "recordname", "recordkind")
+
+	expected := &Row{
+		Id:     1,
+		Record: "just a test",
+	}
+
+	assert.Nil(t, queryError, fmt.Sprintf("Query resulted in error %v \n", queryError))
+	assert.Equal(t, result, expected, fmt.Sprintf("Query returned wrong result %v \n", result))
+
+}
+
+func TestFindById(t *testing.T) {
 
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -235,7 +278,7 @@ func TestQuery(t *testing.T) {
 
 	result, queryError := client.FindById("testdb", "organization", 1)
 
-	expected := &Organization{
+	expected := &Row{
 		Id:     1,
 		Record: "just a test",
 	}
@@ -281,16 +324,16 @@ func TestList(t *testing.T) {
 
 	result, queryError := client.List("testdb", "organization")
 
-	expected := []Organization{
-		Organization{
+	expected := []Row{
+		Row{
 			Id:     1,
 			Record: "just a test",
 		},
-		Organization{
+		Row{
 			Id:     2,
 			Record: "just a test2",
 		},
-		Organization{
+		Row{
 			Id:     3,
 			Record: "just a test3",
 		},

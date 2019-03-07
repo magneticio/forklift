@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/magneticio/forklift/models"
@@ -15,8 +16,9 @@ type SqlClient interface {
 	SetupEnvironment(dbName string, tableName string, elements []string) error
 	UpdateEnvironment(dbName string, tableName string, elements []string) error
 	Insert(dbName string, tableName string, record string) error
-	FindById(dbName string, tableName string, id int) (*Organization, error)
-	List(dbName string, tableName string) ([]Organization, error)
+	FindById(dbName string, tableName string, id int) (*Row, error)
+	FindByNameAndKind(dbName string, tableName string, name string, kind string) (*Row, error)
+	List(dbName string, tableName string) ([]Row, error)
 	Update(dbName string, tableName string, id int, record string) error
 	Delete(dbName string, tableName string, id int) error
 	DeleteByNameAndKind(dbName string, tableName string, name string, kind string) error
@@ -31,7 +33,7 @@ type MySqlClient struct {
 	Db       *sql.DB
 }
 
-type Organization struct {
+type Row struct {
 	Id     int
 	Record string
 }
@@ -39,10 +41,12 @@ type Organization struct {
 func NewSqlClient(config models.Database) (SqlClient, error) {
 	if config.Type == "mysql" {
 		// TODO: add params
-		host, hostError := util.GetHostFromUrl(config.Sql.Url)
+		host, hostError := util.GetHostFromUrl(strings.TrimPrefix(config.Sql.Url, "jdbc:"))
 		if hostError != nil {
 			return nil, hostError
 		}
+
+		fmt.Printf("Accessing DB: %v - %v - %v - %v \n", config.Sql.User, config.Sql.Password, host, config.Sql.Database)
 
 		sqlClient, mySqlError := NewMySqlClient(config.Sql.User, config.Sql.Password, host, config.Sql.Database)
 		if mySqlError != nil {
@@ -227,7 +231,7 @@ func (client *MySqlClient) Insert(dbName string, tableName string, record string
 	return nil
 }
 
-func (client *MySqlClient) FindById(dbName string, tableName string, id int) (*Organization, error) {
+func (client *MySqlClient) FindById(dbName string, tableName string, id int) (*Row, error) {
 
 	_, useDbErr := client.Db.Exec("USE `" + dbName + "`")
 	if useDbErr != nil {
@@ -252,24 +256,24 @@ func (client *MySqlClient) FindById(dbName string, tableName string, id int) (*O
 		return nil, err
 	}
 
-	return &Organization{
+	return &Row{
 		Id:     resultId,
 		Record: resultRecord,
 	}, nil
 }
 
-func (client *MySqlClient) List(dbName string, tableName string) ([]Organization, error) {
+func (client *MySqlClient) List(dbName string, tableName string) ([]Row, error) {
 
 	_, useDbErr := client.Db.Exec("USE `" + dbName + "`")
 	if useDbErr != nil {
 		fmt.Printf("Error: %v\n", useDbErr.Error())
-		return []Organization{}, useDbErr
+		return []Row{}, useDbErr
 	}
 
 	stmtOut, listErr := client.Db.Prepare("SELECT * FROM `" + tableName + "`")
 	if listErr != nil {
 		fmt.Printf("Error: %v\n", listErr.Error())
-		return []Organization{}, listErr
+		return []Row{}, listErr
 	}
 
 	defer stmtOut.Close()
@@ -280,20 +284,20 @@ func (client *MySqlClient) List(dbName string, tableName string) ([]Organization
 	rows, err := stmtOut.Query()
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
-		return []Organization{}, err
+		return []Row{}, err
 	}
 	defer rows.Close()
 
-	var result []Organization
+	var result []Row
 
 	for rows.Next() {
 		err := rows.Scan(&resultId, &resultRecord)
 		if err != nil {
 			fmt.Printf("Error: %v\n", err.Error())
-			return []Organization{}, err
+			return []Row{}, err
 		}
 
-		result = append(result, Organization{
+		result = append(result, Row{
 			Id:     resultId,
 			Record: resultRecord,
 		})
@@ -326,6 +330,42 @@ func (client *MySqlClient) Update(dbName string, tableName string, id int, recor
 	}
 
 	return nil
+}
+
+func (client *MySqlClient) FindByNameAndKind(dbName string, tableName string, name string, kind string) (*Row, error) {
+
+	_, useDbErr := client.Db.Exec("USE `" + dbName + "`")
+	if useDbErr != nil {
+		fmt.Printf("Error: %v\n", useDbErr.Error())
+		return nil, useDbErr
+	}
+
+	stmtQuery, stmtError := client.Db.Prepare("SELECT * FROM `" + tableName + "` WHERE Record LIKE '%\"name\":\"" + name + "\"%' AND Record LIKE '%\"kind\":\"" + kind + "\"%'")
+	if stmtError != nil {
+		fmt.Printf("Error: %v\n", stmtError.Error())
+		return nil, stmtError
+	}
+
+	defer stmtQuery.Close()
+
+	var resultId int
+	var resultRecord string
+
+	queryError := stmtQuery.QueryRow().Scan(&resultId, &resultRecord)
+	if queryError != nil {
+		if queryError == sql.ErrNoRows {
+			fmt.Printf("No rows\n")
+			return nil, nil
+		} else {
+			fmt.Printf("Query error: %v\n", queryError.Error())
+			return nil, queryError
+		}
+	}
+
+	return &Row{
+		Id:     resultId,
+		Record: resultRecord,
+	}, nil
 }
 
 func (client *MySqlClient) DeleteByNameAndKind(dbName string, tableName string, name string, kind string) error {
