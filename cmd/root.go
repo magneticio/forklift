@@ -178,10 +178,16 @@ func SetupConfigurationEnvrionmentVariables() {
 	// VAMP_FORKLIFT_MYSQL_HOST - for example: mysql://<VAMP_FORKLIFT_MYSQL_HOST>/vamp-${namespace}?useSSL=false
 	viper.BindEnv("mysql_host", "VAMP_FORKLIFT_MYSQL_HOST")
 	if viper.GetString("mysql_host") != "" {
-		url := "mysql://" + viper.GetString("mysql_host") + "/vamp-${namespace}?useSSL=false"
+		url := "mysql://" + viper.GetString("mysql_host") + "/vamp-${namespace}"
 		Config.VampConfiguration.Persistence.Database.Sql.Url = url
-		databaseServerUrl := "mysql://" + viper.GetString("mysql_host") + "?useSSL=false"
+		databaseServerUrl := "mysql://" + viper.GetString("mysql_host")
 		Config.VampConfiguration.Persistence.Database.Sql.DatabaseServerUrl = databaseServerUrl
+	}
+	// VAMP_FORKLIFT_MYSQL_PARAMS
+	viper.BindEnv("mysql_params", "VAMP_FORKLIFT_MYSQL_CONNECTION_PROPS")
+	if viper.GetString("mysql_params") != "" {
+		Config.VampConfiguration.Persistence.Database.Sql.Url += "?" + viper.GetString("mysql_params")
+		Config.VampConfiguration.Persistence.Database.Sql.DatabaseServerUrl += "?" + viper.GetString("mysql_params")
 	}
 	// VAMP_FORKLIFT_MYSQL_USER
 	viper.BindEnv("mysql_user", "VAMP_FORKLIFT_MYSQL_USER")
