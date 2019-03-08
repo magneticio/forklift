@@ -165,7 +165,7 @@ func SetupConfigurationEnvrionmentVariables() {
 		Config.VampConfiguration.Persistence.KeyValueStore.Vault.ServerTlsCert = viper.GetString("vault_cacert")
 	}
 	// VAMP_FORKLIFT_VAULT_CLIENT_CERT
-	viper.BindEnv("vault_cacert", "VAMP_FORKLIFT_VAULT_CLIENT_CERT")
+	viper.BindEnv("vault_client_cert", "VAMP_FORKLIFT_VAULT_CLIENT_CERT")
 	if viper.GetString("vault_client_cert") != "" {
 		Config.VampConfiguration.Persistence.KeyValueStore.Vault.ClientTlsCert = viper.GetString("vault_client_cert")
 	}
