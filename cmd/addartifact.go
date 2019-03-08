@@ -21,29 +21,25 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/magneticio/forklift/core"
+	"github.com/magneticio/forklift/util"
 	"github.com/spf13/cobra"
 )
 
-var deleteUserCmd = &cobra.Command{
-	Use:   "user",
-	Short: "Delete a user",
-	Long: AddAppName(`Delete a user
+var addArtifactCmd = &cobra.Command{
+	Use:   "artifact",
+	Short: "Add a new artifact",
+	Long: AddAppName(`Add a new artifact
     Example:
-    $AppName delete user name --organization org`),
+    $AppName add artifact --organization org --environment env --configuration ./somepath.json`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 1 {
-			return errors.New("Not Enough Arguments, Name needed.")
-		}
-		name := args[0]
 
-		namespaced := Config.Namespace + "-" + organization
-		fmt.Printf("name: %v , configPath: %v\n", name, namespaced)
+		namespacedEnvironment := Config.Namespace + "-" + organization + "-" + environment
+		namespacedOrganization := Config.Namespace + "-" + organization
 
 		coreConfig := core.Configuration{
 			VampConfiguration: Config.VampConfiguration,
@@ -53,20 +49,39 @@ var deleteUserCmd = &cobra.Command{
 			return coreError
 		}
 
-		deleteUserError := core.DeleteUser(namespaced, name)
-		if deleteUserError != nil {
-			return deleteUserError
+		artifactBytes, readErr := util.UseSourceUrl(configPath) // just pass the file name
+		if readErr != nil {
+			return readErr
 		}
-		fmt.Printf("User is deleted\n")
+
+		artifactJson, jsonError := util.Convert("yaml", "json", artifactBytes)
+		if jsonError != nil {
+			return jsonError
+		}
+
+		artifactText := string(artifactJson)
+
+		createArtifactError := core.AddArtifact(namespacedOrganization, namespacedEnvironment, artifactText)
+		if createArtifactError != nil {
+			return createArtifactError
+		}
+		fmt.Printf("Artifact is added\n")
 
 		return nil
 	},
 }
 
 func init() {
-	deleteCmd.AddCommand(deleteUserCmd)
+	addCmd.AddCommand(addArtifactCmd)
 
-	deleteUserCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the environment")
-	deleteUserCmd.MarkFlagRequired("organization")
+	addArtifactCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the workflow")
+	addArtifactCmd.MarkFlagRequired("organization")
+
+	addArtifactCmd.Flags().StringVarP(&environment, "environment", "", "", "Environment of the workflow")
+	addArtifactCmd.MarkFlagRequired("environment")
+
+	addArtifactCmd.Flags().StringVarP(&configPath, "configuration", "", "", "User configuration file path")
+	addArtifactCmd.MarkFlagRequired("configuration")
+	addArtifactCmd.Flags().StringVarP(&configFileType, "input", "i", "yaml", "User configuration file type yaml or json")
 
 }

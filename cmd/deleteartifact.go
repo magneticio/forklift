@@ -28,12 +28,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var deleteUserCmd = &cobra.Command{
-	Use:   "user",
-	Short: "Delete a user",
-	Long: AddAppName(`Delete a user
+var deleteArtifactCmd = &cobra.Command{
+	Use:   "artifact",
+	Short: "Delete an artifact",
+	Long: AddAppName(`Delete an artifact
     Example:
-    $AppName delete user name --organization org`),
+    $AppName delete artifact name --kind k --organization org --environment env`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -42,8 +42,8 @@ var deleteUserCmd = &cobra.Command{
 		}
 		name := args[0]
 
-		namespaced := Config.Namespace + "-" + organization
-		fmt.Printf("name: %v , configPath: %v\n", name, namespaced)
+		namespacedEnvironment := Config.Namespace + "-" + organization + "-" + environment
+		namespacedOrganization := Config.Namespace + "-" + organization
 
 		coreConfig := core.Configuration{
 			VampConfiguration: Config.VampConfiguration,
@@ -53,20 +53,26 @@ var deleteUserCmd = &cobra.Command{
 			return coreError
 		}
 
-		deleteUserError := core.DeleteUser(namespaced, name)
-		if deleteUserError != nil {
-			return deleteUserError
+		deleteArtifactError := core.DeleteArtifact(namespacedOrganization, namespacedEnvironment, name, kind)
+		if deleteArtifactError != nil {
+			return deleteArtifactError
 		}
-		fmt.Printf("User is deleted\n")
+		fmt.Printf("Artifact is deleted\n")
 
 		return nil
 	},
 }
 
 func init() {
-	deleteCmd.AddCommand(deleteUserCmd)
+	deleteCmd.AddCommand(deleteArtifactCmd)
 
-	deleteUserCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the environment")
-	deleteUserCmd.MarkFlagRequired("organization")
+	deleteArtifactCmd.Flags().StringVarP(&kind, "kind", "", "", "Kind of the artifact")
+	deleteArtifactCmd.MarkFlagRequired("kind")
+
+	deleteArtifactCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the artifact")
+	deleteArtifactCmd.MarkFlagRequired("organization")
+
+	deleteArtifactCmd.Flags().StringVarP(&environment, "environment", "", "", "Environment of the artifact")
+	deleteArtifactCmd.MarkFlagRequired("environment")
 
 }

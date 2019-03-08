@@ -55,8 +55,10 @@ var Config ForkliftConfig
 var configPath string
 var configFileType string
 var organization string
+var environment string
 var artficatsPath string
 var role string
+var kind string
 
 type ForkliftConfig struct {
 	Namespace         string                   `yaml:"namespace,omitempty" json:"namespace,omitempty"`

@@ -27,9 +27,11 @@ func NewCore(conf Configuration) (*Core, error) {
 	}, nil
 }
 
-func (c *Core) GetUser(namespace string, name string) (*models.SqlElement, error) {
+func (c *Core) GetArtifact(organization string, environment string, name string, kind string) (*models.SqlElement, error) {
 
-	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
+	databaseConfig := c.GetNamespaceDatabaseConfiguration(environment)
+
+	namespacedOrganizationName := c.GetNamespaceDatabaseConfiguration(organization).Sql.Database
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
@@ -37,7 +39,7 @@ func (c *Core) GetUser(namespace string, name string) (*models.SqlElement, error
 		return nil, clientError
 	}
 
-	result, queryError := client.FindByNameAndKind(databaseConfig.Sql.Database, databaseConfig.Sql.Table, name, "users")
+	result, queryError := client.FindByNameAndKind(namespacedOrganizationName, databaseConfig.Sql.Table, name, kind)
 	if queryError != nil {
 		return nil, queryError
 	}
@@ -58,9 +60,7 @@ func (c *Core) GetUser(namespace string, name string) (*models.SqlElement, error
 func (c *Core) CreateUser(namespace string, name string, role string, password string) error {
 
 	version := "1.0.4" // TODO: this should be a constant
-	kind := "users"    // TODO: this should be a constant
-
-	fmt.Printf("Getting user \n")
+	kind := "users"
 
 	userElement, validationError := c.GetUser(namespace, name)
 	if validationError != nil {
@@ -69,7 +69,7 @@ func (c *Core) CreateUser(namespace string, name string, role string, password s
 	}
 	if userElement != nil {
 
-		return errors.New(fmt.Sprintf("User %v already exists", name))
+		return errors.New(fmt.Sprintf("%v %v already exists", kind, name))
 	}
 
 	// get organization Configuration using namespace
@@ -123,6 +123,20 @@ func (c *Core) CreateUser(namespace string, name string, role string, password s
 
 }
 
+func (c *Core) DeleteUser(namespace string, user string) error {
+
+	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
+
+	client, clientError := sql.NewSqlClient(databaseConfig)
+	if clientError != nil {
+		fmt.Printf("Error: %v\n", clientError.Error())
+		return clientError
+	}
+
+	return client.DeleteByNameAndKind(databaseConfig.Sql.Database, databaseConfig.Sql.Table, user, "users") //TODO admin should be a constant
+
+}
+
 func (c *Core) AddUser(namespace string, user string) error {
 
 	sqlElement, convertError := ConvertToSqlElement(user)
@@ -154,9 +168,51 @@ func (c *Core) AddUser(namespace string, user string) error {
 
 }
 
-func (c *Core) DeleteUser(namespace string, user string) error {
+func (c *Core) GetUser(namespace string, name string) (*models.SqlElement, error) {
 
 	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
+
+	client, clientError := sql.NewSqlClient(databaseConfig)
+	if clientError != nil {
+		fmt.Printf("Error: %v\n", clientError.Error())
+		return nil, clientError
+	}
+
+	result, queryError := client.FindByNameAndKind(databaseConfig.Sql.Database, databaseConfig.Sql.Table, name, "users")
+	if queryError != nil {
+		return nil, queryError
+	}
+
+	if result == nil {
+		return nil, nil
+	}
+
+	var sqlElement models.SqlElement
+
+	jsonUnmarshallError := json.Unmarshal([]byte(result.Record), &sqlElement)
+	if jsonUnmarshallError != nil {
+		return nil, jsonUnmarshallError
+	}
+	return &sqlElement, nil
+}
+
+func (c *Core) AddArtifact(organization string, environment string, content string) error {
+
+	databaseConfig := c.GetNamespaceDatabaseConfiguration(environment)
+
+	namespacedOrganizationName := c.GetNamespaceDatabaseConfiguration(organization).Sql.Database
+
+	sqlElement, convertError := ConvertToSqlElement(content)
+	if convertError != nil {
+		return convertError
+	}
+	element, validationError := c.GetArtifact(organization, environment, sqlElement.Name, sqlElement.Kind)
+	if validationError != nil {
+		return validationError
+	}
+	if element != nil {
+		return errors.New(fmt.Sprintf("%v %v already exists", sqlElement.Kind, sqlElement.Name))
+	}
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
@@ -164,7 +220,28 @@ func (c *Core) DeleteUser(namespace string, user string) error {
 		return clientError
 	}
 
-	return client.DeleteByNameAndKind(databaseConfig.Sql.Database, databaseConfig.Sql.Table, user, "users") //TODO admin should be a constant
+	sqlElementString, jsonMarshallError := json.Marshal(sqlElement)
+	if jsonMarshallError != nil {
+		return jsonMarshallError
+	}
+
+	return client.Insert(namespacedOrganizationName, databaseConfig.Sql.Table, string(sqlElementString))
+
+}
+
+func (c *Core) DeleteArtifact(organization string, environment string, name string, kind string) error {
+
+	databaseConfig := c.GetNamespaceDatabaseConfiguration(environment)
+
+	namespacedOrganizationName := c.GetNamespaceDatabaseConfiguration(organization).Sql.Database
+
+	client, clientError := sql.NewSqlClient(databaseConfig)
+	if clientError != nil {
+		fmt.Printf("Error: %v\n", clientError.Error())
+		return clientError
+	}
+
+	return client.DeleteByNameAndKind(namespacedOrganizationName, databaseConfig.Sql.Table, name, kind) //TODO admin should be a constant
 
 }
 
@@ -397,6 +474,8 @@ func ConvertToSqlElement(artifactAsJsonString string) (*models.SqlElement, error
 	var artifact models.Artifact
 	unmarshallError := json.Unmarshal([]byte(artifactAsJsonString), &artifact)
 	if unmarshallError != nil {
+		fmt.Printf("Unmarshalling error : %v\n", artifactAsJsonString)
+		fmt.Printf("Unmarshalling error : %v\n", unmarshallError.Error())
 		return nil, unmarshallError
 	}
 	version := "1.0.4" // TODO: this should be a constant
