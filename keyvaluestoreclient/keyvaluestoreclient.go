@@ -83,7 +83,10 @@ func (c *VaultKeyValueStoreClient) put(keyName string, secretData map[string]int
 func (c *VaultKeyValueStoreClient) get(keyName string) (map[string]interface{}, error) {
 	secretValues, err := c.getClient().Logical().Read(keyName)
 	if err != nil {
-		return nil, nil
+		return nil, err
+	}
+	if secretValues == nil {
+		return nil, errors.New("No Values for key " + keyName)
 	}
 	return secretValues.Data, nil
 }
@@ -156,7 +159,7 @@ func (c *VaultKeyValueStoreClient) PutValue(key string, value string) error {
 func (c *VaultKeyValueStoreClient) GetValue(key string) (string, error) {
 	secretValues, err := c.get(fixPath(key))
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 	value, ok := secretValues["value"].(string)
 	if !ok {
