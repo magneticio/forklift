@@ -331,11 +331,25 @@ func (c *Core) DeleteEnvironment(namespace string) error {
 }
 
 func (c *Core) ShowOrganization(namespace string) (*Configuration, error) {
-	return c.getConfig(namespace)
+	conf, err := c.getConfig(namespace)
+	if err != nil {
+		if strings.HasPrefix(err.Error(), "No Values") {
+			return nil, errors.New("No organization found")
+		}
+		return nil, err
+	}
+	return conf, err
 }
 
 func (c *Core) ShowEnvironment(namespace string) (*Configuration, error) {
-	return c.getConfig(namespace)
+	conf, err := c.getConfig(namespace)
+	if err != nil {
+		if strings.HasPrefix(err.Error(), "No Values") {
+			return nil, errors.New("No environment found")
+		}
+		return nil, err
+	}
+	return conf, err
 }
 
 func (c *Core) putConfig(namespace string, configuration Configuration) error {
@@ -363,9 +377,9 @@ func (c *Core) getConfig(namespace string) (*Configuration, error) {
 		return nil, keyValueStoreClientError
 	}
 	key := keyValueStoreConfig.BasePath + "/configuration/applied"
-	configJson, keyValueStoreClientPutError := keyValueStoreClient.GetValue(key)
-	if keyValueStoreClientPutError != nil {
-		return nil, keyValueStoreClientPutError
+	configJson, keyValueStoreClientGetError := keyValueStoreClient.GetValue(key)
+	if keyValueStoreClientGetError != nil {
+		return nil, keyValueStoreClientGetError
 	}
 	var configuration Configuration
 	jsonUnmarshallError := json.Unmarshal([]byte(configJson), &configuration)
