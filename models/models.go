@@ -1,5 +1,9 @@
 package models
 
+// Backend version is the version this client is tested with
+const BackendVersion string = "1.0.6"
+const UsersKind string = "users"
+
 type VampConfiguration struct {
 	Persistence     Persistence     `yaml:"persistence,omitempty" json:"persistence,omitempty"`
 	Model           Model           `yaml:"model,omitempty" json:"model,omitempty"`

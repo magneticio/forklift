@@ -59,9 +59,6 @@ func (c *Core) GetArtifact(organization string, environment string, name string,
 
 func (c *Core) CreateUser(namespace string, name string, role string, password string) error {
 
-	version := "1.0.4" // TODO: this should be a constant
-	kind := "users"
-
 	userElement, validationError := c.GetUser(namespace, name)
 	if validationError != nil {
 
@@ -69,7 +66,7 @@ func (c *Core) CreateUser(namespace string, name string, role string, password s
 	}
 	if userElement != nil {
 
-		return errors.New(fmt.Sprintf("%v %v already exists", kind, name))
+		return errors.New(fmt.Sprintf("%v %v already exists", models.UsersKind, name))
 	}
 
 	// get organization Configuration using namespace
@@ -83,7 +80,7 @@ func (c *Core) CreateUser(namespace string, name string, role string, password s
 	artifact := models.Artifact{
 		Name:     name,
 		Password: encodedPassword,
-		Kind:     kind,
+		Kind:     models.UsersKind,
 		Roles:    []string{role},
 		Metadata: map[string]string{},
 	}
@@ -96,11 +93,11 @@ func (c *Core) CreateUser(namespace string, name string, role string, password s
 	artifactAsJsonString := string(artifactAsJson)
 
 	sqlElement := models.SqlElement{
-		Version:   version,
+		Version:   models.BackendVersion,
 		Instance:  util.UUID(),
 		Timestamp: util.Timestamp(),
 		Name:      name,
-		Kind:      kind,
+		Kind:      models.UsersKind,
 		Artifact:  artifactAsJsonString,
 	}
 
@@ -133,7 +130,7 @@ func (c *Core) DeleteUser(namespace string, user string) error {
 		return clientError
 	}
 
-	return client.DeleteByNameAndKind(databaseConfig.Sql.Database, databaseConfig.Sql.Table, user, "users") //TODO admin should be a constant
+	return client.DeleteByNameAndKind(databaseConfig.Sql.Database, databaseConfig.Sql.Table, user, models.UsersKind) //TODO admin should be a constant
 
 }
 
@@ -178,7 +175,7 @@ func (c *Core) GetUser(namespace string, name string) (*models.SqlElement, error
 		return nil, clientError
 	}
 
-	result, queryError := client.FindByNameAndKind(databaseConfig.Sql.Database, databaseConfig.Sql.Table, name, "users")
+	result, queryError := client.FindByNameAndKind(databaseConfig.Sql.Database, databaseConfig.Sql.Table, name, models.UsersKind)
 	if queryError != nil {
 		return nil, queryError
 	}
@@ -478,9 +475,9 @@ func ConvertToSqlElement(artifactAsJsonString string) (*models.SqlElement, error
 		fmt.Printf("Unmarshalling error : %v\n", unmarshallError.Error())
 		return nil, unmarshallError
 	}
-	version := "1.0.4" // TODO: this should be a constant
+
 	return &models.SqlElement{
-		Version:   version,
+		Version:   models.BackendVersion,
 		Instance:  util.UUID(),
 		Timestamp: util.Timestamp(),
 		Name:      artifact.Name,

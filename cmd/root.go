@@ -33,12 +33,10 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-// version should be in format d.d.d where d is a decimal number
-const Version string = "0.1.2"
 const AppName string = "forklift"
 
-// Backend version is the version this client is tested with
-const BackendVersion string = "1.0.6"
+// version should be in format d.d.d where d is a decimal number
+const Version string = "0.1.2"
 
 /*
 Application name can change over time so it is made parameteric
