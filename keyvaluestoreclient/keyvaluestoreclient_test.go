@@ -22,6 +22,7 @@ import (
 	credUserpass "github.com/hashicorp/vault/builtin/credential/userpass"
 	vaulthttp "github.com/hashicorp/vault/http"
 	"github.com/magneticio/forklift/keyvaluestoreclient"
+	"github.com/magneticio/forklift/models"
 )
 
 // testVaultServer creates a test vault cluster and returns a configured API
@@ -141,8 +142,19 @@ func TestVaultKeyVauleStoreClientValueWrappers(t *testing.T) {
 	token := client.Token()
 
 	// TODO: Update this test when certs is added to the config
+	config := models.KeyValueStoreConfiguration{
+		Type:     "vault",
+		BasePath: "",
+		Vault: models.VaultKeyValueStoreConfiguration{
+			Url:           url,
+			Token:         token,
+			ClientTlsCert: params["cert"],
+			ClientTlsKey:  params["key"],
+			ServerTlsCert: params["caCert"],
+		},
+	}
 
-	vaultKeyValueStoreClient, clientErr := keyvaluestoreclient.NewVaultKeyValueStoreClient(url, token, params)
+	vaultKeyValueStoreClient, clientErr := keyvaluestoreclient.NewKeyValueStoreClient(config)
 	assert.Nil(t, clientErr)
 	assert.NotNil(t, vaultKeyValueStoreClient)
 
