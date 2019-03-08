@@ -317,14 +317,9 @@ func (c *Core) GetNamespaceDatabaseConfiguration(namespace string) models.Databa
 }
 
 func (c *Core) GetNamespaceKeyValueStoreConfiguration(namespace string) *models.KeyValueStoreConfiguration {
-	return &models.KeyValueStoreConfiguration{
-		Type:     c.Conf.VampConfiguration.Persistence.KeyValueStore.Type,
-		BasePath: Namespaced(namespace, c.Conf.VampConfiguration.Persistence.KeyValueStore.BasePath),
-		Vault: models.VaultKeyValueStoreConfiguration{
-			Url:   Namespaced(namespace, c.Conf.VampConfiguration.Persistence.KeyValueStore.Vault.Url),
-			Token: Namespaced(namespace, c.Conf.VampConfiguration.Persistence.KeyValueStore.Vault.Token),
-		},
-	}
+	model := c.Conf.VampConfiguration.Persistence.KeyValueStore
+	model.BasePath = Namespaced(namespace, c.Conf.VampConfiguration.Persistence.KeyValueStore.BasePath)
+	return &model
 }
 
 func (c *Core) DeleteOrganization(namespace string) error {

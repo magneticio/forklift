@@ -34,7 +34,7 @@ import (
 )
 
 // version should be in format d.d.d where d is a decimal number
-const Version string = "0.1.1"
+const Version string = "0.1.2"
 const AppName string = "forklift"
 
 // Backend version is the version this client is tested with
@@ -165,7 +165,7 @@ func SetupConfigurationEnvrionmentVariables() {
 		Config.VampConfiguration.Persistence.KeyValueStore.Vault.ServerTlsCert = viper.GetString("vault_cacert")
 	}
 	// VAMP_FORKLIFT_VAULT_CLIENT_CERT
-	viper.BindEnv("vault_cacert", "VAMP_FORKLIFT_VAULT_CLIENT_CERT")
+	viper.BindEnv("vault_client_cert", "VAMP_FORKLIFT_VAULT_CLIENT_CERT")
 	if viper.GetString("vault_client_cert") != "" {
 		Config.VampConfiguration.Persistence.KeyValueStore.Vault.ClientTlsCert = viper.GetString("vault_client_cert")
 	}
