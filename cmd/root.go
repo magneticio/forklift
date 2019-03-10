@@ -26,6 +26,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/magneticio/forklift/logging"
 	"github.com/magneticio/forklift/models"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -94,7 +95,7 @@ func init() {
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().BoolVarP(&logging.Verbose, "verbose", "v", false, "Verrbose")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -146,6 +147,7 @@ func initConfig() {
 	SetupConfigurationEnvrionmentVariables()
 	// For Checking during development:
 	// fmt.Printf("Config: %v\n", Config)
+	// logging.Log("Config: %v\n", Config)
 }
 
 func SetupConfigurationEnvrionmentVariables() {
