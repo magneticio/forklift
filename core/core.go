@@ -250,6 +250,80 @@ func (c *Core) GetUser(namespace string, name string) (*models.SqlElement, error
 	return &sqlElement, nil
 }
 
+func (c *Core) ListArtifacts(organization string, environment string, kind string) ([]string, error) {
+
+	databaseConfig := c.GetNamespaceDatabaseConfiguration(environment)
+
+	namespacedOrganizationName := c.GetNamespaceDatabaseConfiguration(organization).Sql.Database
+
+	client, clientError := sql.NewSqlClient(databaseConfig)
+	if clientError != nil {
+		fmt.Printf("Error: %v\n", clientError.Error())
+		return nil, clientError
+	}
+
+	result, queryError := client.List(namespacedOrganizationName, databaseConfig.Sql.Table, kind)
+	if queryError != nil {
+		return nil, queryError
+	}
+
+	if result == nil {
+		return nil, nil
+	}
+
+	var names []string
+
+	for _, element := range result {
+
+		var sqlElement models.SqlElement
+
+		jsonUnmarshallError := json.Unmarshal([]byte(element.Record), &sqlElement)
+		if jsonUnmarshallError != nil {
+			return nil, jsonUnmarshallError
+		}
+
+		names = append(names, sqlElement.Name)
+	}
+
+	return names, nil
+}
+
+func (c *Core) ListUsers(namespace string) ([]string, error) {
+
+	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
+
+	client, clientError := sql.NewSqlClient(databaseConfig)
+	if clientError != nil {
+		fmt.Printf("Error: %v\n", clientError.Error())
+		return nil, clientError
+	}
+
+	result, queryError := client.List(databaseConfig.Sql.Database, databaseConfig.Sql.Table, "users")
+	if queryError != nil {
+		return nil, queryError
+	}
+
+	if result == nil {
+		return nil, nil
+	}
+
+	var names []string
+
+	for _, element := range result {
+
+		var sqlElement models.SqlElement
+
+		jsonUnmarshallError := json.Unmarshal([]byte(element.Record), &sqlElement)
+		if jsonUnmarshallError != nil {
+			return nil, jsonUnmarshallError
+		}
+
+		names = append(names, sqlElement.Name)
+	}
+
+	return names, nil
+}
+
 func (c *Core) AddArtifact(organization string, environment string, content string) error {
 
 	databaseConfig := c.GetNamespaceDatabaseConfiguration(environment)

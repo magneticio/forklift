@@ -356,7 +356,7 @@ func TestList(t *testing.T) {
 		ExpectExec(useDbStatement).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	queryStatement := "SELECT \\* FROM `organization`"
+	queryStatement := "SELECT \\* FROM `organization` WHERE Record LIKE '%\"kind\":\"kind\"%'"
 
 	rows := sqlmock.NewRows([]string{"ID", "Record"}).
 		AddRow(1, "just a test").
@@ -367,7 +367,7 @@ func TestList(t *testing.T) {
 		ExpectQuery().
 		WillReturnRows(rows)
 
-	result, queryError := client.List("testdb", "organization")
+	result, queryError := client.List("testdb", "organization", "kind")
 
 	expected := []Row{
 		Row{
