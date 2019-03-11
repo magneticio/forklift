@@ -36,7 +36,7 @@ var updateorganizationCmd = &cobra.Command{
 	Short: "Update a new organization",
 	Long: AddAppName(`Update a new organization
     Example:
-    $AppName update organization org1 --configuration ./somepath.json`),
+    $AppName update organization org1 --file ./somepath.json`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -79,7 +79,7 @@ var updateorganizationCmd = &cobra.Command{
 func init() {
 	updateCmd.AddCommand(updateorganizationCmd)
 
-	updateorganizationCmd.Flags().StringVarP(&configPath, "configuration", "", "", "Organization configuration file path")
-	updateorganizationCmd.MarkFlagRequired("configuration")
+	updateorganizationCmd.Flags().StringVarP(&configPath, "file", "", "", "Organization configuration file path")
+	updateorganizationCmd.MarkFlagRequired("file")
 	updateorganizationCmd.Flags().StringVarP(&configFileType, "input", "i", "yaml", "Configuration file type yaml or json")
 }

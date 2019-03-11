@@ -36,7 +36,7 @@ var environmentCmd = &cobra.Command{
 	Short: "Create a new environment",
 	Long: AddAppName(`Create a new environment
     Example:
-    $AppName create environment env1 --organization org --configuration ./somepath.json`),
+    $AppName create environment env1 --organization org --file ./somepath.json`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -100,8 +100,8 @@ var environmentCmd = &cobra.Command{
 func init() {
 	createCmd.AddCommand(environmentCmd)
 
-	environmentCmd.Flags().StringVarP(&configPath, "configuration", "", "", "Environment configuration file path")
-	environmentCmd.MarkFlagRequired("configuration")
+	environmentCmd.Flags().StringVarP(&configPath, "file", "", "", "Environment configuration file path")
+	environmentCmd.MarkFlagRequired("file")
 	environmentCmd.Flags().StringVarP(&configFileType, "input", "i", "yaml", "Configuration file type yaml or json")
 	environmentCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the environment")
 	environmentCmd.MarkFlagRequired("organization")

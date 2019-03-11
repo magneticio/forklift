@@ -5,6 +5,20 @@ Vamp Forklift is a command line client written in golang and allows to easily se
 Forklift requires running and reachable instances of MySql and Vault tied to a Vamp installation.
 Please check How to Setup Vamp at the following link https://vamp.io/documentation/installation/v1.0.0/overview/
 
+
+##Table of Contents
+=================
+
+    * [development](#development)
+    * [build](#build)
+    * [installation](#installation)
+       * [Verifying installation](#verifying-installation)
+    * [Usage](#usage)
+       * [Organizations](#organizations)
+       * [Users](#users)
+       * [Environments](#environments)
+       * [Artifacts](#artifacts)
+
 ## development
 
 if you have golang installed, it is recommended to git clone Forklift to $GOPATH/src/github.com/magneticio/forklift
@@ -88,9 +102,17 @@ forklift:
 
 ```
 
+The configuration path can be changed during the execution of any command by specifying the extra parameter
+
+```shell
+--config config-path
+```
+
+Where config-path is the path of the configuration file to be used.
+
 ### Verifying installation
 
-To verify the installation you can run the following command, whcih will return the version of the client's and vamp's versions.
+To verify the installation you can run the following command, which will return the version of the client's and vamp's versions.
 
 ```shell
 forklift version
@@ -101,12 +123,14 @@ It is possible to get all commands and flags by running help:
 forklift help
 ```
 
+## Usage
+
 ### Organizations
 
 Forklift allows for the creation of a new Organization by running:
 
 ```shell
-forklift create organization organization-name --configuration ./resources/organization-config.yaml
+forklift create organization organization-name --file ./resources/organization-config.yaml
 ```
 
 Where organization-config.yaml is the Organization configuration which should correspond to the following Template.
@@ -163,10 +187,10 @@ forklift list organization
 update them with
 
 ```shell
-forklift update organization organization-name --configuration ./resources/organization-config.yaml
+forklift update organization organization-name --file ./resources/organization-config.yaml
 ```
 
-and delete them with
+delete them with
 
 ```shell
 forklift delete organization organization-name
@@ -191,7 +215,7 @@ Upon running the command you will be asked to input a new password twice, taking
 It is also possible to create users not interactively by running:
 
 ```shell
-forklift add user --organization organization-name --configuration ./user-configuration.json
+forklift add user --organization organization-name --file ./user-configuration.json
 ```
 
 Where user-configuration.json is a file specifying the user configuration and should look like this:
@@ -205,10 +229,32 @@ Where user-configuration.json is a file specifying the user configuration and sh
 }
 ```
 
-Once created, you can delete Users by running
+Mind the fact that add will insert the user or replace it if it already exists.
+Once created, you can users Users by running
+
+
+```shell
+forklift update user user-name --role role-name organization organization-name
+```
+
+which will require you to specify the password interactively just like with the create.
+
+You can then delete users with
 
 ```shell
 forklift delete user user-name --organization organization-name
+```
+
+list them with
+
+```shell
+forklift list users --organization organization-name
+```
+
+and show a specific user with
+
+```shell
+forklift show user user-name --organization organization-name
 ```
 
 ### Environments
@@ -216,7 +262,7 @@ forklift delete user user-name --organization organization-name
 Environments can be created with Forklift by running:
 
 ```shell
-forklift create environment environment-name --organization organization-name --configuration ./resources/environment-configuration.yaml --artifacts ./resources/artifacts
+forklift create environment environment-name --organization organization-name --file ./resources/environment-configuration.yaml --artifacts ./resources/artifacts
 ```
 
 Where enviroment-configuration.yaml (or json) follows the template below:
@@ -345,7 +391,7 @@ forklift list environments --organization organization-name
 update them with
 
 ```shell
-forklift update environment environment-name --organization organization-name --configuration ./resources/environment-configuration.yaml --artifacts ./resources/artifacts
+forklift update environment environment-name --organization organization-name --file ./resources/environment-configuration.yaml --artifacts ./resources/artifacts
 ```
 
 and delete them with
@@ -358,4 +404,66 @@ show current configuration with
 
 ```shell
 forklift show environment environment-name --organization organization-name
+```
+
+### Artifacts
+
+Artifacts are breeds and workflows belonging to an environment.
+Artifacts can be created or replaced with the following commands
+
+```shell
+forklift add artifact artifact-name --organization organization-name --environment environment-name --file ./resources/artifact.yaml
+```
+
+where artifact.yaml contains the artifact specification in this form:
+
+```
+name: test
+kind: breeds
+deployable:
+  definition: magneticio/vamp-ee-workflows:1.0.4-quantification
+ports:
+  webport: 8080/http
+environment_variables:
+  VAMP_URL                            : ${config://vamp.workflow-driver.workflow.vamp-url}
+  VAMP_API_TOKEN                      : ${vamp://token}
+  VAMP_NAMESPACE                      : ${config://vamp.namespace}
+  VAMP_WORKFLOW_EXECUTION_TIMEOUT     : ${config://vamp.workflow-driver.workflow.vamp-workflow-execution-timeout}
+  VAMP_KEY_VALUE_STORE_CONNECTION     : ${config://vamp.workflow-driver.workflow.vamp-key-value-store-connection}
+  VAMP_KEY_VALUE_STORE_TOKEN          : ${config://vamp.workflow-driver.workflow.vamp-key-value-store-token}
+  VAMP_KEY_VALUE_STORE_PATH           : ${config://vamp.workflow-driver.workflow.vamp-key-value-store-path}
+  VAMP_WORKFLOW_EXECUTION_PERIOD      : ${config://vamp.workflow-driver.workflow.vamp-workflow-execution-period}
+  VAMP_KEY_VALUE_STORE_TYPE           : ${config://vamp.workflow-driver.workflow.vamp-key-value-store-type}
+  VAMP_PULSE_ELASTICSEARCH_URL        : ${config://vamp.pulse.elasticsearch.url}
+  VAMP_HEALTH                         : true
+  VAMP_ELASTICSEARCH_HEALTH_INDEX     : ${es://health}
+  VAMP_HEALTH_TIME_WINDOW             : 500
+  VAMP_METRICS                        : true
+  VAMP_ELASTICSEARCH_METRICS_INDEX    : ${es://metrics}
+  VAMP_METRICS_TIME_WINDOW            : 500
+  VAMP_CAPACITY                       : true
+  VAMP_ELASTICSEARCH_CAPACITY_INDEX   : ${es://capacity}
+  VAMP_ALLOCATION                     : true
+  VAMP_ELASTICSEARCH_ALLOCATION_INDEX : ${es://allocation}
+  VAMP_GATEWAY_DRIVER_ELASTICSEARCH_METRICS_TYPE : log
+  VAMP_GATEWAY_DRIVER_ELASTICSEARCH_METRICS_INDEX: vamp-vga-${config://vamp.namespace}-*
+```
+
+Just like other resources, artifacts can be listed with
+
+```shell
+forklift list artifact --kind artifact-kind --organization organization-name --environment environment-name
+```
+
+Where kind is the kind of the artifact (breed or workflow).
+Artifacts can also be deleted  with
+
+```shell
+forklift delete artifact artifact-name --kind artifact-kind --organization organization-name --environment environment-name
+```
+
+and shown with
+
+```shell
+forklift show artifact artifact-name --kind artifact-kind --organization organization-name --environment environment-name
 ```

@@ -33,7 +33,7 @@ var addArtifactCmd = &cobra.Command{
 	Short: "Add a new artifact",
 	Long: AddAppName(`Add a new artifact
     Example:
-    $AppName add artifact --organization org --environment env --configuration ./somepath.yaml`),
+    $AppName add artifact --organization org --environment env --file ./somepath.yaml`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -80,8 +80,8 @@ func init() {
 	addArtifactCmd.Flags().StringVarP(&environment, "environment", "", "", "Environment of the workflow")
 	addArtifactCmd.MarkFlagRequired("environment")
 
-	addArtifactCmd.Flags().StringVarP(&configPath, "configuration", "", "", "Artifact configuration file path")
-	addArtifactCmd.MarkFlagRequired("configuration")
+	addArtifactCmd.Flags().StringVarP(&configPath, "file", "", "", "Artifact configuration file path")
+	addArtifactCmd.MarkFlagRequired("file")
 	addArtifactCmd.Flags().StringVarP(&configFileType, "input", "i", "yaml", "Artifact configuration file type yaml or json")
 
 }

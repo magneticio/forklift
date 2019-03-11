@@ -36,7 +36,7 @@ var organizationCmd = &cobra.Command{
 	Short: "Create a new organization",
 	Long: AddAppName(`Create a new organization
     Example:
-    $AppName create organization org1 --configuration ./somepath.json`),
+    $AppName create organization org1 --file ./somepath.json`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -84,7 +84,7 @@ var organizationCmd = &cobra.Command{
 func init() {
 	createCmd.AddCommand(organizationCmd)
 
-	organizationCmd.Flags().StringVarP(&configPath, "configuration", "", "", "Organization configuration file path")
-	organizationCmd.MarkFlagRequired("configuration")
+	organizationCmd.Flags().StringVarP(&configPath, "file", "", "", "Organization configuration file path")
+	organizationCmd.MarkFlagRequired("file")
 	organizationCmd.Flags().StringVarP(&configFileType, "input", "i", "yaml", "Configuration file type yaml or json")
 }

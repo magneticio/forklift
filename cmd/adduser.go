@@ -33,7 +33,7 @@ var addUserCmd = &cobra.Command{
 	Short: "Add a new user",
 	Long: AddAppName(`Add a new user
     Example:
-    $AppName add user --organization org --configuration ./somepath.json`),
+    $AppName add user --organization org --file ./somepath.json`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -71,8 +71,8 @@ func init() {
 	addUserCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the environment")
 	addUserCmd.MarkFlagRequired("organization")
 
-	addUserCmd.Flags().StringVarP(&configPath, "configuration", "", "", "User configuration file path")
-	addUserCmd.MarkFlagRequired("configuration")
+	addUserCmd.Flags().StringVarP(&configPath, "file", "", "", "User configuration file path")
+	addUserCmd.MarkFlagRequired("file")
 	addUserCmd.Flags().StringVarP(&configFileType, "input", "i", "yaml", "User configuration file type yaml or json")
 
 }

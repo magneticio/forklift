@@ -36,7 +36,7 @@ var updateenvironmentCmd = &cobra.Command{
 	Short: "Update a new environment",
 	Long: AddAppName(`Update a new environment
     Example:
-    $AppName update environment env1 --organization org --configuration ./somepath.json`),
+    $AppName update environment env1 --organization org --file ./somepath.json`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -95,8 +95,8 @@ var updateenvironmentCmd = &cobra.Command{
 func init() {
 	updateCmd.AddCommand(updateenvironmentCmd)
 
-	updateenvironmentCmd.Flags().StringVarP(&configPath, "configuration", "", "", "Environment configuration file path")
-	updateenvironmentCmd.MarkFlagRequired("configuration")
+	updateenvironmentCmd.Flags().StringVarP(&configPath, "file", "", "", "Environment configuration file path")
+	updateenvironmentCmd.MarkFlagRequired("file")
 	updateenvironmentCmd.Flags().StringVarP(&configFileType, "input", "i", "yaml", "Configuration file type yaml or json")
 	updateenvironmentCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the environment")
 	updateenvironmentCmd.MarkFlagRequired("organization")
