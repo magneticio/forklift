@@ -19,7 +19,7 @@ type SqlClient interface {
 	InsertOrReplace(dbName string, tableName string, name string, kind string, record string) error
 	FindById(dbName string, tableName string, id int) (*Row, error)
 	FindByNameAndKind(dbName string, tableName string, name string, kind string) (*Row, error)
-	List(dbName string, tableName string) ([]Row, error)
+	List(dbName string, tableName string, kind string) ([]Row, error)
 	Update(dbName string, tableName string, id int, record string) error
 	Delete(dbName string, tableName string, id int) error
 	DeleteByNameAndKind(dbName string, tableName string, name string, kind string) error
@@ -349,7 +349,7 @@ func (client *MySqlClient) FindById(dbName string, tableName string, id int) (*R
 	}, nil
 }
 
-func (client *MySqlClient) List(dbName string, tableName string) ([]Row, error) {
+func (client *MySqlClient) List(dbName string, tableName string, kind string) ([]Row, error) {
 
 	_, useDbErr := client.Db.Exec("USE `" + dbName + "`")
 	if useDbErr != nil {
@@ -357,7 +357,7 @@ func (client *MySqlClient) List(dbName string, tableName string) ([]Row, error) 
 		return []Row{}, useDbErr
 	}
 
-	stmtOut, listErr := client.Db.Prepare("SELECT * FROM `" + tableName + "`")
+	stmtOut, listErr := client.Db.Prepare("SELECT * FROM `" + tableName + "` WHERE Record LIKE '%\"kind\":\"" + kind + "\"%'")
 	if listErr != nil {
 		fmt.Printf("Error: %v\n", listErr.Error())
 		return []Row{}, listErr
