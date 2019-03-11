@@ -120,6 +120,69 @@ func (c *Core) CreateUser(namespace string, name string, role string, password s
 
 }
 
+func (c *Core) UpdateUser(namespace string, name string, role string, password string) error {
+
+	userElement, validationError := c.GetUser(namespace, name)
+	if validationError != nil {
+
+		return validationError
+	}
+	if userElement == nil {
+
+		return errors.New(fmt.Sprintf("%v %v does not exist", models.UsersKind, name))
+	}
+
+	// get organization Configuration using namespace
+	configuration, configurationError := c.getConfig(namespace)
+	if configurationError != nil {
+		return configurationError
+	}
+
+	encodedPassword := util.EncodeString(password, configuration.VampConfiguration.Security.PasswordHashAlgorithm, configuration.VampConfiguration.Security.PasswordHashSalt)
+
+	artifact := models.Artifact{
+		Name:     name,
+		Password: encodedPassword,
+		Kind:     models.UsersKind,
+		Roles:    []string{role},
+		Metadata: map[string]string{},
+	}
+
+	artifactAsJson, artifactJsonError := json.Marshal(artifact)
+	if artifactJsonError != nil {
+		return artifactJsonError
+	}
+
+	artifactAsJsonString := string(artifactAsJson)
+
+	sqlElement := models.SqlElement{
+		Version:   models.BackendVersion,
+		Instance:  util.UUID(),
+		Timestamp: util.Timestamp(),
+		Name:      name,
+		Kind:      models.UsersKind,
+		Artifact:  artifactAsJsonString,
+	}
+
+	sqlElementAsJson, sqlElementJsonError := json.Marshal(sqlElement)
+	if sqlElementJsonError != nil {
+		return sqlElementJsonError
+	}
+
+	sqlElementAsJsonString := string(sqlElementAsJson)
+
+	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
+
+	client, clientError := sql.NewSqlClient(databaseConfig)
+	if clientError != nil {
+		fmt.Printf("Error: %v\n", clientError.Error())
+		return clientError
+	}
+
+	return client.InsertOrReplace(databaseConfig.Sql.Database, databaseConfig.Sql.Table, sqlElement.Name, sqlElement.Kind, sqlElementAsJsonString)
+
+}
+
 func (c *Core) DeleteUser(namespace string, user string) error {
 
 	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
@@ -140,13 +203,6 @@ func (c *Core) AddUser(namespace string, user string) error {
 	if convertError != nil {
 		return convertError
 	}
-	userElement, validationError := c.GetUser(namespace, sqlElement.Name)
-	if validationError != nil {
-		return validationError
-	}
-	if userElement != nil {
-		return errors.New(fmt.Sprintf("User %v already exists", sqlElement.Name))
-	}
 
 	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
 
@@ -161,7 +217,7 @@ func (c *Core) AddUser(namespace string, user string) error {
 		return jsonMarshallError
 	}
 
-	return client.Insert(databaseConfig.Sql.Database, databaseConfig.Sql.Table, string(sqlElementString))
+	return client.InsertOrReplace(databaseConfig.Sql.Database, databaseConfig.Sql.Table, sqlElement.Name, sqlElement.Kind, string(sqlElementString))
 
 }
 
@@ -203,13 +259,6 @@ func (c *Core) AddArtifact(organization string, environment string, content stri
 	if convertError != nil {
 		return convertError
 	}
-	element, validationError := c.GetArtifact(organization, environment, sqlElement.Name, sqlElement.Kind)
-	if validationError != nil {
-		return validationError
-	}
-	if element != nil {
-		return errors.New(fmt.Sprintf("%v %v already exists", sqlElement.Kind, sqlElement.Name))
-	}
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
@@ -222,7 +271,7 @@ func (c *Core) AddArtifact(organization string, environment string, content stri
 		return jsonMarshallError
 	}
 
-	return client.Insert(namespacedOrganizationName, databaseConfig.Sql.Table, string(sqlElementString))
+	return client.InsertOrReplace(namespacedOrganizationName, databaseConfig.Sql.Table, sqlElement.Name, sqlElement.Kind, string(sqlElementString))
 
 }
 

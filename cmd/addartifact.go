@@ -33,7 +33,7 @@ var addArtifactCmd = &cobra.Command{
 	Short: "Add a new artifact",
 	Long: AddAppName(`Add a new artifact
     Example:
-    $AppName add artifact --organization org --environment env --configuration ./somepath.json`),
+    $AppName add artifact --organization org --environment env --configuration ./somepath.yaml`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {

@@ -201,6 +201,51 @@ func TestInsert(t *testing.T) {
 
 }
 
+func TestInsertOrReplace(t *testing.T) {
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	client := MySqlClient{
+		User:     "",
+		Password: "",
+		Host:     "",
+		DbName:   "",
+		Db:       db,
+	}
+
+	useDbStatement := "USE `testdb`"
+
+	mock.
+		ExpectExec(useDbStatement).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	mock.ExpectBegin()
+
+	deleteStatement := "DELETE FROM `organization` WHERE Record LIKE '%\"name\":\"name\"%' AND Record LIKE '%\"kind\":\"kind\"%'"
+
+	mock.ExpectPrepare(deleteStatement).
+		ExpectExec().
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	insertStatement := "INSERT INTO `organization` \\( Record \\) VALUES\\( \\? \\)"
+
+	mock.ExpectPrepare(insertStatement).
+		ExpectExec().
+		WithArgs("record").
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	mock.ExpectCommit()
+
+	insertError := client.InsertOrReplace("testdb", "organization", "name", "kind", "record")
+
+	assert.Nil(t, insertError, fmt.Sprintf("Insert resulted in error %v \n", insertError))
+
+}
+
 func TestFindByNameAndKind(t *testing.T) {
 
 	db, mock, err := sqlmock.New()
