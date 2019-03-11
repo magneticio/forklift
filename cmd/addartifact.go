@@ -54,7 +54,7 @@ var addArtifactCmd = &cobra.Command{
 			return readErr
 		}
 
-		artifactJson, jsonError := util.Convert("yaml", "json", artifactBytes)
+		artifactJson, jsonError := util.Convert(configFileType, "json", artifactBytes)
 		if jsonError != nil {
 			return jsonError
 		}
@@ -80,8 +80,8 @@ func init() {
 	addArtifactCmd.Flags().StringVarP(&environment, "environment", "", "", "Environment of the workflow")
 	addArtifactCmd.MarkFlagRequired("environment")
 
-	addArtifactCmd.Flags().StringVarP(&configPath, "configuration", "", "", "User configuration file path")
+	addArtifactCmd.Flags().StringVarP(&configPath, "configuration", "", "", "Artifact configuration file path")
 	addArtifactCmd.MarkFlagRequired("configuration")
-	addArtifactCmd.Flags().StringVarP(&configFileType, "input", "i", "yaml", "User configuration file type yaml or json")
+	addArtifactCmd.Flags().StringVarP(&configFileType, "input", "i", "yaml", "Artifact configuration file type yaml or json")
 
 }
