@@ -33,7 +33,7 @@ var addUserCmd = &cobra.Command{
 	Short: "Add a new user",
 	Long: AddAppName(`Add a new user
     Example:
-    $AppName add user --role r --organization org --configuration ./somepath.json`),
+    $AppName add user --organization org --configuration ./somepath.json`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {

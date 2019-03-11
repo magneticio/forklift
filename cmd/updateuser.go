@@ -29,12 +29,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var createUserCmd = &cobra.Command{
+var updateUserCmd = &cobra.Command{
 	Use:   "user",
-	Short: "Create a new user",
-	Long: AddAppName(`Create a new user
+	Short: "Update a user",
+	Long: AddAppName(`Update a user
     Example:
-    $AppName create user name --role r --organization org`),
+    $AppName update user name --role r --organization org`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -65,22 +65,22 @@ var createUserCmd = &cobra.Command{
 			return errors.New("Password should be 6 or more characters")
 		}
 
-		createUserError := core.CreateUser(namespaced, name, role, passwd)
-		if createUserError != nil {
-			return createUserError
+		updateUserError := core.UpdateUser(namespaced, name, role, passwd)
+		if updateUserError != nil {
+			return updateUserError
 		}
-		fmt.Printf("User is created\n")
+		fmt.Printf("User is updated\n")
 
 		return nil
 	},
 }
 
 func init() {
-	createCmd.AddCommand(createUserCmd)
+	updateCmd.AddCommand(updateUserCmd)
 
-	createUserCmd.Flags().StringVarP(&role, "role", "", "", "Role of the user")
-	createUserCmd.MarkFlagRequired("role")
-	createUserCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the environment")
-	createUserCmd.MarkFlagRequired("organization")
+	updateUserCmd.Flags().StringVarP(&role, "role", "", "", "Role of the user")
+	updateUserCmd.MarkFlagRequired("role")
+	updateUserCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the environment")
+	updateUserCmd.MarkFlagRequired("organization")
 
 }

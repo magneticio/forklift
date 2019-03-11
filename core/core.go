@@ -28,9 +28,11 @@ func NewCore(conf Configuration) (*Core, error) {
 	}, nil
 }
 
-func (c *Core) GetUser(namespace string, name string) (*models.SqlElement, error) {
+func (c *Core) GetArtifact(organization string, environment string, name string, kind string) (*models.SqlElement, error) {
 
-	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
+	databaseConfig := c.GetNamespaceDatabaseConfiguration(environment)
+
+	namespacedOrganizationName := c.GetNamespaceDatabaseConfiguration(organization).Sql.Database
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
@@ -38,7 +40,7 @@ func (c *Core) GetUser(namespace string, name string) (*models.SqlElement, error
 		return nil, clientError
 	}
 
-	result, queryError := client.FindByNameAndKind(databaseConfig.Sql.Database, databaseConfig.Sql.Table, name, "users")
+	result, queryError := client.FindByNameAndKind(namespacedOrganizationName, databaseConfig.Sql.Table, name, kind)
 	if queryError != nil {
 		return nil, queryError
 	}
@@ -58,11 +60,6 @@ func (c *Core) GetUser(namespace string, name string) (*models.SqlElement, error
 
 func (c *Core) CreateUser(namespace string, name string, role string, password string) error {
 
-	version := "1.0.4" // TODO: this should be a constant
-	kind := "users"    // TODO: this should be a constant
-
-	fmt.Printf("Getting user \n")
-
 	userElement, validationError := c.GetUser(namespace, name)
 	if validationError != nil {
 
@@ -70,7 +67,7 @@ func (c *Core) CreateUser(namespace string, name string, role string, password s
 	}
 	if userElement != nil {
 
-		return errors.New(fmt.Sprintf("User %v already exists", name))
+		return errors.New(fmt.Sprintf("%v %v already exists", models.UsersKind, name))
 	}
 
 	// get organization Configuration using namespace
@@ -84,7 +81,7 @@ func (c *Core) CreateUser(namespace string, name string, role string, password s
 	artifact := models.Artifact{
 		Name:     name,
 		Password: encodedPassword,
-		Kind:     kind,
+		Kind:     models.UsersKind,
 		Roles:    []string{role},
 		Metadata: map[string]string{},
 	}
@@ -97,11 +94,11 @@ func (c *Core) CreateUser(namespace string, name string, role string, password s
 	artifactAsJsonString := string(artifactAsJson)
 
 	sqlElement := models.SqlElement{
-		Version:   version,
+		Version:   models.BackendVersion,
 		Instance:  util.UUID(),
 		Timestamp: util.Timestamp(),
 		Name:      name,
-		Kind:      kind,
+		Kind:      models.UsersKind,
 		Artifact:  artifactAsJsonString,
 	}
 
@@ -124,18 +121,88 @@ func (c *Core) CreateUser(namespace string, name string, role string, password s
 
 }
 
+func (c *Core) UpdateUser(namespace string, name string, role string, password string) error {
+
+	userElement, validationError := c.GetUser(namespace, name)
+	if validationError != nil {
+
+		return validationError
+	}
+	if userElement == nil {
+
+		return errors.New(fmt.Sprintf("%v %v does not exist", models.UsersKind, name))
+	}
+
+	// get organization Configuration using namespace
+	configuration, configurationError := c.getConfig(namespace)
+	if configurationError != nil {
+		return configurationError
+	}
+
+	encodedPassword := util.EncodeString(password, configuration.VampConfiguration.Security.PasswordHashAlgorithm, configuration.VampConfiguration.Security.PasswordHashSalt)
+
+	artifact := models.Artifact{
+		Name:     name,
+		Password: encodedPassword,
+		Kind:     models.UsersKind,
+		Roles:    []string{role},
+		Metadata: map[string]string{},
+	}
+
+	artifactAsJson, artifactJsonError := json.Marshal(artifact)
+	if artifactJsonError != nil {
+		return artifactJsonError
+	}
+
+	artifactAsJsonString := string(artifactAsJson)
+
+	sqlElement := models.SqlElement{
+		Version:   models.BackendVersion,
+		Instance:  util.UUID(),
+		Timestamp: util.Timestamp(),
+		Name:      name,
+		Kind:      models.UsersKind,
+		Artifact:  artifactAsJsonString,
+	}
+
+	sqlElementAsJson, sqlElementJsonError := json.Marshal(sqlElement)
+	if sqlElementJsonError != nil {
+		return sqlElementJsonError
+	}
+
+	sqlElementAsJsonString := string(sqlElementAsJson)
+
+	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
+
+	client, clientError := sql.NewSqlClient(databaseConfig)
+	if clientError != nil {
+		fmt.Printf("Error: %v\n", clientError.Error())
+		return clientError
+	}
+
+	return client.InsertOrReplace(databaseConfig.Sql.Database, databaseConfig.Sql.Table, sqlElement.Name, sqlElement.Kind, sqlElementAsJsonString)
+
+}
+
+func (c *Core) DeleteUser(namespace string, user string) error {
+
+	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
+
+	client, clientError := sql.NewSqlClient(databaseConfig)
+	if clientError != nil {
+		fmt.Printf("Error: %v\n", clientError.Error())
+		return clientError
+	}
+
+	return client.DeleteByNameAndKind(databaseConfig.Sql.Database, databaseConfig.Sql.Table, user, models.UsersKind) //TODO admin should be a constant
+
+}
+
 func (c *Core) AddUser(namespace string, user string) error {
 
 	sqlElement, convertError := ConvertToSqlElement(user)
 	if convertError != nil {
 		return convertError
-	}
-	userElement, validationError := c.GetUser(namespace, sqlElement.Name)
-	if validationError != nil {
-		return validationError
-	}
-	if userElement != nil {
-		return errors.New(fmt.Sprintf("User %v already exists", sqlElement.Name))
 	}
 
 	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
@@ -151,13 +218,48 @@ func (c *Core) AddUser(namespace string, user string) error {
 		return jsonMarshallError
 	}
 
-	return client.Insert(databaseConfig.Sql.Database, databaseConfig.Sql.Table, string(sqlElementString))
+	return client.InsertOrReplace(databaseConfig.Sql.Database, databaseConfig.Sql.Table, sqlElement.Name, sqlElement.Kind, string(sqlElementString))
 
 }
 
-func (c *Core) DeleteUser(namespace string, user string) error {
+func (c *Core) GetUser(namespace string, name string) (*models.SqlElement, error) {
 
 	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
+
+	client, clientError := sql.NewSqlClient(databaseConfig)
+	if clientError != nil {
+		fmt.Printf("Error: %v\n", clientError.Error())
+		return nil, clientError
+	}
+
+	result, queryError := client.FindByNameAndKind(databaseConfig.Sql.Database, databaseConfig.Sql.Table, name, models.UsersKind)
+	if queryError != nil {
+		return nil, queryError
+	}
+
+	if result == nil {
+		return nil, nil
+	}
+
+	var sqlElement models.SqlElement
+
+	jsonUnmarshallError := json.Unmarshal([]byte(result.Record), &sqlElement)
+	if jsonUnmarshallError != nil {
+		return nil, jsonUnmarshallError
+	}
+	return &sqlElement, nil
+}
+
+func (c *Core) AddArtifact(organization string, environment string, content string) error {
+
+	databaseConfig := c.GetNamespaceDatabaseConfiguration(environment)
+
+	namespacedOrganizationName := c.GetNamespaceDatabaseConfiguration(organization).Sql.Database
+
+	sqlElement, convertError := ConvertToSqlElement(content)
+	if convertError != nil {
+		return convertError
+	}
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
@@ -165,7 +267,28 @@ func (c *Core) DeleteUser(namespace string, user string) error {
 		return clientError
 	}
 
-	return client.DeleteByNameAndKind(databaseConfig.Sql.Database, databaseConfig.Sql.Table, user, "users") //TODO admin should be a constant
+	sqlElementString, jsonMarshallError := json.Marshal(sqlElement)
+	if jsonMarshallError != nil {
+		return jsonMarshallError
+	}
+
+	return client.InsertOrReplace(namespacedOrganizationName, databaseConfig.Sql.Table, sqlElement.Name, sqlElement.Kind, string(sqlElementString))
+
+}
+
+func (c *Core) DeleteArtifact(organization string, environment string, name string, kind string) error {
+
+	databaseConfig := c.GetNamespaceDatabaseConfiguration(environment)
+
+	namespacedOrganizationName := c.GetNamespaceDatabaseConfiguration(organization).Sql.Database
+
+	client, clientError := sql.NewSqlClient(databaseConfig)
+	if clientError != nil {
+		fmt.Printf("Error: %v\n", clientError.Error())
+		return clientError
+	}
+
+	return client.DeleteByNameAndKind(namespacedOrganizationName, databaseConfig.Sql.Table, name, kind) //TODO admin should be a constant
 
 }
 
@@ -417,11 +540,13 @@ func ConvertToSqlElement(artifactAsJsonString string) (*models.SqlElement, error
 	var artifact models.Artifact
 	unmarshallError := json.Unmarshal([]byte(artifactAsJsonString), &artifact)
 	if unmarshallError != nil {
+		fmt.Printf("Unmarshalling error : %v\n", artifactAsJsonString)
+		fmt.Printf("Unmarshalling error : %v\n", unmarshallError.Error())
 		return nil, unmarshallError
 	}
-	version := "1.0.4" // TODO: this should be a constant
+
 	return &models.SqlElement{
-		Version:   version,
+		Version:   models.BackendVersion,
 		Instance:  util.UUID(),
 		Timestamp: util.Timestamp(),
 		Name:      artifact.Name,

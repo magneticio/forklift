@@ -25,25 +25,25 @@ import (
 	"fmt"
 
 	"github.com/magneticio/forklift/core"
-	"github.com/magneticio/forklift/util"
 	"github.com/spf13/cobra"
 )
 
-var createUserCmd = &cobra.Command{
-	Use:   "user",
-	Short: "Create a new user",
-	Long: AddAppName(`Create a new user
+var deleteArtifactCmd = &cobra.Command{
+	Use:   "artifact",
+	Short: "Delete an artifact",
+	Long: AddAppName(`Delete an artifact
     Example:
-    $AppName create user name --role r --organization org`),
+    $AppName delete artifact name --kind k --organization org --environment env`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
-			return errors.New("Not Enough Arguments, User Name needed.")
+			return errors.New("Not Enough Arguments, Name needed.")
 		}
 		name := args[0]
 
-		namespaced := Config.Namespace + "-" + organization
+		namespacedEnvironment := Config.Namespace + "-" + organization + "-" + environment
+		namespacedOrganization := Config.Namespace + "-" + organization
 
 		coreConfig := core.Configuration{
 			VampConfiguration: Config.VampConfiguration,
@@ -53,34 +53,26 @@ var createUserCmd = &cobra.Command{
 			return coreError
 		}
 
-		passwd, passwdError := util.GetParameterFromTerminalAsSecret(
-			"Enter your password (password will not be visible):",
-			"Enter your password again (password will not be visible):",
-			"Passwords do not match.")
-		if passwdError != nil {
-			return passwdError
+		deleteArtifactError := core.DeleteArtifact(namespacedOrganization, namespacedEnvironment, name, kind)
+		if deleteArtifactError != nil {
+			return deleteArtifactError
 		}
-
-		if len(passwd) < 6 {
-			return errors.New("Password should be 6 or more characters")
-		}
-
-		createUserError := core.CreateUser(namespaced, name, role, passwd)
-		if createUserError != nil {
-			return createUserError
-		}
-		fmt.Printf("User is created\n")
+		fmt.Printf("Artifact is deleted\n")
 
 		return nil
 	},
 }
 
 func init() {
-	createCmd.AddCommand(createUserCmd)
+	deleteCmd.AddCommand(deleteArtifactCmd)
 
-	createUserCmd.Flags().StringVarP(&role, "role", "", "", "Role of the user")
-	createUserCmd.MarkFlagRequired("role")
-	createUserCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the environment")
-	createUserCmd.MarkFlagRequired("organization")
+	deleteArtifactCmd.Flags().StringVarP(&kind, "kind", "", "", "Kind of the artifact")
+	deleteArtifactCmd.MarkFlagRequired("kind")
+
+	deleteArtifactCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the artifact")
+	deleteArtifactCmd.MarkFlagRequired("organization")
+
+	deleteArtifactCmd.Flags().StringVarP(&environment, "environment", "", "", "Environment of the artifact")
+	deleteArtifactCmd.MarkFlagRequired("environment")
 
 }

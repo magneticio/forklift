@@ -16,6 +16,7 @@ type SqlClient interface {
 	SetupEnvironment(dbName string, tableName string, elements []string) error
 	UpdateEnvironment(dbName string, tableName string, elements []string) error
 	Insert(dbName string, tableName string, record string) error
+	InsertOrReplace(dbName string, tableName string, name string, kind string, record string) error
 	FindById(dbName string, tableName string, id int) (*Row, error)
 	FindByNameAndKind(dbName string, tableName string, name string, kind string) (*Row, error)
 	List(dbName string, tableName string) ([]Row, error)
@@ -171,7 +172,11 @@ func (client *MySqlClient) UpdateEnvironment(dbName string, tableName string, el
 
 	_, deleteErr := tx.Exec("DELETE FROM `" + tableName + "`")
 	if deleteErr != nil {
-		tx.Rollback()
+		rollbackError := tx.Rollback()
+		if rollbackError != nil {
+			fmt.Printf("Error: %v\n", rollbackError.Error())
+			return rollbackError
+		}
 		fmt.Printf("Error: %v\n", deleteErr.Error())
 		return deleteErr
 	}
@@ -180,7 +185,11 @@ func (client *MySqlClient) UpdateEnvironment(dbName string, tableName string, el
 
 		stmtIns, stmtInsErr := tx.Prepare("INSERT INTO `" + tableName + "` ( Record ) VALUES( ? )")
 		if stmtInsErr != nil {
-			tx.Rollback()
+			rollbackError := tx.Rollback()
+			if rollbackError != nil {
+				fmt.Printf("Error: %v\n", rollbackError.Error())
+				return rollbackError
+			}
 			fmt.Printf("Error: %v\n", stmtInsErr.Error())
 			return stmtInsErr
 		}
@@ -189,7 +198,11 @@ func (client *MySqlClient) UpdateEnvironment(dbName string, tableName string, el
 
 		_, insErr := stmtIns.Exec(value)
 		if insErr != nil {
-			tx.Rollback()
+			rollbackError := tx.Rollback()
+			if rollbackError != nil {
+				fmt.Printf("Error: %v\n", rollbackError.Error())
+				return rollbackError
+			}
 			fmt.Printf("Error: %v\n", insErr.Error())
 			return insErr
 		}
@@ -198,7 +211,11 @@ func (client *MySqlClient) UpdateEnvironment(dbName string, tableName string, el
 
 	commitError := tx.Commit()
 	if commitError != nil {
-		tx.Rollback()
+		rollbackError := tx.Rollback()
+		if rollbackError != nil {
+			fmt.Printf("Error: %v\n", rollbackError.Error())
+			return rollbackError
+		}
 		fmt.Printf("Error: %v\n", commitError.Error())
 		return commitError
 	}
@@ -226,6 +243,76 @@ func (client *MySqlClient) Insert(dbName string, tableName string, record string
 	if err != nil {
 		fmt.Printf("Error: %v\n", err.Error())
 		return err
+	}
+
+	return nil
+}
+
+func (client *MySqlClient) InsertOrReplace(dbName string, tableName string, name string, kind string, record string) error {
+
+	_, useDbErr := client.Db.Exec("USE `" + dbName + "`")
+	if useDbErr != nil {
+		fmt.Printf("Error: %v\n", useDbErr.Error())
+		return useDbErr
+	}
+
+	tx, startTransactionError := client.Db.Begin()
+	if startTransactionError != nil {
+		fmt.Printf("Error: %v\n", startTransactionError.Error())
+		return startTransactionError
+	}
+
+	stmtDelete, stmtError := tx.Prepare("DELETE FROM `" + tableName + "` WHERE Record LIKE '%\"name\":\"" + name + "\"%' AND Record LIKE '%\"kind\":\"" + kind + "\"%'")
+	if stmtError != nil {
+		rollbackError := tx.Rollback()
+		if rollbackError != nil {
+			return rollbackError
+		}
+		fmt.Printf("Error: %v\n", stmtError.Error())
+		return stmtError
+	}
+
+	_, deleteError := stmtDelete.Exec()
+	if deleteError != nil {
+		rollbackError := tx.Rollback()
+		if rollbackError != nil {
+			return rollbackError
+		}
+		fmt.Printf("Error: %v\n", deleteError.Error())
+		return deleteError
+	}
+
+	stmtIns, err := tx.Prepare("INSERT INTO `" + tableName + "` ( Record ) VALUES( ? )")
+	if err != nil {
+		rollbackError := tx.Rollback()
+		if rollbackError != nil {
+			return rollbackError
+		}
+		fmt.Printf("Error: %v\n", err.Error())
+		return err
+	}
+
+	defer stmtIns.Close()
+
+	_, insertError := stmtIns.Exec(record)
+	if insertError != nil {
+		rollbackError := tx.Rollback()
+		if rollbackError != nil {
+			return rollbackError
+		}
+		fmt.Printf("Error: %v\n", err.Error())
+		return insertError
+	}
+
+	commitError := tx.Commit()
+	if commitError != nil {
+		rollbackError := tx.Rollback()
+		if rollbackError != nil {
+			fmt.Printf("Error: %v\n", rollbackError.Error())
+			return rollbackError
+		}
+		fmt.Printf("Error: %v\n", commitError.Error())
+		return commitError
 	}
 
 	return nil

@@ -21,7 +21,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/magneticio/forklift/core"
@@ -29,21 +28,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var createUserCmd = &cobra.Command{
-	Use:   "user",
-	Short: "Create a new user",
-	Long: AddAppName(`Create a new user
+var addArtifactCmd = &cobra.Command{
+	Use:   "artifact",
+	Short: "Add a new artifact",
+	Long: AddAppName(`Add a new artifact
     Example:
-    $AppName create user name --role r --organization org`),
+    $AppName add artifact --organization org --environment env --configuration ./somepath.yaml`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 1 {
-			return errors.New("Not Enough Arguments, User Name needed.")
-		}
-		name := args[0]
 
-		namespaced := Config.Namespace + "-" + organization
+		namespacedEnvironment := Config.Namespace + "-" + organization + "-" + environment
+		namespacedOrganization := Config.Namespace + "-" + organization
 
 		coreConfig := core.Configuration{
 			VampConfiguration: Config.VampConfiguration,
@@ -53,34 +49,39 @@ var createUserCmd = &cobra.Command{
 			return coreError
 		}
 
-		passwd, passwdError := util.GetParameterFromTerminalAsSecret(
-			"Enter your password (password will not be visible):",
-			"Enter your password again (password will not be visible):",
-			"Passwords do not match.")
-		if passwdError != nil {
-			return passwdError
+		artifactBytes, readErr := util.UseSourceUrl(configPath) // just pass the file name
+		if readErr != nil {
+			return readErr
 		}
 
-		if len(passwd) < 6 {
-			return errors.New("Password should be 6 or more characters")
+		artifactJson, jsonError := util.Convert(configFileType, "json", artifactBytes)
+		if jsonError != nil {
+			return jsonError
 		}
 
-		createUserError := core.CreateUser(namespaced, name, role, passwd)
-		if createUserError != nil {
-			return createUserError
+		artifactText := string(artifactJson)
+
+		createArtifactError := core.AddArtifact(namespacedOrganization, namespacedEnvironment, artifactText)
+		if createArtifactError != nil {
+			return createArtifactError
 		}
-		fmt.Printf("User is created\n")
+		fmt.Printf("Artifact is added\n")
 
 		return nil
 	},
 }
 
 func init() {
-	createCmd.AddCommand(createUserCmd)
+	addCmd.AddCommand(addArtifactCmd)
 
-	createUserCmd.Flags().StringVarP(&role, "role", "", "", "Role of the user")
-	createUserCmd.MarkFlagRequired("role")
-	createUserCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the environment")
-	createUserCmd.MarkFlagRequired("organization")
+	addArtifactCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the workflow")
+	addArtifactCmd.MarkFlagRequired("organization")
+
+	addArtifactCmd.Flags().StringVarP(&environment, "environment", "", "", "Environment of the workflow")
+	addArtifactCmd.MarkFlagRequired("environment")
+
+	addArtifactCmd.Flags().StringVarP(&configPath, "configuration", "", "", "Artifact configuration file path")
+	addArtifactCmd.MarkFlagRequired("configuration")
+	addArtifactCmd.Flags().StringVarP(&configFileType, "input", "i", "yaml", "Artifact configuration file type yaml or json")
 
 }
