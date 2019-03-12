@@ -40,7 +40,7 @@ var organizationsCmd = &cobra.Command{
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		logging.Log("Listing organizations\n")
+		logging.Info.Log("Listing organizations\n")
 
 		coreConfig := core.Configuration{
 			VampConfiguration: Config.VampConfiguration,

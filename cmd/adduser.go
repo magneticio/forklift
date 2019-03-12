@@ -39,7 +39,7 @@ var addUserCmd = &cobra.Command{
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		logging.Log("Adding new user to organization %v\n", organization)
+		logging.Info.Log("Adding new user to organization %v\n", organization)
 
 		namespaced := Config.Namespace + "-" + organization
 

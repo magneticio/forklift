@@ -40,7 +40,7 @@ var listArtifactsCmd = &cobra.Command{
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		logging.Log("Listing %v in environment %v in organization %v\n", kind, environment, organization)
+		logging.Info.Log("Listing %v in environment %v in organization %v\n", kind, environment, organization)
 
 		coreConfig := core.Configuration{
 			VampConfiguration: Config.VampConfiguration,

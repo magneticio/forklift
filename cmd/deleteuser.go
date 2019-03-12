@@ -43,10 +43,9 @@ var deleteUserCmd = &cobra.Command{
 		}
 		name := args[0]
 
-		logging.Log("Deleting user %v from organization %v\n", name, organization)
+		logging.Info.Log("Deleting user %v from organization %v\n", name, organization)
 
 		namespaced := Config.Namespace + "-" + organization
-		fmt.Printf("name: %v , configPath: %v\n", name, namespaced)
 
 		coreConfig := core.Configuration{
 			VampConfiguration: Config.VampConfiguration,

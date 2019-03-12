@@ -43,7 +43,7 @@ var deleteArtifactCmd = &cobra.Command{
 		}
 		name := args[0]
 
-		logging.Log("Deleting artifact %v from environment %v in organization %v\n", name, environment, organization)
+		logging.Info.Log("Deleting artifact %v from environment %v in organization %v\n", name, environment, organization)
 
 		namespacedEnvironment := Config.Namespace + "-" + organization + "-" + environment
 		namespacedOrganization := Config.Namespace + "-" + organization

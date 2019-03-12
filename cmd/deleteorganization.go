@@ -44,7 +44,7 @@ var deleteorganizationCmd = &cobra.Command{
 		}
 		name := args[0]
 
-		logging.Log("Deleting organization %v \n", name)
+		logging.Info.Log("Deleting organization %v \n", name)
 
 		namespacedOrganization := Config.Namespace + "-" + name
 		coreConfig := core.Configuration{

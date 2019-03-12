@@ -46,7 +46,7 @@ var showorganizationCmd = &cobra.Command{
 		}
 		name := args[0]
 
-		logging.Log("Showing organization %v\n", name)
+		logging.Info.Log("Showing organization %v\n", name)
 
 		if !util.ValidateName(name) {
 			return errors.New("Organization name should be only lowercase alphanumerics")

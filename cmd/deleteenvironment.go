@@ -42,7 +42,7 @@ var deleteenvironmentCmd = &cobra.Command{
 		}
 		name := args[0]
 
-		logging.Log("Deleting environment %v from organization %v\n", name, organization)
+		logging.Info.Log("Deleting environment %v from organization %v\n", name, organization)
 
 		namespacedOrganization := Config.Namespace + "-" + organization
 		namespacedEnvironment := namespacedOrganization + "-" + name

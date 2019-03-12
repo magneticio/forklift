@@ -1,11 +1,44 @@
 package logging
 
-import "log"
+import (
+	"fmt"
+	"io"
+	"log"
+)
 
 var Verbose bool = false
 
-func Log(format string, v ...interface{}) {
+var (
+	Info  *CustomLogger
+	Error *CustomLogger
+)
+
+func Init(
+	infoHandle io.Writer,
+	errorHandle io.Writer) {
+
+	Info =
+		&CustomLogger{
+			log.New(infoHandle,
+				"INFO: ",
+				log.Ldate|log.Ltime|log.Lshortfile),
+		}
+
+	Error =
+		&CustomLogger{
+			log.New(errorHandle,
+				"ERROR: ",
+				log.Ldate|log.Ltime|log.Lshortfile),
+		}
+}
+
+type CustomLogger struct {
+	Logger *log.Logger
+}
+
+func (c *CustomLogger) Log(format string, v ...interface{}) {
+
 	if Verbose {
-		log.Printf(format, v...)
+		c.Logger.Output(2, fmt.Sprintf(format, v...))
 	}
 }

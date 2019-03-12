@@ -46,7 +46,7 @@ var showenvironmentCmd = &cobra.Command{
 		}
 		name := args[0]
 
-		logging.Log("Showing environment %v in organization %v\n", name, organization)
+		logging.Info.Log("Showing environment %v in organization %v\n", name, organization)
 
 		if !util.ValidateName(name) {
 			return errors.New("Environment name should be only lowercase alphanumerics")

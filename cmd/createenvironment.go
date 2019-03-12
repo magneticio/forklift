@@ -50,7 +50,7 @@ var environmentCmd = &cobra.Command{
 			return errors.New("Environment name should be only lowercase alphanumerics")
 		}
 
-		logging.Log("Creating environment %v in organization %v\n", name, organization)
+		logging.Info.Log("Creating environment %v in organization %v\n", name, organization)
 
 		namespaced := Config.Namespace + "-" + organization + "-" + name
 		namespacedOrganization := Config.Namespace + "-" + organization
@@ -83,7 +83,7 @@ var environmentCmd = &cobra.Command{
 				return artifactsReadError
 			}
 			for file, content := range artifacts {
-				fmt.Printf("Using file as artifact %v\n", file)
+				logging.Info.Log("Using file as artifact %v\n", file)
 				contentJson, jsonError := util.Convert("yaml", "json", content)
 				if jsonError != nil {
 					return jsonError

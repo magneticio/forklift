@@ -45,7 +45,7 @@ var showUserCmd = &cobra.Command{
 		}
 		name := args[0]
 
-		logging.Log("Showing user %v in organization %v\n", name, organization)
+		logging.Info.Log("Showing user %v in organization %v\n", name, organization)
 
 		namespaced := Config.Namespace + "-" + organization
 		coreConfig := core.Configuration{

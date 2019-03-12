@@ -46,7 +46,7 @@ var updateenvironmentCmd = &cobra.Command{
 		}
 		name := args[0]
 
-		logging.Log("Updating environment %v in organization %v\n", name, organization)
+		logging.Info.Log("Updating environment %v in organization %v\n", name, organization)
 
 		namespaced := Config.Namespace + "-" + organization + "-" + name
 		namespacedOrganization := Config.Namespace + "-" + organization
@@ -79,7 +79,7 @@ var updateenvironmentCmd = &cobra.Command{
 				return artifactsReadError
 			}
 			for file, content := range artifacts {
-				fmt.Printf("Using file as artifact %v\n", file)
+				logging.Info.Log("Using file as artifact %v\n", file)
 				contentJson, jsonError := util.Convert("yaml", "json", content)
 				if jsonError != nil {
 					return jsonError

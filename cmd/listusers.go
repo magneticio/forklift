@@ -40,7 +40,7 @@ var listUsersCmd = &cobra.Command{
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		logging.Log("Listing users in organization %v\n", organization)
+		logging.Info.Log("Listing users in organization %v\n", organization)
 
 		coreConfig := core.Configuration{
 			VampConfiguration: Config.VampConfiguration,

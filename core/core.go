@@ -396,7 +396,7 @@ func (c *Core) ListOrganizations(baseNamespace string) ([]string, error) {
 		return nil, keyValueStoreClientError
 	}
 	key := keyValueStoreConfig.BasePath
-	logging.Log("Listing Values in Key Value Store Under Key: %v\n", key)
+	logging.Info.Log("Listing Values in Key Value Store Under Key: %v\n", key)
 	list, keyValueStoreClientListError := keyValueStoreClient.List(key)
 	if keyValueStoreClientListError != nil {
 		return nil, keyValueStoreClientListError
@@ -426,7 +426,7 @@ func (c *Core) ListEnvironments(baseNamespace string, organization string) ([]st
 		return nil, keyValueStoreClientError
 	}
 	key := keyValueStoreConfig.BasePath
-	logging.Log("Listing Values in Key Value Store Under Key: %v\n", key)
+	logging.Info.Log("Listing Values in Key Value Store Under Key: %v\n", key)
 	list, keyValueStoreClientListError := keyValueStoreClient.List(key)
 	if keyValueStoreClientListError != nil {
 		return nil, keyValueStoreClientListError
@@ -559,7 +559,7 @@ func (c *Core) putConfig(namespace string, configuration Configuration) error {
 		return keyValueStoreClientError
 	}
 	key := keyValueStoreConfig.BasePath + "/configuration/applied"
-	logging.Log("Storing Config Under Key: %v\n", key)
+	logging.Info.Log("Storing Config Under Key: %v\n", key)
 	value, jsonMarshallError := json.Marshal(configuration)
 	if jsonMarshallError != nil {
 		return jsonMarshallError
@@ -578,7 +578,7 @@ func (c *Core) getConfig(namespace string) (*Configuration, error) {
 		return nil, keyValueStoreClientError
 	}
 	key := keyValueStoreConfig.BasePath + "/configuration/applied"
-	logging.Log("Reading Config Under Key: %v\n", key)
+	logging.Info.Log("Reading Config Under Key: %v\n", key)
 	configJson, keyValueStoreClientGetError := keyValueStoreClient.GetValue(key)
 	if keyValueStoreClientGetError != nil {
 		return nil, keyValueStoreClientGetError
@@ -598,7 +598,7 @@ func (c *Core) deleteConfig(namespace string) error {
 		return keyValueStoreClientError
 	}
 	key := keyValueStoreConfig.BasePath + "/configuration/applied"
-	logging.Log("Deleting Config Under Key: %v\n", key)
+	logging.Info.Log("Deleting Config Under Key: %v\n", key)
 	keyValueStoreClientPutError := keyValueStoreClient.Delete(key)
 	if keyValueStoreClientPutError != nil {
 		return keyValueStoreClientPutError
