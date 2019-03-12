@@ -26,6 +26,7 @@ import (
 	"fmt"
 
 	"github.com/magneticio/forklift/core"
+	"github.com/magneticio/forklift/logging"
 	"github.com/magneticio/forklift/util"
 	"github.com/spf13/cobra"
 )
@@ -44,6 +45,9 @@ var updateorganizationCmd = &cobra.Command{
 			return errors.New("Not Enough Arguments, Organization Name needed.")
 		}
 		name := args[0]
+
+		logging.Log("Updating organization %v\n", name)
+
 		namespaced := Config.Namespace + "-" + name
 
 		configBtye, readErr := util.UseSourceUrl(configPath) // just pass the file name

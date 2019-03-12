@@ -26,6 +26,7 @@ import (
 	"fmt"
 
 	"github.com/magneticio/forklift/core"
+	"github.com/magneticio/forklift/logging"
 	"github.com/spf13/cobra"
 )
 
@@ -43,6 +44,8 @@ var showArtifact = &cobra.Command{
 			return errors.New("Not Enough Arguments, Artifact Name needed.")
 		}
 		name := args[0]
+
+		logging.Log("Showing artifact %v in environment %v in organization %v\n", name, environment, organization)
 
 		namespacedEnvironment := Config.Namespace + "-" + organization + "-" + environment
 		namespacedOrganization := Config.Namespace + "-" + organization

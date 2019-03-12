@@ -24,6 +24,7 @@ import (
 	"fmt"
 
 	"github.com/magneticio/forklift/core"
+	"github.com/magneticio/forklift/logging"
 	"github.com/magneticio/forklift/util"
 	"github.com/spf13/cobra"
 )
@@ -37,6 +38,7 @@ var addArtifactCmd = &cobra.Command{
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		logging.Log("Adding new artifact to environment %v in organization %v\n", organization, environment)
 
 		namespacedEnvironment := Config.Namespace + "-" + organization + "-" + environment
 		namespacedOrganization := Config.Namespace + "-" + organization

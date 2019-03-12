@@ -25,6 +25,7 @@ import (
 	"fmt"
 
 	"github.com/magneticio/forklift/core"
+	"github.com/magneticio/forklift/logging"
 	"github.com/spf13/cobra"
 )
 
@@ -42,6 +43,9 @@ var deleteorganizationCmd = &cobra.Command{
 			return errors.New("Not Enough Arguments, Organization Name needed.")
 		}
 		name := args[0]
+
+		logging.Log("Deleting organization %v \n", name)
+
 		namespacedOrganization := Config.Namespace + "-" + name
 		coreConfig := core.Configuration{
 			VampConfiguration: Config.VampConfiguration,

@@ -25,6 +25,7 @@ import (
 	"fmt"
 
 	"github.com/magneticio/forklift/core"
+	"github.com/magneticio/forklift/logging"
 	"github.com/magneticio/forklift/util"
 	"github.com/spf13/cobra"
 )
@@ -42,6 +43,8 @@ var updateUserCmd = &cobra.Command{
 			return errors.New("Not Enough Arguments, User Name needed.")
 		}
 		name := args[0]
+
+		logging.Log("Updating user %v in organization %v\n", name, organization)
 
 		namespaced := Config.Namespace + "-" + organization
 

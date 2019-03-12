@@ -25,6 +25,7 @@ import (
 	"fmt"
 
 	"github.com/magneticio/forklift/core"
+	"github.com/magneticio/forklift/logging"
 	"github.com/magneticio/forklift/util"
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v2"
@@ -44,6 +45,8 @@ var showenvironmentCmd = &cobra.Command{
 			return errors.New("Not Enough Arguments, Environment Name needed.")
 		}
 		name := args[0]
+
+		logging.Log("Showing environment %v in organization %v\n", name, organization)
 
 		if !util.ValidateName(name) {
 			return errors.New("Environment name should be only lowercase alphanumerics")

@@ -26,6 +26,7 @@ import (
 	"fmt"
 
 	"github.com/magneticio/forklift/core"
+	"github.com/magneticio/forklift/logging"
 	"github.com/magneticio/forklift/util"
 	"github.com/spf13/cobra"
 )
@@ -48,6 +49,8 @@ var environmentCmd = &cobra.Command{
 		if !util.ValidateName(name) {
 			return errors.New("Environment name should be only lowercase alphanumerics")
 		}
+
+		logging.Log("Creating environment %v in organization %v\n", name, organization)
 
 		namespaced := Config.Namespace + "-" + organization + "-" + name
 		namespacedOrganization := Config.Namespace + "-" + organization

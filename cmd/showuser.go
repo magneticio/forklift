@@ -26,6 +26,7 @@ import (
 	"fmt"
 
 	"github.com/magneticio/forklift/core"
+	"github.com/magneticio/forklift/logging"
 	"github.com/spf13/cobra"
 )
 
@@ -43,6 +44,8 @@ var showUserCmd = &cobra.Command{
 			return errors.New("Not Enough Arguments, User Name needed.")
 		}
 		name := args[0]
+
+		logging.Log("Showing user %v in organization %v\n", name, organization)
 
 		namespaced := Config.Namespace + "-" + organization
 		coreConfig := core.Configuration{

@@ -25,6 +25,7 @@ import (
 	"fmt"
 
 	"github.com/magneticio/forklift/core"
+	"github.com/magneticio/forklift/logging"
 	"github.com/spf13/cobra"
 )
 
@@ -41,6 +42,8 @@ var deleteUserCmd = &cobra.Command{
 			return errors.New("Not Enough Arguments, Name needed.")
 		}
 		name := args[0]
+
+		logging.Log("Deleting user %v from organization %v\n", name, organization)
 
 		namespaced := Config.Namespace + "-" + organization
 		fmt.Printf("name: %v , configPath: %v\n", name, namespaced)
