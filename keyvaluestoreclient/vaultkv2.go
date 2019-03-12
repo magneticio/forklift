@@ -56,3 +56,40 @@ func (c *VaultKeyValueStoreClient) GetData(key string, version int) (map[string]
 
 	return nil, errors.New(fmt.Sprintf("No value found at %s", path))
 }
+
+func (c *VaultKeyValueStoreClient) PutData(key string, data map[string]interface{}, cas int) error {
+	client := c.getClient()
+	path := sanitizePath(key)
+
+	mountPath, v2, pathError := isKVv2(path, client)
+	if pathError != nil {
+		logging.Error(pathError.Error())
+		return pathError
+	}
+
+	if v2 {
+		path = addPrefixToVKVPath(path, mountPath, "data")
+		data = map[string]interface{}{
+			"data":    data,
+			"options": map[string]interface{}{},
+		}
+
+		if cas > -1 {
+			data["options"].(map[string]interface{})["cas"] = cas
+		}
+	}
+
+	secret, writeError := client.Logical().Write(path, data)
+	if writeError != nil {
+		logging.Error("Error writing data to %s: %s", path, writeError)
+		if secret != nil {
+			logging.Info("Secret: %v\n", secret)
+		}
+		return writeError
+	}
+	if secret == nil {
+		logging.Info("Success! Data written to: %s", path)
+		return nil
+	}
+	return nil
+}

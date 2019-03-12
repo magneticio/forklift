@@ -22,9 +22,13 @@ func TestVaultKeyVauleStoreClientKV2(t *testing.T) {
 	assert.Nil(t, clientErr)
 	assert.NotNil(t, vaultKeyValueStoreClient)
 
-	key := "secret/foo"
-	valueExpected := map[string]interface{}(map[string]interface{}{"bar": "baz"})
-	valueActual, getErr := vaultKeyValueStoreClient.GetData(key, 2)
+	key := "secret/vamp"
+	valueExpected := map[string]interface{}(map[string]interface{}{"value": "kv2test"})
+
+	putErr := vaultKeyValueStoreClient.PutData(key, valueExpected, -1) // 0 means no cas
+	assert.Nil(t, putErr)
+
+	valueActual, getErr := vaultKeyValueStoreClient.GetData(key, 0) // 0 means latest version
 	fmt.Printf("valueActual %v\n", valueActual)
 	assert.Nil(t, getErr)
 	assert.Equal(t, valueExpected, valueActual)
