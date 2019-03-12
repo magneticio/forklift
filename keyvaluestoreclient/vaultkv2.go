@@ -93,3 +93,40 @@ func (c *VaultKeyValueStoreClient) PutData(key string, data map[string]interface
 	}
 	return nil
 }
+
+func (c *VaultKeyValueStoreClient) ListData(key string) (map[string]interface{}, error) {
+	client := c.getClient()
+	path := ensureTrailingSlash(sanitizePath(key))
+	mountPath, v2, pathError := isKVv2(path, client)
+	if pathError != nil {
+		logging.Error(pathError.Error())
+		return nil, pathError
+	}
+
+	if v2 {
+		path = addPrefixToVKVPath(path, mountPath, "metadata")
+	}
+
+	secret, listError := client.Logical().List(path)
+	if listError != nil {
+		logging.Error("Error listing %s: %s", path, listError.Error())
+		return nil, listError
+	}
+	if secret == nil || secret.Data == nil {
+		logging.Error(fmt.Sprintf("No value found at %s", path))
+		return nil, errors.New(fmt.Sprintf("No value found at %s", path))
+	}
+
+	// If the secret is wrapped, return the wrapped response.
+	if secret.WrapInfo != nil && secret.WrapInfo.TTL != 0 {
+		logging.Info("Wrapped Secret %v\n", secret)
+		return secret.Data, nil
+	}
+
+	if _, ok := extractListData(secret); !ok {
+		logging.Error(fmt.Sprintf("No entries found at %s", path))
+		return nil, errors.New(fmt.Sprintf("No entries found at %s", path))
+	}
+
+	return secret.Data, nil
+}
