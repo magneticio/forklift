@@ -38,7 +38,7 @@ var addArtifactCmd = &cobra.Command{
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logging.Info.Log("Adding new artifact to environment %v in organization %v\n", organization, environment)
+		logging.Info("Adding new artifact to environment %v in organization %v\n", organization, environment)
 
 		namespacedEnvironment := Config.Namespace + "-" + organization + "-" + environment
 		namespacedOrganization := Config.Namespace + "-" + organization

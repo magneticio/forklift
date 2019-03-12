@@ -45,7 +45,7 @@ var showArtifact = &cobra.Command{
 		}
 		name := args[0]
 
-		logging.Info.Log("Showing artifact %v in environment %v in organization %v\n", name, environment, organization)
+		logging.Info("Showing artifact %v in environment %v in organization %v\n", name, environment, organization)
 
 		namespacedEnvironment := Config.Namespace + "-" + organization + "-" + environment
 		namespacedOrganization := Config.Namespace + "-" + organization

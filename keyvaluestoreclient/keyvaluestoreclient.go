@@ -47,17 +47,17 @@ func NewKeyValueStoreClient(config models.KeyValueStoreConfiguration) (KeyValueS
 
 func NewVaultKeyValueStoreClient(address string, token string, params map[string]string) (*VaultKeyValueStoreClient, error) {
 
-	logging.Info.Log("Initialising Vault Client with address %v\n", address)
+	logging.Info("Initialising Vault Client with address %v\n", address)
 
 	config, configErr := getConfig(address, params["cert"], params["key"], params["caCert"])
 	if configErr != nil {
-		logging.Error.Log("Error getting config %v\n", configErr.Error())
+		logging.Error("Error getting config %v\n", configErr.Error())
 		return nil, configErr
 	}
 
 	client, err := vaultapi.NewClient(config)
 	if err != nil {
-		logging.Error.Log("Error initialising client %v\n", err.Error())
+		logging.Error("Error initialising client %v\n", err.Error())
 		return nil, err
 	}
 
@@ -78,7 +78,7 @@ func (c *VaultKeyValueStoreClient) getClient() *vaultapi.Client {
 
 func (c *VaultKeyValueStoreClient) put(keyName string, secretData map[string]interface{}) error {
 	// fmt.Printf("KeyName: %v, value: %v\n", keyName, secretData)
-	logging.Info.Log("Putting to Vault key %v\n", keyName)
+	logging.Info("Putting to Vault key %v\n", keyName)
 	_, err := c.getClient().Logical().Write(keyName, secretData)
 	if err != nil {
 		return err
@@ -87,10 +87,10 @@ func (c *VaultKeyValueStoreClient) put(keyName string, secretData map[string]int
 }
 
 func (c *VaultKeyValueStoreClient) get(keyName string) (map[string]interface{}, error) {
-	logging.Info.Log("Getting from Vault key %v\n", keyName)
+	logging.Info("Getting from Vault key %v\n", keyName)
 	secretValues, err := c.getClient().Logical().Read(keyName)
 	if err != nil {
-		logging.Error.Log("Error while getting from Vault key %v - %v\n", keyName, err.Error())
+		logging.Error("Error while getting from Vault key %v - %v\n", keyName, err.Error())
 		return nil, err
 	}
 	if secretValues == nil {
@@ -100,10 +100,10 @@ func (c *VaultKeyValueStoreClient) get(keyName string) (map[string]interface{}, 
 }
 
 func (c *VaultKeyValueStoreClient) Delete(keyName string) error {
-	logging.Info.Log("Deleting from Vault key %v\n", keyName)
+	logging.Info("Deleting from Vault key %v\n", keyName)
 	_, err := c.getClient().Logical().Delete(fixPath(keyName))
 	if err != nil {
-		logging.Error.Log("Error while deleting from Vault key %v - %v\n", keyName, err.Error())
+		logging.Error("Error while deleting from Vault key %v - %v\n", keyName, err.Error())
 		return err
 	}
 	return nil
@@ -179,10 +179,10 @@ func (c *VaultKeyValueStoreClient) GetValue(key string) (string, error) {
 }
 
 func (c *VaultKeyValueStoreClient) List(key string) ([]string, error) {
-	logging.Info.Log("Getting list from Vault with key %v\n", key)
+	logging.Info("Getting list from Vault with key %v\n", key)
 	secret, err := c.getClient().Logical().List(fixPath(key))
 	if err != nil {
-		logging.Error.Log("Error while getting list from Vault with key %v - %v\n", key, err.Error())
+		logging.Error("Error while getting list from Vault with key %v - %v\n", key, err.Error())
 		return nil, err
 	}
 	if val, ok := secret.Data["keys"]; ok {

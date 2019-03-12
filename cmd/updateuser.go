@@ -44,7 +44,7 @@ var updateUserCmd = &cobra.Command{
 		}
 		name := args[0]
 
-		logging.Info.Log("Updating user %v in organization %v\n", name, organization)
+		logging.Info("Updating user %v in organization %v\n", name, organization)
 
 		namespaced := Config.Namespace + "-" + organization
 

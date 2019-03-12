@@ -40,7 +40,7 @@ var environmentsCmd = &cobra.Command{
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		logging.Info.Log("Listing environments in organization %v\n", organization)
+		logging.Info("Listing environments in organization %v\n", organization)
 
 		coreConfig := core.Configuration{
 			VampConfiguration: Config.VampConfiguration,

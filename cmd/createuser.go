@@ -45,7 +45,7 @@ var createUserCmd = &cobra.Command{
 
 		name := args[0]
 
-		logging.Info.Log("Creating user %v in organization %v\n", name, organization)
+		logging.Info("Creating user %v in organization %v\n", name, organization)
 
 		namespaced := Config.Namespace + "-" + organization
 

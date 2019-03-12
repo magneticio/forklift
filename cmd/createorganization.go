@@ -50,7 +50,7 @@ var organizationCmd = &cobra.Command{
 			return errors.New("Organization name should be only lowercase alphanumerics")
 		}
 
-		logging.Info.Log("Creating organization %v\n", name)
+		logging.Info("Creating organization %v\n", name)
 
 		namespaced := Config.Namespace + "-" + name
 
