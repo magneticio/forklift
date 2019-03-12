@@ -26,6 +26,7 @@ import (
 	"fmt"
 
 	"github.com/magneticio/forklift/core"
+	"github.com/magneticio/forklift/logging"
 	"github.com/magneticio/forklift/util"
 	"github.com/spf13/cobra"
 )
@@ -44,6 +45,9 @@ var updateenvironmentCmd = &cobra.Command{
 			return errors.New("Not Enough Arguments, Organization Name needed.")
 		}
 		name := args[0]
+
+		logging.Info("Updating environment %v in organization %v\n", name, organization)
+
 		namespaced := Config.Namespace + "-" + organization + "-" + name
 		namespacedOrganization := Config.Namespace + "-" + organization
 
@@ -75,7 +79,7 @@ var updateenvironmentCmd = &cobra.Command{
 				return artifactsReadError
 			}
 			for file, content := range artifacts {
-				fmt.Printf("Using file as artifact %v\n", file)
+				logging.Info("Using file as artifact %v\n", file)
 				contentJson, jsonError := util.Convert("yaml", "json", content)
 				if jsonError != nil {
 					return jsonError

@@ -24,6 +24,7 @@ import (
 	"fmt"
 
 	"github.com/magneticio/forklift/core"
+	"github.com/magneticio/forklift/logging"
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -38,6 +39,9 @@ var environmentsCmd = &cobra.Command{
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
+
+		logging.Info("Listing environments in organization %v\n", organization)
+
 		coreConfig := core.Configuration{
 			VampConfiguration: Config.VampConfiguration,
 		}

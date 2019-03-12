@@ -25,6 +25,7 @@ import (
 	"fmt"
 
 	"github.com/magneticio/forklift/core"
+	"github.com/magneticio/forklift/logging"
 	"github.com/spf13/cobra"
 )
 
@@ -40,6 +41,9 @@ var deleteenvironmentCmd = &cobra.Command{
 			return errors.New("Not Enough Arguments, Environment Name needed.")
 		}
 		name := args[0]
+
+		logging.Info("Deleting environment %v from organization %v\n", name, organization)
+
 		namespacedOrganization := Config.Namespace + "-" + organization
 		namespacedEnvironment := namespacedOrganization + "-" + name
 		coreConfig := core.Configuration{

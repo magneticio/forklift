@@ -25,6 +25,7 @@ import (
 	"fmt"
 
 	"github.com/magneticio/forklift/core"
+	"github.com/magneticio/forklift/logging"
 	"github.com/magneticio/forklift/util"
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v2"
@@ -44,6 +45,8 @@ var showorganizationCmd = &cobra.Command{
 			return errors.New("Not Enough Arguments, Organization Name needed.")
 		}
 		name := args[0]
+
+		logging.Info("Showing organization %v\n", name)
 
 		if !util.ValidateName(name) {
 			return errors.New("Organization name should be only lowercase alphanumerics")

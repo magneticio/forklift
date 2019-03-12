@@ -25,6 +25,7 @@ import (
 	"fmt"
 
 	"github.com/magneticio/forklift/core"
+	"github.com/magneticio/forklift/logging"
 	"github.com/spf13/cobra"
 )
 
@@ -41,6 +42,8 @@ var deleteArtifactCmd = &cobra.Command{
 			return errors.New("Not Enough Arguments, Name needed.")
 		}
 		name := args[0]
+
+		logging.Info("Deleting artifact %v from environment %v in organization %v\n", name, environment, organization)
 
 		namespacedEnvironment := Config.Namespace + "-" + organization + "-" + environment
 		namespacedOrganization := Config.Namespace + "-" + organization

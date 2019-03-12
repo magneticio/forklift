@@ -25,6 +25,7 @@ import (
 	"fmt"
 
 	"github.com/magneticio/forklift/core"
+	"github.com/magneticio/forklift/logging"
 	"github.com/magneticio/forklift/util"
 	"github.com/spf13/cobra"
 )
@@ -41,7 +42,10 @@ var createUserCmd = &cobra.Command{
 		if len(args) < 1 {
 			return errors.New("Not Enough Arguments, User Name needed.")
 		}
+
 		name := args[0]
+
+		logging.Info("Creating user %v in organization %v\n", name, organization)
 
 		namespaced := Config.Namespace + "-" + organization
 
