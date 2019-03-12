@@ -9,6 +9,22 @@ import (
 	"github.com/hashicorp/vault/helper/strutil"
 )
 
+/*
+These functions are copied from
+https://github.com/hashicorp/vault/blob/ebc733f4ca5d362fdfb302ac75953228585c54a2/command/base_helpers.go
+https://github.com/hashicorp/vault/blob/ebc733f4ca5d362fdfb302ac75953228585c54a2/command/base.go
+https://github.com/hashicorp/vault/tree/ebc733f4ca5d362fdfb302ac75953228585c54a2/command
+
+https://github.com/hashicorp/vault has Mozilla Public License 2.0
+https://github.com/hashicorp/vault/blob/ebc733f4ca5d362fdfb302ac75953228585c54a2/LICENSE
+Permissions of this weak copyleft license are conditioned on making available
+source code of licensed files and modifications of those files under the same
+license (or in certain cases, one of the GNU licenses). Copyright and license
+notices must be preserved. Contributors provide an express grant of patent
+rights. However, a larger work using the licensed work may be distributed
+under different terms and without source code for files added in the larger work.
+*/
+
 // extractListData reads the secret and returns a typed list of data and a
 // boolean indicating whether the extraction was successful.
 func extractListData(secret *api.Secret) ([]interface{}, bool) {
