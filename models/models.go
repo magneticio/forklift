@@ -173,9 +173,15 @@ type Pulse struct {
 }
 
 type Nats struct {
-	Url       string `yaml:"url,omitempty" json:"url,omitempty"`
-	ClusterID string `yaml:"cluster-id,omitempty" json:"cluster-id,omitempty"`
-	ClientID  string `yaml:"client-id,omitempty" json:"client-id,omitempty"`
+	Url        string `yaml:"url,omitempty" json:"url,omitempty"`
+	ClusterID  string `yaml:"cluster-id,omitempty" json:"cluster-id,omitempty"`
+	ClientID   string `yaml:"client-id,omitempty" json:"client-id,omitempty"`
+	Token      string `yaml:"token,omitempty" json:"token,omitempty"`
+	Username   string `yaml:"username,omitempty" json:"username,omitempty"`
+	Password   string `yaml:"password,omitempty" json:"password,omitempty"`
+	CaCert     string `yaml:"ca-cert,omitempty" json:"ca-cert,omitempty"`
+	ClientCert string `yaml:"client-cert,omitempty" json:"client-cert,omitempty"`
+	ClientKey  string `yaml:"client-key,omitempty" json:"client-key,omitempty"`
 }
 
 type Namespace struct {
