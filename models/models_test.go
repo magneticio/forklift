@@ -12,8 +12,6 @@ import (
 
 func TestOperationTemplateModel(t *testing.T) {
 
-	fmt.Println("Reading file")
-
 	configPath := "../resources/test/operation-template.yaml"
 
 	configBtye, readErr := util.UseSourceUrl(configPath)
@@ -24,8 +22,6 @@ func TestOperationTemplateModel(t *testing.T) {
 
 	configText := string(configBtye)
 	configJson, convertErr := util.Convert("yaml", "json", configText)
-
-	//fmt.Printf("Config json %v", configJson)
 	if convertErr != nil {
 		fmt.Printf("Error while converting file")
 		panic(convertErr)
@@ -35,24 +31,22 @@ func TestOperationTemplateModel(t *testing.T) {
 	if unmarshallError != nil {
 		panic(unmarshallError)
 	}
-	//fmt.Printf("Config json %v", vampConfig)
 
-	configJson2, marshalError := json.Marshal(vampConfig)
+	remarshalledJson, marshalError := json.Marshal(vampConfig)
 	if marshalError != nil {
 		panic(marshalError)
 	}
 
-	configText2 := string(configJson2)
+	remarshalledText := string(remarshalledJson)
 
-	configYaml, convertErr := util.Convert("json", "yaml", configText2)
+	remarshalledYaml, convertErr := util.Convert("json", "yaml", remarshalledText)
 
-	result := string(configYaml)
+	result := string(remarshalledYaml)
 	assert.Equal(t, configText, result)
+
 }
 
 func TestAdminTemplateModel(t *testing.T) {
-
-	fmt.Println("Reading file")
 
 	configPath := "../resources/test/admin-template.yaml"
 
@@ -64,8 +58,6 @@ func TestAdminTemplateModel(t *testing.T) {
 
 	configText := string(configBtye)
 	configJson, convertErr := util.Convert("yaml", "json", configText)
-
-	//fmt.Printf("Config json %v", configJson)
 	if convertErr != nil {
 		fmt.Printf("Error while converting file")
 		panic(convertErr)
@@ -75,17 +67,19 @@ func TestAdminTemplateModel(t *testing.T) {
 	if unmarshallError != nil {
 		panic(unmarshallError)
 	}
-	//fmt.Printf("Config json %v", vampConfig)
 
-	configJson2, marshalError := json.Marshal(vampConfig)
+	remarshalledJson, marshalError := json.Marshal(vampConfig)
 	if marshalError != nil {
 		panic(marshalError)
 	}
 
-	configText2 := string(configJson2)
+	remarshalledText := string(remarshalledJson)
 
-	configYaml, convertErr := util.Convert("json", "yaml", configText2)
+	remarshalledYaml, convertErr := util.Convert("json", "yaml", remarshalledText)
+	if convertErr != nil {
+		panic(convertErr)
+	}
 
-	result := string(configYaml)
+	result := string(remarshalledYaml)
 	assert.Equal(t, configText, result)
 }
