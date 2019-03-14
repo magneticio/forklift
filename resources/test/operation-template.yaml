@@ -1,0 +1,96 @@
+vamp:
+  container-driver:
+    kubernetes:
+      tls-check: false
+      url: https://kubernetes
+      vamp-gateway-agent-id: vamp-gateway-agent
+    type: kubernetes
+  gateway-driver:
+    marshallers:
+    - name: "1.8"
+      template:
+        resource: /io/vamp/gateway_driver/haproxy/template.twig
+      type: haproxy
+  lifter:
+    artifacts:
+    - /usr/local/vamp/artifacts/breeds/quantification.yml
+    - /usr/local/vamp/artifacts/workflows/quantification.yml
+    - /usr/local/vamp/artifacts/breeds/vamp-workflow-javascript.yml
+  metadata:
+    namespace:
+      title: environment
+  model:
+    resolvers:
+      deployment:
+      - io.vamp.ee.model.DisabledConfigurationValueResolver
+      namespace:
+      - io.vamp.ee.model.NamespaceValueResolver
+      workflow:
+      - io.vamp.ee.model.WorkflowValueResolver
+      - io.vamp.pulse.ElasticsearchValueResolver
+  operation:
+    deployment:
+      arguments: []
+      scale:
+        cpu: 0.2
+        instances: 1
+        memory: 256MB
+    gateway:
+      selector: namespace(${namespace})
+      virtual-hosts: {}
+    synchronization:
+      check:
+        cpu: true
+        deployable: true
+        environment-variables: true
+        health-checks: true
+        instances: true
+        memory: true
+        ports: true
+      deployment:
+        refetch-breed-on-update: true
+      period: 3 seconds
+  persistence:
+    database:
+      sql:
+        database: vamp-${parent}
+        database-server-url: jdbc:mysql://mysql.default.svc.cluster.local:3306?useSSL=false
+        password: secret
+        table: ${namespace}
+        url: jdbc:mysql://mysql.default.svc.cluster.local:3306/vamp-${parent}?useSSL=false
+        user: root
+      type: mysql
+    key-value-store:
+      base-path: /secret/vamp/${namespace}
+      type: vault
+      vault:
+        token: ${env://VAMP_PERSISTENCE_KEY_VALUE_STORE_VAULT_TOKEN}
+        url: ${env://VAMP_PERSISTENCE_KEY_VALUE_STORE_VAULT_URL}
+    transformers:
+      classes: []
+  pulse:
+    elasticsearch:
+      index:
+        name: vamp-pulse-${namespace}
+      url: http://elasticsearch.default.svc.cluster.local:9200
+    nats: {}
+    type: elasticsearch
+  security: {}
+  workflow-driver:
+    type: kubernetes
+    workflow:
+      deployables:
+      - breed: vamp-workflow-javascript
+        type: application/javascript
+      scale:
+        cpu: 0.1
+        instances: 1
+        memory: 128MB
+      vamp-elasticsearch-url: http://elasticsearch.default.svc.cluster.local:9200
+      vamp-key-value-store-connection: ${env://VAMP_WORKFLOW_DRIVER_WORKFLOW_VAMP_KEY_VALUE_STORE_CONNECTION}
+      vamp-key-value-store-path: /secret/vamp/${namespace}/workflows/${workflow}
+      vamp-key-value-store-token: ${env://VAMP_WORKFLOW_DRIVER_WORKFLOW_VAMP_KEY_VALUE_STORE_TOKEN}
+      vamp-key-value-store-type: vault
+      vamp-url: http://vamp.default.svc.cluster.local:8080
+      vamp-workflow-execution-period: 60
+      vamp-workflow-execution-timeout: 60

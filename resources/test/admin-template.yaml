@@ -1,0 +1,57 @@
+vamp:
+  container-driver:
+    kubernetes:
+      tls-check: false
+  gateway-driver: {}
+  lifter: {}
+  metadata:
+    namespace:
+      title: organization
+  model:
+    resolvers:
+      namespace:
+      - io.vamp.ee.model.NamespaceValueResolver
+  operation:
+    deployment:
+      arguments: null
+      scale: {}
+    gateway:
+      virtual-hosts: {}
+    synchronization:
+      check: {}
+      deployment: {}
+  persistence:
+    database:
+      sql:
+        database: vamp-${namespace}
+        database-server-url: jdbc:mysql://mysql.default.svc.cluster.local:3306?useSSL=false
+        password: secret
+        table: ${namespace}
+        url: jdbc:mysql://mysql.default.svc.cluster.local:3306/vamp-${namespace}?useSSL=false
+        user: root
+      type: mysql
+    key-value-store:
+      base-path: /secret/vamp/${namespace}
+      type: vault
+      vault:
+        token: ${env://VAMP_PERSISTENCE_KEY_VALUE_STORE_VAULT_TOKEN}
+        url: ${env://VAMP_PERSISTENCE_KEY_VALUE_STORE_VAULT_URL}
+    transformers:
+      classes: []
+  pulse:
+    elasticsearch:
+      index:
+        name: vamp-pulse-${namespace}
+      url: http://elasticsearch.default.svc.cluster.local:9200
+    nats: {}
+    type: elasticsearch
+  security:
+    lookup-hash-algorithm: SHA-1
+    lookup-hash-salt: b9a277bb-59a5-43d1-9c27-8a72e7e27685
+    password-hash-algorithm: SHA-512
+    password-hash-salt: d4f22852-e281-428f-8968-1265b1c5a1b0
+    session-id-length: 24
+    token-value-length: 24
+  workflow-driver:
+    workflow:
+      scale: {}
