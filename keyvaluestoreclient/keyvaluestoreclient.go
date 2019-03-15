@@ -102,12 +102,10 @@ func (c *VaultKeyValueStoreClient) getClient() (*vaultapi.Client, error) {
 			return nil, errors.New("Failed to convert creation_ttl to integer")
 		}
 
-		intTTL, covnersionError := ttl.Int64()
+		renewPeriod, covnersionError := ttl.Int64()
 		if covnersionError != nil {
 			return nil, errors.New("Failed to convetr ttl from int64 to int")
 		}
-
-		renewPeriod := int(intTTL / 2)
 
 		if renewPeriod < 1 {
 			return nil, errors.New("Token renew period is invalid")
@@ -116,7 +114,7 @@ func (c *VaultKeyValueStoreClient) getClient() (*vaultapi.Client, error) {
 		logging.Info("Attempting token renewal with ttl %v seconds", renewPeriod)
 
 		//Renewing the token with half its original ttl
-		_, err := c.Client.Auth().Token().RenewSelf(renewPeriod)
+		_, err := c.Client.Auth().Token().RenewSelf(int(renewPeriod))
 		if err != nil {
 			return nil, errors.New(fmt.Sprintf("Failed to renew token - %v", err))
 		}
