@@ -1,15 +1,17 @@
 package sql
 
 import (
+	"crypto/tls"
 	"database/sql"
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
+	mysql "github.com/go-sql-driver/mysql"
 	"github.com/magneticio/forklift/logging"
 	"github.com/magneticio/forklift/models"
-	"github.com/magneticio/forklift/util"
 )
 
 type SqlClient interface {
@@ -43,14 +45,18 @@ type Row struct {
 func NewSqlClient(config models.Database) (SqlClient, error) {
 	if config.Type == "mysql" {
 		// TODO: add params
-		host, hostError := util.GetHostFromUrl(strings.TrimPrefix(config.Sql.Url, "jdbc:"))
-		if hostError != nil {
-			return nil, hostError
+		u, err_url := url.ParseRequestURI(strings.TrimPrefix(config.Sql.Url, "jdbc:"))
+
+		if err_url != nil {
+			return nil, err_url
 		}
 
-		logging.Info("Creating new sql client. User: %v - Host: %v - Database: %v\n", config.Sql.User, host, config.Sql.Database)
+		logging.Info("Creating new sql client. User: %v - Host: %v - Database: %v - Query: %v\n", config.Sql.User, u.Host, config.Sql.Database, u.Query().Encode())
 
-		sqlClient, mySqlError := NewMySqlClient(config.Sql.User, config.Sql.Password, host, config.Sql.Database)
+		//params := strings.Replace(u.Query().Encode(), "?", "&", 0)
+
+		sqlClient, mySqlError := NewMySqlClient(
+			config.Sql.User, config.Sql.Password, u.Host, config.Sql.Database, u.Query().Encode())
 		if mySqlError != nil {
 			return nil, mySqlError
 		}
@@ -60,11 +66,19 @@ func NewSqlClient(config models.Database) (SqlClient, error) {
 	return nil, errors.New("Unsupported Sql Client: " + config.Type)
 }
 
-func NewMySqlClient(user string, password string, host string, dbName string) (*MySqlClient, error) {
+func NewMySqlClient(user string, password string, host string, dbName string, params string) (*MySqlClient, error) {
 
-	// fmt.Printf("%v\n", fmt.Sprint(user, ":", password, "@tcp(", host, ")/"))
+	serverNameParts := strings.Split(host, ":")
 
-	db, connectionErr := sql.Open("mysql", fmt.Sprint(user, ":", password, "@tcp(", host, ")/"))
+	err := mysql.RegisterTLSConfig("custom", &tls.Config{
+		ServerName: serverNameParts[0],
+	})
+
+	if err != nil {
+		logging.Error("Failed to establish tls connection %v\n", err)
+	}
+
+	db, connectionErr := sql.Open("mysql", fmt.Sprint(user, ":", password, "@tcp(", host, ")/?"+params))
 	if connectionErr != nil {
 		logging.Error("Error in mysql client creation: %v\n", connectionErr.Error())
 		return nil, connectionErr
