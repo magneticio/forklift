@@ -75,7 +75,7 @@ For general users it is recommended to download the binary for your platform.
 Latest release can be found here:
 https://github.com/magneticio/forklift/releases/latest
 
-Now make sure to have a ".forklift.yaml" configuration file in your home, like the one shown below, but with the correct parameters to connect to the database and the key-value store.
+Now make sure to have a "config.yaml" configuration file in your home under ".forklift" folder, like the one shown below, but with the correct parameters to connect to the database and the key-value store.
 
 ```
 namespace: vampio
@@ -109,6 +109,31 @@ The configuration path can be changed during the execution of any command by spe
 ```
 
 Where config-path is the path of the configuration file to be used.
+
+
+
+Environment variables can be used in combination with the config.
+Environment variables overrides the configuration file!
+
+Environment variables:
+  VAMP_FORKLIFT_VAULT_ADDR
+    Vault address. Example: http://vault.default.svc.cluster.local:8200
+  VAMP_FORKLIFT_VAULT_TOKEN
+    Vault token
+  VAMP_FORKLIFT_VAULT_CACERT
+    Path of the CA Certificate.
+  VAMP_FORKLIFT_VAULT_CLIENT_CERT
+    Path of the Client Certificate for TLS
+  VAMP_FORKLIFT_VAULT_CLIENT_KEY
+    Path of the Client Certificate for TLS
+  VAMP_FORKLIFT_MYSQL_HOST
+    MySql host address. Example mysql.default.svc.cluster.local:3306
+  VAMP_FORKLIFT_MYSQL_CONNECTION_PROPS
+    Parameters to use in combination with MySql Url. Example: useSSL=false
+  VAMP_FORKLIFT_MYSQL_USER
+    MySql username
+  VAMP_FORKLIFT_MYSQL_PASSWORD
+    MySql password
 
 ### Verifying installation
 

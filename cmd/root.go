@@ -68,12 +68,21 @@ type ForkliftConfig struct {
 var rootCmd = &cobra.Command{
 	Use:   AddAppName("$AppName"),
 	Short: AddAppName("A command line client for $AppName"),
-	Long: AddAppName(`A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`),
+	Long: AddAppName(`$AppName is a organization and environment setup tool for vamp.
+    It requires a vamp deployment setup as a backend to work.
+    It is required to have a default config.
+    Envrionment variables can be used in combination with the config.
+    Environment variables:
+      VAMP_FORKLIFT_VAULT_ADDR
+      VAMP_FORKLIFT_VAULT_TOKEN
+      VAMP_FORKLIFT_VAULT_CACERT
+      VAMP_FORKLIFT_VAULT_CLIENT_CERT
+      VAMP_FORKLIFT_VAULT_CLIENT_KEY
+      VAMP_FORKLIFT_MYSQL_HOST
+      VAMP_FORKLIFT_MYSQL_CONNECTION_PROPS
+      VAMP_FORKLIFT_MYSQL_USER
+      VAMP_FORKLIFT_MYSQL_PASSWORD
+    `),
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
