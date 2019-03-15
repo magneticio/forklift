@@ -116,24 +116,31 @@ Environment variables can be used in combination with the config.
 Environment variables overrides the configuration file!
 
 Environment variables:
+```shell
   VAMP_FORKLIFT_VAULT_ADDR
-    Vault address. Example: http://vault.default.svc.cluster.local:8200
+    #  Vault address. Example: http://vault.default.svc.cluster.local:8200
   VAMP_FORKLIFT_VAULT_TOKEN
-    Vault token
+    # Vault token
   VAMP_FORKLIFT_VAULT_CACERT
-    Path of the CA Certificate.
+    # Path of the CA Certificate.
   VAMP_FORKLIFT_VAULT_CLIENT_CERT
-    Path of the Client Certificate for TLS
+    # Path of the Client Certificate for TLS
   VAMP_FORKLIFT_VAULT_CLIENT_KEY
-    Path of the Client Certificate for TLS
+    # Path of the Client Certificate for TLS
   VAMP_FORKLIFT_MYSQL_HOST
-    MySql host address. Example mysql.default.svc.cluster.local:3306
+    # MySql host address. Example mysql.default.svc.cluster.local:3306
   VAMP_FORKLIFT_MYSQL_CONNECTION_PROPS
     Parameters to use in combination with MySql Url. Example: useSSL=false
   VAMP_FORKLIFT_MYSQL_USER
-    MySql username
+    # MySql username
   VAMP_FORKLIFT_MYSQL_PASSWORD
-    MySql password
+    # MySql password
+```
+
+Use export to setup environment variables (be careful about empty spaces) :
+```shell
+export VAMP_FORKLIFT_VAULT_ADDR="http://vault.default.svc.cluster.local:8200"
+```
 
 ### Verifying installation
 
