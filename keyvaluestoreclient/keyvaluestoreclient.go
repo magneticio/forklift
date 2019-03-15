@@ -72,7 +72,6 @@ func NewVaultKeyValueStoreClient(address string, token string, params map[string
 }
 
 func (c *VaultKeyValueStoreClient) getClient() (*vaultapi.Client, error) {
-	// TODO: This will check for token renewal
 
 	logging.Info("Retrievng token")
 
@@ -80,6 +79,7 @@ func (c *VaultKeyValueStoreClient) getClient() (*vaultapi.Client, error) {
 
 	logging.Info("Looking up token")
 
+	//Looking up token secret
 	tokenSecret, err := token.LookupSelf()
 	if err != nil {
 		logging.Error("Could not lookup token due to %v", err.Error())
@@ -91,6 +91,7 @@ func (c *VaultKeyValueStoreClient) getClient() (*vaultapi.Client, error) {
 	renewable, _ := tokenSecret.TokenIsRenewable()
 	if renewable {
 
+		//Getting original ttl
 		ttl, _ := tokenSecret.Data["creation_ttl"].(json.Number).Int64()
 
 		renewPeriod := ttl / 2
@@ -101,6 +102,7 @@ func (c *VaultKeyValueStoreClient) getClient() (*vaultapi.Client, error) {
 
 		logging.Info("Attempting token renewal with ttl %v seconds", renewPeriod)
 
+		//Renewing the token with half its original ttl
 		_, err := c.Client.Auth().Token().RenewSelf(int(renewPeriod))
 		if err != nil {
 			return nil, errors.New(fmt.Sprintf("Failed to renew token - %v", err))
