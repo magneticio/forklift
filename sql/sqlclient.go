@@ -51,7 +51,7 @@ func NewSqlClient(config models.Database) (SqlClient, error) {
 			return nil, err_url
 		}
 
-		logging.Info("Creating new sql client. User: %v - Host: %v - Database: %v\n", config.Sql.User, u.Host, config.Sql.Database)
+		logging.Info("Creating new sql client. User: %v - Host: %v - Database: %v - Query: %v\n", config.Sql.User, u.Host, config.Sql.Database, u.Query().Encode())
 
 		//params := strings.Replace(u.Query().Encode(), "?", "&", 0)
 
@@ -68,7 +68,6 @@ func NewSqlClient(config models.Database) (SqlClient, error) {
 
 func NewMySqlClient(user string, password string, host string, dbName string, params string) (*MySqlClient, error) {
 
-	// fmt.Printf("%v\n", fmt.Sprint(user, ":", password, "@tcp(", host, ")/"))
 	serverNameParts := strings.Split(host, ":")
 
 	err := mysql.RegisterTLSConfig("custom", &tls.Config{
