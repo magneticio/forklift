@@ -73,7 +73,7 @@ func NewVaultKeyValueStoreClient(address string, token string, params map[string
 
 func (c *VaultKeyValueStoreClient) getClient() (*vaultapi.Client, error) {
 
-	logging.Info("Retrievng token")
+	logging.Info("Retrieving token")
 
 	token := c.Client.Auth().Token()
 
@@ -92,9 +92,22 @@ func (c *VaultKeyValueStoreClient) getClient() (*vaultapi.Client, error) {
 	if renewable {
 
 		//Getting original ttl
-		ttl, _ := tokenSecret.Data["creation_ttl"].(json.Number).Int64()
+		ttlData := tokenSecret.Data["creation_ttl"]
+		if ttlData == nil {
+			return nil, errors.New("Couldn't retrieve creation ttl")
+		}
 
-		renewPeriod := ttl / 2
+		ttl, ok := tokenSecret.Data["creation_ttl"].(json.Number)
+		if !ok {
+			return nil, errors.New("Failed to convert creation_ttl to integer")
+		}
+
+		intTTL, covnersionError := ttl.Int64()
+		if covnersionError != nil {
+			return nil, errors.New("Failed to convetr ttl from int64 to int")
+		}
+
+		renewPeriod := int(intTTL / 2)
 
 		if renewPeriod < 1 {
 			return nil, errors.New("Token renew period is invalid")
@@ -103,7 +116,7 @@ func (c *VaultKeyValueStoreClient) getClient() (*vaultapi.Client, error) {
 		logging.Info("Attempting token renewal with ttl %v seconds", renewPeriod)
 
 		//Renewing the token with half its original ttl
-		_, err := c.Client.Auth().Token().RenewSelf(int(renewPeriod))
+		_, err := c.Client.Auth().Token().RenewSelf(renewPeriod)
 		if err != nil {
 			return nil, errors.New(fmt.Sprintf("Failed to renew token - %v", err))
 		}
