@@ -3,6 +3,7 @@ package keyvaluestoreclient
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -70,9 +71,46 @@ func NewVaultKeyValueStoreClient(address string, token string, params map[string
 	}, nil
 }
 
-func (c *VaultKeyValueStoreClient) getClient() *vaultapi.Client {
+func (c *VaultKeyValueStoreClient) getClient() (*vaultapi.Client, error) {
 	// TODO: This will check for token renewal
-	return c.Client
+
+	logging.Info("Retrievng token")
+
+	token := c.Client.Auth().Token()
+
+	logging.Info("Looking up token")
+
+	tokenSecret, err := token.LookupSelf()
+	if err != nil {
+		logging.Error("Could not lookup token due to %v", err.Error())
+		return c.Client, nil
+	}
+
+	logging.Info("Checking if token is renewable")
+
+	renewable, _ := tokenSecret.TokenIsRenewable()
+	if renewable {
+
+		ttl, _ := tokenSecret.Data["creation_ttl"].(json.Number).Int64()
+
+		renewPeriod := ttl / 2
+
+		if renewPeriod < 1 {
+			return nil, errors.New("Token renew period is invalid")
+		}
+
+		logging.Info("Attempting token renewal with ttl %v seconds", renewPeriod)
+
+		_, err := c.Client.Auth().Token().RenewSelf(int(renewPeriod))
+		if err != nil {
+			return nil, errors.New(fmt.Sprintf("Failed to renew token - %v", err))
+		}
+
+	} else {
+		logging.Info("Token is not renewable")
+	}
+
+	return c.Client, nil
 }
 
 func (c *VaultKeyValueStoreClient) Delete(keyName string) error {
