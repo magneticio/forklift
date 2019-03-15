@@ -97,7 +97,7 @@ func (c *VaultKeyValueStoreClient) getClient() (*vaultapi.Client, error) {
 			return nil, errors.New("Couldn't retrieve creation ttl")
 		}
 
-		ttl, ok := tokenSecret.Data["creation_ttl"].(json.Number)
+		ttl, ok := ttlData.(json.Number)
 		if !ok {
 			return nil, errors.New("Failed to convert creation_ttl to integer")
 		}
