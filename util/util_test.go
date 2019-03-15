@@ -1,11 +1,28 @@
 package util_test
 
 import (
+	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/magneticio/forklift/util"
 	"github.com/stretchr/testify/assert"
 )
+
+//Utility test to check that the url query parameters are parsed correctly
+func TestUrlParsing(t *testing.T) {
+
+	u, _ := url.ParseRequestURI(strings.TrimPrefix(
+		"jdbc:mysql://mysql.default.svc.cluster.local:3306/vamp-${parent}?test=1&test2=2&useSSL=false", "jdbc:"))
+
+	assert.Equal(t, "test=1&test2=2&useSSL=false", u.Query().Encode())
+
+	u, _ = url.ParseRequestURI(strings.TrimPrefix(
+		"jdbc:mysql://mysql.default.svc.cluster.local:3306/vamp-${parent}", "jdbc:"))
+
+	assert.Equal(t, "", u.Query().Encode())
+
+}
 
 func TestValidateName(t *testing.T) {
 
