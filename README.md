@@ -79,26 +79,16 @@ Now make sure to have a "config.yaml" configuration file in your home under ".fo
 
 ```
 namespace: vampio
-forklift:
-  persistence:
-    database:
-      sql:
-        database: vamp-${namespace}
-        url: mysql://mysql.default.svc.cluster.local:3306/vamp-${namespace}?useSSL=false
-        database-server-url: mysql://mysql.default.svc.cluster.local:3306?useSSL=false
-        user: root
-        table: ${namespace}
-        password: secret
-      type: mysql
-    key-value-store:
-      vault:
-        url: http://vault.default.svc.cluster.local:8200
-        token: vamp
-      base-path: /secret/vamp/${namespace}
-      type: vault
-  metadata:
-    namespace:
-      title: organization
+database-type: mysql
+database-name: vamp-${namespace}
+database-url: jdbc:mysql://mysql.default.svc.cluster.local:3306/vamp-${namespace}
+database-user: root
+database-table: ${namespace}
+database-password: secret
+key-value-store-url: ${env://VAMP_PERSISTENCE_KEY_VALUE_STORE_VAULT_URL}
+key-value-store-token: ${env://VAMP_PERSISTENCE_KEY_VALUE_STORE_VAULT_TOKEN}
+key-value-store-base-path: /secret/vamp/${namespace}
+key-value-store-type: vault
 
 ```
 

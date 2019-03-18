@@ -43,10 +43,7 @@ var addArtifactCmd = &cobra.Command{
 		namespacedEnvironment := Config.Namespace + "-" + organization + "-" + environment
 		namespacedOrganization := Config.Namespace + "-" + organization
 
-		coreConfig := core.Configuration{
-			VampConfiguration: Config.VampConfiguration,
-		}
-		core, coreError := core.NewCore(coreConfig)
+		core, coreError := core.NewCore(Config)
 		if coreError != nil {
 			return coreError
 		}

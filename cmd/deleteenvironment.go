@@ -46,10 +46,8 @@ var deleteenvironmentCmd = &cobra.Command{
 
 		namespacedOrganization := Config.Namespace + "-" + organization
 		namespacedEnvironment := namespacedOrganization + "-" + name
-		coreConfig := core.Configuration{
-			VampConfiguration: Config.VampConfiguration,
-		}
-		core, coreError := core.NewCore(coreConfig)
+
+		core, coreError := core.NewCore(Config)
 		if coreError != nil {
 			return coreError
 		}

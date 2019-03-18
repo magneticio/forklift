@@ -53,10 +53,8 @@ var showenvironmentCmd = &cobra.Command{
 		}
 
 		namespaced := Config.Namespace + "-" + organization + "-" + name
-		coreConfig := core.Configuration{
-			VampConfiguration: Config.VampConfiguration,
-		}
-		core, coreError := core.NewCore(coreConfig)
+
+		core, coreError := core.NewCore(Config)
 		if coreError != nil {
 			return coreError
 		}

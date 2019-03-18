@@ -4,7 +4,30 @@ package models
 const BackendVersion string = "1.0.6"
 const UsersKind string = "users"
 
+type ForkliftConfiguration struct {
+	Namespace                      string `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+	DatabaseType                   string `yaml:"database-type,omitempty" json:"database-type,omitempty"`
+	DatabaseName                   string `yaml:"database-name,omitempty" json:"database-name,omitempty"`
+	DatabaseURL                    string `yaml:"database-url,omitempty" json:"database-url,omitempty"`
+	DatabaseUser                   string `yaml:"database-user,omitempty" json:"database-user,omitempty"`
+	DatabaseTable                  string `yaml:"database-table,omitempty" json:"database-table,omitempty"`
+	DatabasePassword               string `yaml:"database-password,omitempty" json:"database-password,omitempty"`
+	KeyValueStoreUrL               string `yaml:"key-value-store-url,omitempty" json:"key-value-store-url,omitempty"`
+	KeyValueStoreToken             string `yaml:"key-value-store-token,omitempty" json:"key-value-store-token,omitempty"`
+	KeyValueStoreBasePath          string `yaml:"key-value-store-base-path,omitempty" json:"key-value-store-base-path,omitempty"`
+	KeyValueStoreType              string `yaml:"key-value-store-type,omitempty" json:"key-value-store-type,omitempty"`
+	KeyValueStoreServerTlsCert     string `yaml:"key-value-store-server-tls-cert,omitempty" json:"key-value-store-server-tls-cert,omitempty"`
+	KeyValueStoreClientTlsKey      string `yaml:"key-value-store-client-tls-key,omitempty" json:"key-value-store-client-tls-key,omitempty"`
+	KeyValueStoreClientTlsCert     string `yaml:"key-value-store-client-tls-cert,omitempty" json:"key-value-store-client-tls-cert,omitempty"`
+	KeyValueStoreKvMode            string `yaml:"key-value-store-kv-mode,omitempty" json:"key-value-store-kv-mode,omitempty"`
+	KeyValueStoreFallbackKvVersion int    `yaml:"key-value-store-fallback-kv-version,omitempty" json:"key-value-store-fallback-kv-version,omitempty"`
+}
+
 type VampConfiguration struct {
+	Vamp Vamp `yaml:"vamp,omitempty" json:"vamp,omitempty"`
+}
+
+type Vamp struct {
 	Persistence     Persistence     `yaml:"persistence,omitempty" json:"persistence,omitempty"`
 	Model           Model           `yaml:"model,omitempty" json:"model,omitempty"`
 	Security        Security        `yaml:"security,omitempty" json:"security,omitempty"`

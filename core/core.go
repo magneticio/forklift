@@ -13,15 +13,11 @@ import (
 	"github.com/magneticio/forklift/util"
 )
 
-type Configuration struct {
-	VampConfiguration models.VampConfiguration `yaml:"vamp,omitempty" json:"vamp,omitempty"`
-}
-
 type Core struct {
-	Conf Configuration `yaml:"forklift,omitempty" json:"forklift,omitempty"`
+	Conf models.ForkliftConfiguration
 }
 
-func NewCore(conf Configuration) (*Core, error) {
+func NewCore(conf models.ForkliftConfiguration) (*Core, error) {
 
 	return &Core{
 		Conf: conf,
@@ -76,7 +72,7 @@ func (c *Core) CreateUser(namespace string, name string, role string, password s
 		return configurationError
 	}
 
-	encodedPassword := util.EncodeString(password, configuration.VampConfiguration.Security.PasswordHashAlgorithm, configuration.VampConfiguration.Security.PasswordHashSalt)
+	encodedPassword := util.EncodeString(password, configuration.Vamp.Security.PasswordHashAlgorithm, configuration.Vamp.Security.PasswordHashSalt)
 
 	artifact := models.Artifact{
 		Name:     name,
@@ -139,7 +135,7 @@ func (c *Core) UpdateUser(namespace string, name string, role string, password s
 		return configurationError
 	}
 
-	encodedPassword := util.EncodeString(password, configuration.VampConfiguration.Security.PasswordHashAlgorithm, configuration.VampConfiguration.Security.PasswordHashSalt)
+	encodedPassword := util.EncodeString(password, configuration.Vamp.Security.PasswordHashAlgorithm, configuration.Vamp.Security.PasswordHashSalt)
 
 	artifact := models.Artifact{
 		Name:     name,
@@ -366,7 +362,7 @@ func (c *Core) DeleteArtifact(organization string, environment string, name stri
 
 }
 
-func (c *Core) CreateOrganization(namespace string, configuration Configuration) error {
+func (c *Core) CreateOrganization(namespace string, configuration models.VampConfiguration) error {
 
 	putConfigError := c.putConfig(namespace, configuration)
 	if putConfigError != nil {
@@ -385,7 +381,7 @@ func (c *Core) CreateOrganization(namespace string, configuration Configuration)
 
 }
 
-func (c *Core) UpdateOrganization(namespace string, configuration Configuration) error {
+func (c *Core) UpdateOrganization(namespace string, configuration models.VampConfiguration) error {
 	return c.putConfig(namespace, configuration)
 }
 
@@ -450,7 +446,7 @@ func (c *Core) ListEnvironments(baseNamespace string, organization string) ([]st
 	return filteredReducedList, nil
 }
 
-func (c *Core) CreateEnvironment(namespace string, organization string, elements []string, configuration Configuration) error {
+func (c *Core) CreateEnvironment(namespace string, organization string, elements []string, configuration models.VampConfiguration) error {
 	putConfigError := c.putConfig(namespace, configuration)
 	if putConfigError != nil {
 		return putConfigError
@@ -479,7 +475,7 @@ func (c *Core) CreateEnvironment(namespace string, organization string, elements
 
 }
 
-func (c *Core) UpdateEnvironment(namespace string, organization string, elements []string, configuration Configuration) error {
+func (c *Core) UpdateEnvironment(namespace string, organization string, elements []string, configuration models.VampConfiguration) error {
 
 	putConfigError := c.putConfig(namespace, configuration)
 	if putConfigError != nil {
@@ -501,25 +497,35 @@ func (c *Core) UpdateEnvironment(namespace string, organization string, elements
 }
 
 func (c *Core) GetNamespaceDatabaseConfiguration(namespace string) models.Database {
-	databaseConf := c.Conf.VampConfiguration.Persistence.Database
 
 	return models.Database{
 		Sql: models.SqlConfiguration{
-			Database:          Namespaced(namespace, databaseConf.Sql.Database),
-			Table:             Namespaced(namespace, databaseConf.Sql.Table),
-			User:              Namespaced(namespace, databaseConf.Sql.User),
-			Password:          Namespaced(namespace, databaseConf.Sql.Password),
-			Url:               Namespaced(namespace, databaseConf.Sql.Url),
-			DatabaseServerUrl: Namespaced(namespace, databaseConf.Sql.DatabaseServerUrl),
+			Database: Namespaced(namespace, c.Conf.DatabaseName),
+			Table:    Namespaced(namespace, c.Conf.DatabaseTable),
+			User:     c.Conf.DatabaseUser,
+			Password: c.Conf.DatabasePassword,
+			Url:      Namespaced(namespace, c.Conf.DatabaseURL),
 		},
-		Type: databaseConf.Type,
+		Type: c.Conf.DatabaseType,
 	}
 }
 
 func (c *Core) GetNamespaceKeyValueStoreConfiguration(namespace string) *models.KeyValueStoreConfiguration {
-	model := c.Conf.VampConfiguration.Persistence.KeyValueStore
-	model.BasePath = Namespaced(namespace, c.Conf.VampConfiguration.Persistence.KeyValueStore.BasePath)
-	return &model
+
+	return &models.KeyValueStoreConfiguration{
+		Type:     c.Conf.KeyValueStoreType,
+		BasePath: Namespaced(namespace, c.Conf.KeyValueStoreBasePath),
+		Vault: models.VaultKeyValueStoreConfiguration{
+			Url:               c.Conf.KeyValueStoreUrL,
+			Token:             c.Conf.KeyValueStoreToken,
+			ServerTlsCert:     c.Conf.KeyValueStoreServerTlsCert,
+			ClientTlsCert:     c.Conf.KeyValueStoreClientTlsCert,
+			ClientTlsKey:      c.Conf.KeyValueStoreClientTlsKey,
+			KvMode:            c.Conf.KeyValueStoreKvMode,
+			FallbackKvVersion: c.Conf.KeyValueStoreFallbackKvVersion,
+		},
+	}
+
 }
 
 func (c *Core) DeleteOrganization(namespace string) error {
@@ -530,7 +536,7 @@ func (c *Core) DeleteEnvironment(namespace string) error {
 	return c.deleteConfig(namespace)
 }
 
-func (c *Core) ShowOrganization(namespace string) (*Configuration, error) {
+func (c *Core) ShowOrganization(namespace string) (*models.VampConfiguration, error) {
 	conf, err := c.getConfig(namespace)
 	if err != nil {
 		if strings.HasPrefix(err.Error(), "No Values") {
@@ -541,7 +547,7 @@ func (c *Core) ShowOrganization(namespace string) (*Configuration, error) {
 	return conf, err
 }
 
-func (c *Core) ShowEnvironment(namespace string) (*Configuration, error) {
+func (c *Core) ShowEnvironment(namespace string) (*models.VampConfiguration, error) {
 	conf, err := c.getConfig(namespace)
 	if err != nil {
 		if strings.HasPrefix(err.Error(), "No Values") {
@@ -552,7 +558,7 @@ func (c *Core) ShowEnvironment(namespace string) (*Configuration, error) {
 	return conf, err
 }
 
-func (c *Core) putConfig(namespace string, configuration Configuration) error {
+func (c *Core) putConfig(namespace string, configuration models.VampConfiguration) error {
 	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(namespace)
 	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
 	if keyValueStoreClientError != nil {
@@ -571,7 +577,7 @@ func (c *Core) putConfig(namespace string, configuration Configuration) error {
 	return nil
 }
 
-func (c *Core) getConfig(namespace string) (*Configuration, error) {
+func (c *Core) getConfig(namespace string) (*models.VampConfiguration, error) {
 	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(namespace)
 	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
 	if keyValueStoreClientError != nil {
@@ -583,7 +589,7 @@ func (c *Core) getConfig(namespace string) (*Configuration, error) {
 	if keyValueStoreClientGetError != nil {
 		return nil, keyValueStoreClientGetError
 	}
-	var configuration Configuration
+	var configuration models.VampConfiguration
 	jsonUnmarshallError := json.Unmarshal([]byte(configJson), &configuration)
 	if jsonUnmarshallError != nil {
 		return nil, jsonUnmarshallError

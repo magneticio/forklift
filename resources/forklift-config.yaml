@@ -1,40 +1,11 @@
 namespace: vampio
-forklift:
-  persistence:
-    database:
-      sql:
-        database: vamp-${namespace}
-        url: jdbc:mysql://mysql.default.svc.cluster.local:3306/vamp-${namespace}?useSSL=false
-        database-server-url: jdbc:mysql://mysql.default.svc.cluster.local:3306?useSSL=false
-        user: root
-        table: ${namespace}
-        password: secret
-      type: mysql
-    key-value-store:
-      vault:
-        url: ${env://VAMP_PERSISTENCE_KEY_VALUE_STORE_VAULT_URL}
-        token: ${env://VAMP_PERSISTENCE_KEY_VALUE_STORE_VAULT_TOKEN}
-      base-path: /secret/vamp/${namespace}
-      type: vault
-    transformers:
-      classes: []
-  model:
-    resolvers:
-      namespace:
-      - io.vamp.ee.model.NamespaceValueResolver
-  security:
-    lookup-hash-salt: b9a277bb-59a5-43d1-9c27-8a72e7e27685
-    lookup-hash-algorithm: SHA-1
-    session-id-length: 24
-    password-hash-algorithm: SHA-512
-    password-hash-salt: d4f22852-e281-428f-8968-1265b1c5a1b0
-    token-value-length: 24
-  pulse:
-    elasticsearch:
-      index:
-        name: vamp-pulse-${namespace}
-      url: http://elasticsearch.default.svc.cluster.local:9200
-    type: elasticsearch
-  metadata:
-    namespace:
-      title: organization
+database-type: mysql
+database-name: vamp-${namespace}
+database-url: jdbc:mysql://mysql.default.svc.cluster.local:3306/vamp-${namespace}
+database-user: root
+database-table: ${namespace}
+database-password: secret
+key-value-store-url: ${env://VAMP_PERSISTENCE_KEY_VALUE_STORE_VAULT_URL}
+key-value-store-token: ${env://VAMP_PERSISTENCE_KEY_VALUE_STORE_VAULT_TOKEN}
+key-value-store-base-path: /secret/vamp/${namespace}
+key-value-store-type: vault

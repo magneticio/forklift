@@ -42,13 +42,9 @@ var listUsersCmd = &cobra.Command{
 
 		logging.Info("Listing users in organization %v\n", organization)
 
-		coreConfig := core.Configuration{
-			VampConfiguration: Config.VampConfiguration,
-		}
-
 		namespaced := Config.Namespace + "-" + organization
 
-		core, coreError := core.NewCore(coreConfig)
+		core, coreError := core.NewCore(Config)
 		if coreError != nil {
 			return coreError
 		}

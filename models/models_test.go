@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/magneticio/forklift/core"
+	"github.com/magneticio/forklift/models"
 	"github.com/magneticio/forklift/util"
 	"github.com/stretchr/testify/assert"
 )
@@ -26,7 +26,7 @@ func TestOperationTemplateModel(t *testing.T) {
 		fmt.Printf("Error while converting file")
 		panic(convertErr)
 	}
-	var vampConfig core.Configuration
+	var vampConfig models.VampConfiguration
 	unmarshallError := json.Unmarshal([]byte(configJson), &vampConfig)
 	if unmarshallError != nil {
 		panic(unmarshallError)
@@ -62,7 +62,7 @@ func TestAdminTemplateModel(t *testing.T) {
 		fmt.Printf("Error while converting file")
 		panic(convertErr)
 	}
-	var vampConfig core.Configuration
+	var vampConfig models.VampConfiguration
 	unmarshallError := json.Unmarshal([]byte(configJson), &vampConfig)
 	if unmarshallError != nil {
 		panic(unmarshallError)
