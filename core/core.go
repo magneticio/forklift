@@ -516,10 +516,16 @@ func (c *Core) GetNamespaceKeyValueStoreConfiguration(namespace string) *models.
 		Type:     c.Conf.KeyValueStoreType,
 		BasePath: Namespaced(namespace, c.Conf.KeyValueStoreBasePath),
 		Vault: models.VaultKeyValueStoreConfiguration{
-			Url:   c.Conf.KeyValueStoreUrL,
-			Token: c.Conf.KeyValueStoreToken,
+			Url:               c.Conf.KeyValueStoreUrL,
+			Token:             c.Conf.KeyValueStoreToken,
+			ServerTlsCert:     c.Conf.KeyValueStoreServerTlsCert,
+			ClientTlsCert:     c.Conf.KeyValueStoreClientTlsCert,
+			ClientTlsKey:      c.Conf.KeyValueStoreClientTlsKey,
+			KvMode:            c.Conf.KeyValueStoreKvMode,
+			FallbackKvVersion: c.Conf.KeyValueStoreFallbackKvVersion,
 		},
 	}
+
 }
 
 func (c *Core) DeleteOrganization(namespace string) error {
