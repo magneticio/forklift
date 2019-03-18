@@ -23,7 +23,10 @@ under different terms and without source code for files added in the larger work
 */
 
 func (c *VaultKeyValueStoreClient) GetData(key string, version int) (map[string]interface{}, error) {
-	client := c.getClient()
+	client, clientError := c.getClient()
+	if clientError != nil {
+		return nil, clientError
+	}
 	path := sanitizePath(key)
 	mountPath, v2, pathError := isKVv2(path, client)
 	if pathError != nil {
@@ -73,7 +76,10 @@ func (c *VaultKeyValueStoreClient) GetData(key string, version int) (map[string]
 }
 
 func (c *VaultKeyValueStoreClient) PutData(key string, data map[string]interface{}, cas int) error {
-	client := c.getClient()
+	client, clientError := c.getClient()
+	if clientError != nil {
+		return clientError
+	}
 	path := sanitizePath(key)
 
 	mountPath, v2, pathError := isKVv2(path, client)
@@ -110,7 +116,10 @@ func (c *VaultKeyValueStoreClient) PutData(key string, data map[string]interface
 }
 
 func (c *VaultKeyValueStoreClient) ListData(key string) (map[string]interface{}, error) {
-	client := c.getClient()
+	client, clientError := c.getClient()
+	if clientError != nil {
+		return nil, clientError
+	}
 	path := ensureTrailingSlash(sanitizePath(key))
 	mountPath, v2, pathError := isKVv2(path, client)
 	if pathError != nil {
@@ -147,7 +156,10 @@ func (c *VaultKeyValueStoreClient) ListData(key string) (map[string]interface{},
 }
 
 func (c *VaultKeyValueStoreClient) DeleteData(key string, versions []string) error {
-	client := c.getClient()
+	client, clientError := c.getClient()
+	if clientError != nil {
+		return clientError
+	}
 	path := sanitizePath(key)
 	mountPath, v2, pathError := isKVv2(path, client)
 	if pathError != nil {
@@ -176,7 +188,10 @@ func (c *VaultKeyValueStoreClient) DeleteData(key string, versions []string) err
 }
 
 func (c *VaultKeyValueStoreClient) deleteV2(path, mountPath string, versions []string, allVersions bool) (*api.Secret, error) {
-	client := c.getClient()
+	client, clientError := c.getClient()
+	if clientError != nil {
+		return nil, clientError
+	}
 	var err error
 	var secret *api.Secret
 	switch {

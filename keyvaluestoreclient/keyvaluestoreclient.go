@@ -3,6 +3,7 @@ package keyvaluestoreclient
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -70,9 +71,59 @@ func NewVaultKeyValueStoreClient(address string, token string, params map[string
 	}, nil
 }
 
-func (c *VaultKeyValueStoreClient) getClient() *vaultapi.Client {
-	// TODO: This will check for token renewal
-	return c.Client
+func (c *VaultKeyValueStoreClient) getClient() (*vaultapi.Client, error) {
+
+	logging.Info("Retrieving token")
+
+	token := c.Client.Auth().Token()
+
+	logging.Info("Looking up token")
+
+	//Looking up token secret
+	tokenSecret, err := token.LookupSelf()
+	if err != nil {
+		logging.Error("Could not lookup token due to %v", err.Error())
+		return c.Client, nil
+	}
+
+	logging.Info("Checking if token is renewable")
+
+	renewable, _ := tokenSecret.TokenIsRenewable()
+	if renewable {
+
+		//Getting original ttl
+		ttlData := tokenSecret.Data["creation_ttl"]
+		if ttlData == nil {
+			return nil, errors.New("Couldn't retrieve creation ttl")
+		}
+
+		ttl, ok := ttlData.(json.Number)
+		if !ok {
+			return nil, errors.New("Failed to convert creation_ttl to integer")
+		}
+
+		renewPeriod, covnersionError := ttl.Int64()
+		if covnersionError != nil {
+			return nil, errors.New("Failed to convetr ttl from int64 to int")
+		}
+
+		if renewPeriod < 1 {
+			return nil, errors.New("Token renew period is invalid")
+		}
+
+		logging.Info("Attempting token renewal with ttl %v seconds", renewPeriod)
+
+		//Renewing the token with half its original ttl
+		_, err := c.Client.Auth().Token().RenewSelf(int(renewPeriod))
+		if err != nil {
+			return nil, errors.New(fmt.Sprintf("Failed to renew token - %v", err))
+		}
+
+	} else {
+		logging.Info("Token is not renewable")
+	}
+
+	return c.Client, nil
 }
 
 func (c *VaultKeyValueStoreClient) Delete(keyName string) error {
