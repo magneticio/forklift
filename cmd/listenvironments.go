@@ -42,10 +42,7 @@ var environmentsCmd = &cobra.Command{
 
 		logging.Info("Listing environments in organization %v\n", organization)
 
-		coreConfig := core.Configuration{
-			VampConfiguration: Config.VampConfiguration,
-		}
-		core, coreError := core.NewCore(coreConfig)
+		core, coreError := core.NewCore(Config)
 		if coreError != nil {
 			return coreError
 		}

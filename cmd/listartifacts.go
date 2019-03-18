@@ -42,14 +42,10 @@ var listArtifactsCmd = &cobra.Command{
 
 		logging.Info("Listing %v in environment %v in organization %v\n", kind, environment, organization)
 
-		coreConfig := core.Configuration{
-			VampConfiguration: Config.VampConfiguration,
-		}
-
 		namespacedEnvironment := Config.Namespace + "-" + organization + "-" + environment
 		namespacedOrganization := Config.Namespace + "-" + organization
 
-		core, coreError := core.NewCore(coreConfig)
+		core, coreError := core.NewCore(Config)
 		if coreError != nil {
 			return coreError
 		}

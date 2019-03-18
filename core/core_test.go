@@ -10,32 +10,27 @@ import (
 func TestGetNamespaceSqlConfiguration(t *testing.T) {
 
 	c := Core{
-		Conf: Configuration{
-			VampConfiguration: models.VampConfiguration{
-				Persistence: models.Persistence{
-					Database: models.Database{
-						Sql: models.SqlConfiguration{
-							Database:          "database-${namespace}",
-							Table:             "table-${namespace}",
-							User:              "user-${namespace}",
-							Password:          "password-${namespace}",
-							Url:               "url-${namespace}",
-							DatabaseServerUrl: "databaseServerUrl-${namespace}",
-						},
-						Type: "type",
-					},
-				},
-			},
+		Conf: models.ForkliftConfiguration{
+			Namespace:             "namespace",
+			DatabaseType:          "database-type-${namespace}",
+			DatabaseName:          "database-name-${namespace}",
+			DatabaseURL:           "database-url-${namespace}",
+			DatabaseUser:          "database-user-${namespace}",
+			DatabasePassword:      "database-password-${namespace}",
+			DatabaseTable:         "database-table-${namespace}",
+			KeyValueStoreUrL:      "kv-url-${namespace}",
+			KeyValueStoreToken:    "kv-token-${namespace}",
+			KeyValueStoreBasePath: "kv-bas-path-${namespace}",
+			KeyValueStoreType:     "kv-type-${namespace}",
 		},
 	}
 
 	result := c.GetNamespaceDatabaseConfiguration("namespace")
 
-	assert.Equal(t, result.Sql.Database, "database-namespace")
-	assert.Equal(t, result.Sql.Table, "table-namespace")
-	assert.Equal(t, result.Sql.User, "user-namespace")
-	assert.Equal(t, result.Sql.Password, "password-namespace")
-	assert.Equal(t, result.Sql.Url, "url-namespace")
-	assert.Equal(t, result.Sql.DatabaseServerUrl, "databaseServerUrl-namespace")
-	assert.Equal(t, result.Type, "type")
+	assert.Equal(t, result.Sql.Database, "database-name-namespace")
+	assert.Equal(t, result.Sql.Table, "database-table-namespace")
+	assert.Equal(t, result.Sql.User, "database-user-${namespace}")
+	assert.Equal(t, result.Sql.Password, "database-password-${namespace}")
+	assert.Equal(t, result.Sql.Url, "database-url-namespace")
+	assert.Equal(t, result.Type, "database-type-${namespace}")
 }

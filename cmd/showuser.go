@@ -48,10 +48,8 @@ var showUserCmd = &cobra.Command{
 		logging.Info("Showing user %v in organization %v\n", name, organization)
 
 		namespaced := Config.Namespace + "-" + organization
-		coreConfig := core.Configuration{
-			VampConfiguration: Config.VampConfiguration,
-		}
-		core, coreError := core.NewCore(coreConfig)
+
+		core, coreError := core.NewCore(Config)
 		if coreError != nil {
 			return coreError
 		}

@@ -27,6 +27,7 @@ import (
 
 	"github.com/magneticio/forklift/core"
 	"github.com/magneticio/forklift/logging"
+	"github.com/magneticio/forklift/models"
 	"github.com/magneticio/forklift/util"
 	"github.com/spf13/cobra"
 )
@@ -64,15 +65,13 @@ var environmentCmd = &cobra.Command{
 		if convertErr != nil {
 			return convertErr
 		}
-		var vampConfig core.Configuration
+		var vampConfig models.VampConfiguration
 		unmarshallError := json.Unmarshal([]byte(configJson), &vampConfig)
 		if unmarshallError != nil {
 			return unmarshallError
 		}
-		coreConfig := core.Configuration{
-			VampConfiguration: Config.VampConfiguration,
-		}
-		core, coreError := core.NewCore(coreConfig)
+
+		core, coreError := core.NewCore(Config)
 		if coreError != nil {
 			return coreError
 		}
