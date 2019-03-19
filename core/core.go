@@ -428,7 +428,7 @@ func (c *Core) ListEnvironments(baseNamespace string, organization string) ([]st
 		return nil, keyValueStoreClientListError
 	}
 	filteredMap := make(map[string]bool)
-	filterPrefix := baseNamespace + "-" + organization
+	filterPrefix := baseNamespace + "-" + organization + "-"
 	for _, name := range list {
 		if strings.HasPrefix(name, filterPrefix) {
 			filteredName := strings.Split(name, "-")
