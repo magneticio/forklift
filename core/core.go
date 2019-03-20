@@ -469,6 +469,17 @@ func (c *Core) CreateEnvironment(namespace string, organization string, elements
 			return convertError
 		}
 		sqlElements[i] = sqlElement
+
+		sqlElementAsStruct, conversionError := ConvertToSqlElement(element)
+		if conversionError != nil {
+			return conversionError
+		}
+		if sqlElementAsStruct.Kind == "workflows" {
+			tokenInsertError := c.InsertTokenForWorkflow(namespace, sqlElementAsStruct.Name, "admin")
+			if tokenInsertError != nil {
+				return tokenInsertError
+			}
+		}
 	}
 
 	return client.SetupEnvironment(namespacedOrganizationName, databaseConfig.Sql.Table, sqlElements)
@@ -646,4 +657,63 @@ func ConvertToSqlElementJson(artifactAsJsonString string) (string, error) {
 		return "", jsonMarshallError
 	}
 	return string(sqlElementString), nil
+}
+
+func (c *Core) InsertTokenForWorkflow(namespace string, workflowName string, role string) error {
+	// get Configuration using namespace
+	configuration, configurationError := c.getConfig(namespace)
+	if configurationError != nil {
+		return configurationError
+	}
+	kind := "workflows"
+	artifactVersion := "v1"
+	namespaceReference := "io.vamp.common.Namespace@" + namespace
+	lookupName := util.EncodeString(namespaceReference, configuration.Vamp.Security.LookupHashAlgorithm, artifactVersion)
+	//TODO: More meaningful configuration.Vamp.Security.PasswordHashSalt
+	tokenName := fmt.Sprintf("%s/%s/%s", lookupName, kind, workflowName)
+
+	encodedValue := util.RandomEncodedString(configuration.Vamp.Security.TokenValueLength)
+
+	artifact := models.Artifact{
+		Name:      tokenName,
+		Value:     encodedValue,
+		Namespace: namespace,
+		Kind:      kind,
+		Roles:     []string{role},
+		Metadata:  map[string]string{},
+	}
+
+	artifactAsJson, artifactJsonError := json.Marshal(artifact)
+	if artifactJsonError != nil {
+		return artifactJsonError
+	}
+
+	artifactAsJsonString := string(artifactAsJson)
+
+	sqlElement := models.SqlElement{
+		Version:   models.BackendVersion,
+		Instance:  util.UUID(),
+		Timestamp: util.Timestamp(),
+		Name:      workflowName,
+		Kind:      kind,
+		Artifact:  artifactAsJsonString,
+	}
+
+	sqlElementAsJson, sqlElementJsonError := json.Marshal(sqlElement)
+	if sqlElementJsonError != nil {
+		return sqlElementJsonError
+	}
+
+	sqlElementAsJsonString := string(sqlElementAsJson)
+
+	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
+
+	client, clientError := sql.NewSqlClient(databaseConfig)
+	if clientError != nil {
+		logging.Error("Error: %v\n", clientError.Error())
+		return clientError
+	}
+
+	return client.Insert(databaseConfig.Sql.Database, databaseConfig.Sql.Table, sqlElementAsJsonString)
+
 }

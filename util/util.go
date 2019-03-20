@@ -286,3 +286,11 @@ func EncodeString(value string, algorithm string, salt string) string {
 
 	return hex.EncodeToString(h.Sum(nil))
 }
+
+func RandomEncodedString(length int) string {
+
+	token := make([]byte, length)
+	rand.Read(token)
+
+	return hex.EncodeToString(token)
+}
