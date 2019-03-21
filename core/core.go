@@ -361,7 +361,7 @@ func (c *Core) DeleteArtifact(organization string, environment string, name stri
 
 	databaseConfig := c.GetNamespaceDatabaseConfiguration(environment)
 
-	namespacedOrganizationName := c.GetNamespaceDatabaseConfiguration(organization).Sql.Database
+	organizationDatabaseConfig := c.GetNamespaceDatabaseConfiguration(organization)
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
@@ -369,7 +369,14 @@ func (c *Core) DeleteArtifact(organization string, environment string, name stri
 		return clientError
 	}
 
-	return client.DeleteByNameAndKind(namespacedOrganizationName, databaseConfig.Sql.Table, name, kind) //TODO admin should be a constant
+	tokenName := GenerateTokenName(environment, name, kind)
+
+	deleteTokenError := client.DeleteByNameAndKind(organizationDatabaseConfig.Sql.Database, organizationDatabaseConfig.Sql.Table, tokenName, "tokens")
+	if deleteTokenError != nil {
+		return deleteTokenError
+	}
+
+	return client.DeleteByNameAndKind(organizationDatabaseConfig.Sql.Database, databaseConfig.Sql.Table, name, kind)
 
 }
 
@@ -673,6 +680,17 @@ func ConvertToSqlElementJson(artifactAsJsonString string) (string, error) {
 	return string(sqlElementString), nil
 }
 
+func GenerateTokenName(namespace string, workflowName string, kindInTokenName string) string {
+
+	artifactVersion := "v1"
+	namespaceReference := "class io.vamp.common.Namespace@" + namespace
+	lookupHashAlgorithm := "SHA1" // it is fixed
+	logging.Info("namespaceReference %v LookupHashAlgorithm %v, artifactVersion %v\n", namespaceReference, lookupHashAlgorithm, artifactVersion)
+	lookupName := util.EncodeString(namespaceReference, lookupHashAlgorithm, artifactVersion)
+
+	return fmt.Sprintf("%s/%s/%s", lookupName, kindInTokenName, workflowName)
+}
+
 func (c *Core) GenerateTokenForWorkflow(namespace string, workflowName string, role string) (string, error) {
 	// get Configuration using namespace
 	s := strings.Split(namespace, "-")
@@ -682,13 +700,9 @@ func (c *Core) GenerateTokenForWorkflow(namespace string, workflowName string, r
 	}
 	kind := "tokens"
 	kindInTokenName := "workflows"
-	artifactVersion := "v1"
-	namespaceReference := "class io.vamp.common.Namespace@" + namespace
-	lookupHashAlgorithm := "SHA1" // it is fixed
-	logging.Info("namespaceReference %v LookupHashAlgorithm %v, artifactVersion %v\n", namespaceReference, lookupHashAlgorithm, artifactVersion)
-	lookupName := util.EncodeString(namespaceReference, lookupHashAlgorithm, artifactVersion)
+
+	tokenName := GenerateTokenName(namespace, workflowName, kindInTokenName)
 	//TODO: More meaningful configuration.Vamp.Security.PasswordHashSalt
-	tokenName := fmt.Sprintf("%s/%s/%s", lookupName, kindInTokenName, workflowName)
 
 	encodedValue := util.RandomEncodedString(configuration.Vamp.Security.TokenValueLength)
 
