@@ -342,6 +342,17 @@ func (c *Core) AddArtifact(organization string, environment string, content stri
 		return jsonMarshallError
 	}
 
+	if sqlElement.Kind == "workflows" {
+		tokenSqlElementAsString, generateTokenError := c.GenerateTokenForWorkflow(environment, sqlElement.Name, "admin")
+		if generateTokenError != nil {
+			return generateTokenError
+		}
+		insertTokenError := client.InsertOrReplace(namespacedOrganizationName, databaseConfig.Sql.Table, sqlElement.Name, "tokens", tokenSqlElementAsString)
+		if insertTokenError != nil {
+			return insertTokenError
+		}
+	}
+
 	return client.InsertOrReplace(namespacedOrganizationName, databaseConfig.Sql.Table, sqlElement.Name, sqlElement.Kind, string(sqlElementString))
 
 }
@@ -475,9 +486,13 @@ func (c *Core) CreateEnvironment(namespace string, organization string, elements
 			return conversionError
 		}
 		if sqlElementAsStruct.Kind == "workflows" {
-			tokenInsertError := c.InsertTokenForWorkflow(namespace, sqlElementAsStruct.Name, "admin")
-			if tokenInsertError != nil {
-				return tokenInsertError
+			tokenSqlElementAsString, generateTokenError := c.GenerateTokenForWorkflow(namespace, sqlElementAsStruct.Name, "admin")
+			if generateTokenError != nil {
+				return generateTokenError
+			}
+			insertTokenError := client.InsertOrReplace(databaseConfig.Sql.Database, databaseConfig.Sql.Table, sqlElementAsStruct.Name, "tokens", tokenSqlElementAsString)
+			if insertTokenError != nil {
+				return insertTokenError
 			}
 		}
 	}
@@ -659,18 +674,20 @@ func ConvertToSqlElementJson(artifactAsJsonString string) (string, error) {
 	return string(sqlElementString), nil
 }
 
-func (c *Core) InsertTokenForWorkflow(namespace string, workflowName string, role string) error {
+func (c *Core) GenerateTokenForWorkflow(namespace string, workflowName string, role string) (string, error) {
 	// get Configuration using namespace
-	configuration, configurationError := c.getConfig(namespace)
+	s := strings.Split(namespace, "-")
+	configuration, configurationError := c.getConfig(s[0] + "-" + s[1])
 	if configurationError != nil {
-		return configurationError
+		return "", configurationError
 	}
-	kind := "workflows"
+	kind := "tokens"
+	kindInTokenName := "workflows"
 	artifactVersion := "v1"
 	namespaceReference := "io.vamp.common.Namespace@" + namespace
 	lookupName := util.EncodeString(namespaceReference, configuration.Vamp.Security.LookupHashAlgorithm, artifactVersion)
 	//TODO: More meaningful configuration.Vamp.Security.PasswordHashSalt
-	tokenName := fmt.Sprintf("%s/%s/%s", lookupName, kind, workflowName)
+	tokenName := fmt.Sprintf("%s/%s/%s", lookupName, kindInTokenName, workflowName)
 
 	encodedValue := util.RandomEncodedString(configuration.Vamp.Security.TokenValueLength)
 
@@ -680,15 +697,16 @@ func (c *Core) InsertTokenForWorkflow(namespace string, workflowName string, rol
 		Namespace: namespace,
 		Kind:      kind,
 		Roles:     []string{role},
-		Metadata:  map[string]string{},
+		Metadata:  map[string]string{"a": "b"},
 	}
 
 	artifactAsJson, artifactJsonError := json.Marshal(artifact)
 	if artifactJsonError != nil {
-		return artifactJsonError
+		return "", artifactJsonError
 	}
 
 	artifactAsJsonString := string(artifactAsJson)
+	logging.Info("Token string: %v\n", artifactAsJsonString)
 
 	sqlElement := models.SqlElement{
 		Version:   models.BackendVersion,
@@ -701,19 +719,11 @@ func (c *Core) InsertTokenForWorkflow(namespace string, workflowName string, rol
 
 	sqlElementAsJson, sqlElementJsonError := json.Marshal(sqlElement)
 	if sqlElementJsonError != nil {
-		return sqlElementJsonError
+		return "", sqlElementJsonError
 	}
 
 	sqlElementAsJsonString := string(sqlElementAsJson)
 
-	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
-
-	client, clientError := sql.NewSqlClient(databaseConfig)
-	if clientError != nil {
-		logging.Error("Error: %v\n", clientError.Error())
-		return clientError
-	}
-
-	return client.Insert(databaseConfig.Sql.Database, databaseConfig.Sql.Table, sqlElementAsJsonString)
+	return sqlElementAsJsonString, nil
 
 }
