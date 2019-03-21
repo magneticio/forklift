@@ -273,18 +273,18 @@ func (client *MySqlClient) Insert(dbName string, tableName string, record string
 
 	logging.Info("Inserting record in table %v\n", tableName)
 
-	stmtIns, err := client.Db.Prepare("INSERT INTO `" + tableName + "` ( Record ) VALUES( ? )")
-	if err != nil {
-		logging.Error("Error while preparing insert statment in table %v - %v\n", tableName, err.Error())
-		return err
+	stmtIns, stmtErr := client.Db.Prepare("INSERT INTO `" + tableName + "` ( Record ) VALUES( ? )")
+	if stmtErr != nil {
+		logging.Error("Error while preparing insert statment in table %v - %v\n", tableName, stmtErr.Error())
+		return stmtErr
 	}
 
 	defer stmtIns.Close()
 
-	_, err = stmtIns.Exec(record)
-	if err != nil {
-		logging.Error("Error while inserting in organization %v - %v\n", tableName, err.Error())
-		return err
+	_, insErr := stmtIns.Exec(record)
+	if insErr != nil {
+		logging.Error("Error while inserting in organization %v - %v\n", tableName, insErr.Error())
+		return insErr
 	}
 
 	return nil
@@ -382,26 +382,26 @@ func (client *MySqlClient) FindById(dbName string, tableName string, id int) (*R
 
 	logging.Info("Selecting record with id %v from table %v\n", id, tableName)
 
-	stmtOut, err := client.Db.Prepare("SELECT * FROM `" + tableName + "` WHERE ID = ?")
-	if err != nil {
-		logging.Error("Error preparing select statement for record with id %v in table %v - %v\n", id, tableName, err.Error())
-		return nil, err
+	stmtOut, stmtErr := client.Db.Prepare("SELECT * FROM `" + tableName + "` WHERE ID = ?")
+	if stmtErr != nil {
+		logging.Error("Error preparing select statement for record with id %v in table %v - %v\n", id, tableName, stmtErr.Error())
+		return nil, stmtErr
 	}
 
 	defer stmtOut.Close()
 
-	var resultId int
+	var resultID int
 	var resultRecord string
 
-	err = stmtOut.QueryRow(id).Scan(&resultId, &resultRecord)
-	if err != nil {
-		logging.Error("Error selecting record with id %v from table %v - %v\n", id, tableName, err.Error())
-		fmt.Printf("Error: %v\n", err.Error())
-		return nil, err
+	queryErr := stmtOut.QueryRow(id).Scan(&resultID, &resultRecord)
+	if queryErr != nil {
+		logging.Error("Error selecting record with id %v from table %v - %v\n", id, tableName, queryErr.Error())
+		fmt.Printf("Error: %v\n", queryErr.Error())
+		return nil, queryErr
 	}
 
 	return &Row{
-		Id:     resultId,
+		Id:     resultID,
 		Record: resultRecord,
 	}, nil
 }
@@ -426,7 +426,7 @@ func (client *MySqlClient) List(dbName string, tableName string, kind string) ([
 
 	defer stmtOut.Close()
 
-	var resultId int
+	var resultID int
 	var resultRecord string
 
 	rows, err := stmtOut.Query()
@@ -439,14 +439,14 @@ func (client *MySqlClient) List(dbName string, tableName string, kind string) ([
 	var result []Row
 
 	for rows.Next() {
-		err := rows.Scan(&resultId, &resultRecord)
-		if err != nil {
-			logging.Error("Error scanning select result - %v\n", err.Error())
-			return []Row{}, err
+		scanErr := rows.Scan(&resultID, &resultRecord)
+		if scanErr != nil {
+			logging.Error("Error scanning select result - %v\n", scanErr.Error())
+			return []Row{}, scanErr
 		}
 
 		result = append(result, Row{
-			Id:     resultId,
+			Id:     resultID,
 			Record: resultRecord,
 		})
 
@@ -467,18 +467,18 @@ func (client *MySqlClient) Update(dbName string, tableName string, id int, recor
 
 	logging.Info("Updating record with id %v in table %v\n", id, tableName)
 
-	stmtIns, err := client.Db.Prepare("UPDATE `" + tableName + "` SET `Record` = ? WHERE ID = ?")
-	if err != nil {
-		logging.Error("Error preparing update statement for record with id %v in table %v - %v\n", id, tableName, err.Error())
-		return err
+	stmtIns, stmtErr := client.Db.Prepare("UPDATE `" + tableName + "` SET `Record` = ? WHERE ID = ?")
+	if stmtErr != nil {
+		logging.Error("Error preparing update statement for record with id %v in table %v - %v\n", id, tableName, stmtErr.Error())
+		return stmtErr
 	}
 
 	defer stmtIns.Close()
 
-	_, err = stmtIns.Exec(record, id)
-	if err != nil {
-		logging.Error("Error updating record with id %v in table %v - %v\n", id, tableName, err.Error())
-		return err
+	_, insErr := stmtIns.Exec(record, id)
+	if insErr != nil {
+		logging.Error("Error updating record with id %v in table %v - %v\n", id, tableName, insErr.Error())
+		return insErr
 	}
 
 	return nil
@@ -504,10 +504,10 @@ func (client *MySqlClient) FindByNameAndKind(dbName string, tableName string, na
 
 	defer stmtQuery.Close()
 
-	var resultId int
+	var resultID int
 	var resultRecord string
 
-	queryError := stmtQuery.QueryRow().Scan(&resultId, &resultRecord)
+	queryError := stmtQuery.QueryRow().Scan(&resultID, &resultRecord)
 	if queryError != nil {
 		if queryError == sql.ErrNoRows {
 			logging.Info("No records found with name %v and kind %v in table %v\n", name, kind, tableName)
@@ -519,7 +519,7 @@ func (client *MySqlClient) FindByNameAndKind(dbName string, tableName string, na
 	}
 
 	return &Row{
-		Id:     resultId,
+		Id:     resultID,
 		Record: resultRecord,
 	}, nil
 }
@@ -536,18 +536,18 @@ func (client *MySqlClient) DeleteByNameAndKind(dbName string, tableName string, 
 
 	logging.Info("Deleting records with kind %v and name %v from table %v\n", kind, name, tableName)
 
-	stmtIns, err := client.Db.Prepare("DELETE FROM `" + tableName + "` WHERE Record LIKE '%\"name\":\"" + name + "\"%' AND Record LIKE '%\"kind\":\"" + kind + "\"%'")
-	if err != nil {
-		logging.Error("Error preparing delete statement for records with name %v and kind %v on table %v - %v\n", name, kind, tableName, err.Error())
-		return err
+	stmtIns, stmtErr := client.Db.Prepare("DELETE FROM `" + tableName + "` WHERE Record LIKE '%\"name\":\"" + name + "\"%' AND Record LIKE '%\"kind\":\"" + kind + "\"%'")
+	if stmtErr != nil {
+		logging.Error("Error preparing delete statement for records with name %v and kind %v on table %v - %v\n", name, kind, tableName, stmtErr.Error())
+		return stmtErr
 	}
 
 	defer stmtIns.Close()
 
-	_, err = stmtIns.Exec()
-	if err != nil {
-		logging.Error("Error deleting records with name %v and kind %v on table %v - %v\n", name, kind, tableName, err.Error())
-		return err
+	_, insErr := stmtIns.Exec()
+	if insErr != nil {
+		logging.Error("Error deleting records with name %v and kind %v on table %v - %v\n", name, kind, tableName, insErr.Error())
+		return insErr
 	}
 
 	return nil
@@ -565,18 +565,18 @@ func (client *MySqlClient) Delete(dbName string, tableName string, id int) error
 
 	logging.Info("Deleting record with id %v from table %v\n", id, tableName)
 
-	stmtIns, err := client.Db.Prepare("DELETE FROM `" + tableName + "` WHERE ID = ?")
-	if err != nil {
-		logging.Error("Error preparing delete statement for records with id %v on table %v - %v\n", id, tableName, err.Error())
-		return err
+	stmtIns, stmtErr := client.Db.Prepare("DELETE FROM `" + tableName + "` WHERE ID = ?")
+	if stmtErr != nil {
+		logging.Error("Error preparing delete statement for records with id %v on table %v - %v\n", id, tableName, stmtErr.Error())
+		return stmtErr
 	}
 
 	defer stmtIns.Close()
 
-	_, err = stmtIns.Exec(id)
-	if err != nil {
-		logging.Error("Error deleting records with id %v on table %v - %v\n", id, tableName, err.Error())
-		return err
+	_, insErr := stmtIns.Exec(id)
+	if insErr != nil {
+		logging.Error("Error deleting records with id %v on table %v - %v\n", id, tableName, insErr.Error())
+		return insErr
 	}
 
 	return nil
