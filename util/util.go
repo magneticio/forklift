@@ -5,7 +5,6 @@ import (
 	"crypto/sha1"
 	"crypto/sha512"
 	"crypto/x509"
-	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
@@ -13,6 +12,7 @@ import (
 	"hash"
 	"io"
 	"io/ioutil"
+	"math/big"
 	"math/rand"
 	"net"
 	"net/http"
@@ -284,7 +284,7 @@ func EncodeString(value string, algorithm string, salt string) string {
 
 	h.Write([]byte(text))
 
-	return strings.TrimPrefix(hex.EncodeToString(h.Sum(nil)), "0")
+	return HexAsBigInt(h.Sum(nil))
 }
 
 func RandomEncodedString(length int) string {
@@ -292,5 +292,12 @@ func RandomEncodedString(length int) string {
 	token := make([]byte, length)
 	rand.Read(token)
 
-	return hex.EncodeToString(token)
+	return HexAsBigInt(token)
+}
+
+// This is the hex conversion algorithm implemented in vamp
+func HexAsBigInt(bytes []byte) string {
+	var bigInt big.Int
+	bigInt.SetBytes(bytes)
+	return bigInt.Text(16)
 }
