@@ -324,8 +324,7 @@ func (c *Core) AddArtifact(organization string, environment string, content stri
 
 	databaseConfig := c.GetNamespaceDatabaseConfiguration(environment)
 
-	namespacedOrganizationName := c.GetNamespaceDatabaseConfiguration(organization).Sql.Database
-	namespacedOrganizationTable := c.GetNamespaceDatabaseConfiguration(organization).Sql.Table
+	organizationDbConfiguration := c.GetNamespaceDatabaseConfiguration(organization)
 
 	sqlElement, convertError := ConvertToSqlElement(content)
 	if convertError != nil {
@@ -348,13 +347,13 @@ func (c *Core) AddArtifact(organization string, environment string, content stri
 		if generateTokenError != nil {
 			return generateTokenError
 		}
-		insertTokenError := client.InsertOrReplace(namespacedOrganizationName, namespacedOrganizationTable, sqlElement.Name, "tokens", tokenSqlElementAsString)
+		insertTokenError := client.InsertOrReplace(organizationDbConfiguration.Sql.Database, organizationDbConfiguration.Sql.Table, sqlElement.Name, "tokens", tokenSqlElementAsString)
 		if insertTokenError != nil {
 			return insertTokenError
 		}
 	}
 
-	return client.InsertOrReplace(namespacedOrganizationName, databaseConfig.Sql.Table, sqlElement.Name, sqlElement.Kind, string(sqlElementString))
+	return client.InsertOrReplace(organizationDbConfiguration.Sql.Database, databaseConfig.Sql.Table, sqlElement.Name, sqlElement.Kind, string(sqlElementString))
 
 }
 
@@ -465,8 +464,7 @@ func (c *Core) CreateEnvironment(namespace string, organization string, elements
 	}
 
 	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
-
-	namespacedOrganizationName := c.GetNamespaceDatabaseConfiguration(organization).Sql.Database
+	organizationDatabaseConfig := c.GetNamespaceDatabaseConfiguration(organization)
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
@@ -491,14 +489,14 @@ func (c *Core) CreateEnvironment(namespace string, organization string, elements
 			if generateTokenError != nil {
 				return generateTokenError
 			}
-			insertTokenError := client.InsertOrReplace(databaseConfig.Sql.Database, databaseConfig.Sql.Table, sqlElementAsStruct.Name, "tokens", tokenSqlElementAsString)
+			insertTokenError := client.InsertOrReplace(organizationDatabaseConfig.Sql.Database, organizationDatabaseConfig.Sql.Table, sqlElementAsStruct.Name, "tokens", tokenSqlElementAsString)
 			if insertTokenError != nil {
 				return insertTokenError
 			}
 		}
 	}
 
-	return client.SetupEnvironment(namespacedOrganizationName, databaseConfig.Sql.Table, sqlElements)
+	return client.SetupEnvironment(organizationDatabaseConfig.Sql.Database, databaseConfig.Sql.Table, sqlElements)
 
 }
 
