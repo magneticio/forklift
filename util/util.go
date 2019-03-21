@@ -284,11 +284,7 @@ func EncodeString(value string, algorithm string, salt string) string {
 
 	h.Write([]byte(text))
 
-	result := hex.EncodeToString(h.Sum(nil))
-	if len(result) == h.Size()*2 {
-		return strings.TrimPrefix(result, "0")
-	}
-	return result
+	return strings.TrimPrefix(hex.EncodeToString(h.Sum(nil)), "0")
 }
 
 func RandomEncodedString(length int) string {
