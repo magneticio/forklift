@@ -29,6 +29,7 @@ import (
 
 	"github.com/magneticio/forklift/logging"
 	"github.com/magneticio/forklift/models"
+	"github.com/magneticio/forklift/util"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -158,7 +159,7 @@ func initConfig() {
 	// fmt.Printf("Config: %v\n", Config)
 	jsonConfig, _ := json.Marshal(Config)
 
-	logging.Info("Forklift configuration %v\n", string(jsonConfig))
+	logging.Info("Forklift configuration %v\n", util.PrettyJson(string(jsonConfig)))
 
 }
 

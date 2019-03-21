@@ -312,7 +312,7 @@ func (client *MySqlClient) InsertOrReplace(dbName string, tableName string, name
 
 	stmtDelete, stmtError := tx.Prepare("DELETE FROM `" + tableName + "` WHERE Record LIKE '%\"name\":\"" + name + "\"%' AND Record LIKE '%\"kind\":\"" + kind + "\"%'")
 	if stmtError != nil {
-		logging.Error("Error while preparing delete statement for %v with name %v in environment %v in organization %v - %v\n", kind, name, tableName, name, startTransactionError.Error())
+		logging.Error("Error while preparing delete statement for %v with name %v in environment %v in organization %v - %v\n", kind, name, tableName, name, stmtError.Error())
 		rollbackError := tx.Rollback()
 		if rollbackError != nil {
 			return rollbackError
@@ -322,7 +322,7 @@ func (client *MySqlClient) InsertOrReplace(dbName string, tableName string, name
 
 	_, deleteError := stmtDelete.Exec()
 	if deleteError != nil {
-		logging.Error("Error while deleting %v with name %v in environment %v in organization %v - %v\n", kind, name, tableName, dbName, startTransactionError.Error())
+		logging.Error("Error while deleting %v with name %v in environment %v in organization %v - %v\n", kind, name, tableName, dbName, deleteError.Error())
 		rollbackError := tx.Rollback()
 		if rollbackError != nil {
 			return rollbackError

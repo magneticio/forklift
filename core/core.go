@@ -324,7 +324,7 @@ func (c *Core) AddArtifact(organization string, environment string, content stri
 
 	databaseConfig := c.GetNamespaceDatabaseConfiguration(environment)
 
-	namespacedOrganizationName := c.GetNamespaceDatabaseConfiguration(organization).Sql.Database
+	organizationDbConfiguration := c.GetNamespaceDatabaseConfiguration(organization)
 
 	sqlElement, convertError := ConvertToSqlElement(content)
 	if convertError != nil {
@@ -342,7 +342,18 @@ func (c *Core) AddArtifact(organization string, environment string, content stri
 		return jsonMarshallError
 	}
 
-	return client.InsertOrReplace(namespacedOrganizationName, databaseConfig.Sql.Table, sqlElement.Name, sqlElement.Kind, string(sqlElementString))
+	if sqlElement.Kind == "workflows" {
+		tokenSqlElementAsString, generateTokenError := c.GenerateTokenForWorkflow(environment, sqlElement.Name, "admin")
+		if generateTokenError != nil {
+			return generateTokenError
+		}
+		insertTokenError := client.InsertOrReplace(organizationDbConfiguration.Sql.Database, organizationDbConfiguration.Sql.Table, sqlElement.Name, "tokens", tokenSqlElementAsString)
+		if insertTokenError != nil {
+			return insertTokenError
+		}
+	}
+
+	return client.InsertOrReplace(organizationDbConfiguration.Sql.Database, databaseConfig.Sql.Table, sqlElement.Name, sqlElement.Kind, string(sqlElementString))
 
 }
 
@@ -350,7 +361,7 @@ func (c *Core) DeleteArtifact(organization string, environment string, name stri
 
 	databaseConfig := c.GetNamespaceDatabaseConfiguration(environment)
 
-	namespacedOrganizationName := c.GetNamespaceDatabaseConfiguration(organization).Sql.Database
+	organizationDatabaseConfig := c.GetNamespaceDatabaseConfiguration(organization)
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
@@ -358,7 +369,14 @@ func (c *Core) DeleteArtifact(organization string, environment string, name stri
 		return clientError
 	}
 
-	return client.DeleteByNameAndKind(namespacedOrganizationName, databaseConfig.Sql.Table, name, kind) //TODO admin should be a constant
+	tokenName := GenerateTokenName(environment, name, kind)
+
+	deleteTokenError := client.DeleteByNameAndKind(organizationDatabaseConfig.Sql.Database, organizationDatabaseConfig.Sql.Table, tokenName, "tokens")
+	if deleteTokenError != nil {
+		return deleteTokenError
+	}
+
+	return client.DeleteByNameAndKind(organizationDatabaseConfig.Sql.Database, databaseConfig.Sql.Table, name, kind)
 
 }
 
@@ -453,8 +471,7 @@ func (c *Core) CreateEnvironment(namespace string, organization string, elements
 	}
 
 	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
-
-	namespacedOrganizationName := c.GetNamespaceDatabaseConfiguration(organization).Sql.Database
+	organizationDatabaseConfig := c.GetNamespaceDatabaseConfiguration(organization)
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
@@ -469,9 +486,24 @@ func (c *Core) CreateEnvironment(namespace string, organization string, elements
 			return convertError
 		}
 		sqlElements[i] = sqlElement
+
+		sqlElementAsStruct, conversionError := ConvertToSqlElement(element)
+		if conversionError != nil {
+			return conversionError
+		}
+		if sqlElementAsStruct.Kind == "workflows" {
+			tokenSqlElementAsString, generateTokenError := c.GenerateTokenForWorkflow(namespace, sqlElementAsStruct.Name, "admin")
+			if generateTokenError != nil {
+				return generateTokenError
+			}
+			insertTokenError := client.InsertOrReplace(organizationDatabaseConfig.Sql.Database, organizationDatabaseConfig.Sql.Table, sqlElementAsStruct.Name, "tokens", tokenSqlElementAsString)
+			if insertTokenError != nil {
+				return insertTokenError
+			}
+		}
 	}
 
-	return client.SetupEnvironment(namespacedOrganizationName, databaseConfig.Sql.Table, sqlElements)
+	return client.SetupEnvironment(organizationDatabaseConfig.Sql.Database, databaseConfig.Sql.Table, sqlElements)
 
 }
 
@@ -646,4 +678,67 @@ func ConvertToSqlElementJson(artifactAsJsonString string) (string, error) {
 		return "", jsonMarshallError
 	}
 	return string(sqlElementString), nil
+}
+
+func GenerateTokenName(namespace string, workflowName string, kindInTokenName string) string {
+
+	artifactVersion := "v1"
+	namespaceReference := "class io.vamp.common.Namespace@" + namespace
+	lookupHashAlgorithm := "SHA1" // it is fixed
+	logging.Info("namespaceReference %v LookupHashAlgorithm %v, artifactVersion %v\n", namespaceReference, lookupHashAlgorithm, artifactVersion)
+	lookupName := util.EncodeString(namespaceReference, lookupHashAlgorithm, artifactVersion)
+
+	return fmt.Sprintf("%s/%s/%s", lookupName, kindInTokenName, workflowName)
+}
+
+func (c *Core) GenerateTokenForWorkflow(namespace string, workflowName string, role string) (string, error) {
+	// get Configuration using namespace
+	s := strings.Split(namespace, "-")
+	configuration, configurationError := c.getConfig(s[0] + "-" + s[1])
+	if configurationError != nil {
+		return "", configurationError
+	}
+	kind := "tokens"
+	kindInTokenName := "workflows"
+
+	tokenName := GenerateTokenName(namespace, workflowName, kindInTokenName)
+	//TODO: More meaningful configuration.Vamp.Security.PasswordHashSalt
+
+	encodedValue := util.RandomEncodedString(configuration.Vamp.Security.TokenValueLength)
+
+	artifact := models.Artifact{
+		Name:      tokenName,
+		Value:     encodedValue,
+		Namespace: namespace,
+		Kind:      kind,
+		Roles:     []string{role},
+		Metadata:  map[string]string{},
+	}
+
+	artifactAsJson, artifactJsonError := json.Marshal(artifact)
+	if artifactJsonError != nil {
+		return "", artifactJsonError
+	}
+
+	artifactAsJsonString := string(artifactAsJson)
+	logging.Info("Token string: %v\n", artifactAsJsonString)
+
+	sqlElement := models.SqlElement{
+		Version:   models.BackendVersion,
+		Instance:  util.UUID(),
+		Timestamp: util.Timestamp(),
+		Name:      tokenName,
+		Kind:      kind,
+		Artifact:  artifactAsJsonString,
+	}
+
+	sqlElementAsJson, sqlElementJsonError := json.Marshal(sqlElement)
+	if sqlElementJsonError != nil {
+		return "", sqlElementJsonError
+	}
+
+	sqlElementAsJsonString := string(sqlElementAsJson)
+
+	return sqlElementAsJsonString, nil
+
 }
