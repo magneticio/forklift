@@ -686,7 +686,7 @@ func GenerateTokenName(namespace string, workflowName string, kindInTokenName st
 	namespaceReference := "class io.vamp.common.Namespace@" + namespace
 	lookupHashAlgorithm := "SHA1" // it is fixed
 	logging.Info("namespaceReference %v LookupHashAlgorithm %v, artifactVersion %v\n", namespaceReference, lookupHashAlgorithm, artifactVersion)
-	lookupName := strings.TrimPrefix(util.EncodeString(namespaceReference, lookupHashAlgorithm, artifactVersion), "0")
+	lookupName := util.EncodeString(namespaceReference, lookupHashAlgorithm, artifactVersion)
 
 	return fmt.Sprintf("%s/%s/%s", lookupName, kindInTokenName, workflowName)
 }
