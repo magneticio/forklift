@@ -685,8 +685,10 @@ func (c *Core) GenerateTokenForWorkflow(namespace string, workflowName string, r
 	kind := "tokens"
 	kindInTokenName := "workflows"
 	artifactVersion := "v1"
-	namespaceReference := "io.vamp.common.Namespace@" + namespace
-	lookupName := util.EncodeString(namespaceReference, configuration.Vamp.Security.LookupHashAlgorithm, artifactVersion)
+	namespaceReference := "class io.vamp.common.Namespace@" + namespace
+	lookupHashAlgorithm := "SHA1" // it is fixed
+	logging.Info("namespaceReference %v LookupHashAlgorithm %v, artifactVersion %v\n", namespaceReference, lookupHashAlgorithm, artifactVersion)
+	lookupName := util.EncodeString(namespaceReference, lookupHashAlgorithm, artifactVersion)
 	//TODO: More meaningful configuration.Vamp.Security.PasswordHashSalt
 	tokenName := fmt.Sprintf("%s/%s/%s", lookupName, kindInTokenName, workflowName)
 
