@@ -1,7 +1,7 @@
 package models
 
 // Backend version is the version this client is tested with
-const BackendVersion string = "1.0.6"
+const BackendVersion string = "1.1.0"
 const UsersKind string = "users"
 
 type ForkliftConfiguration struct {
