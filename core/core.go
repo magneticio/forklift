@@ -325,6 +325,7 @@ func (c *Core) AddArtifact(organization string, environment string, content stri
 	databaseConfig := c.GetNamespaceDatabaseConfiguration(environment)
 
 	namespacedOrganizationName := c.GetNamespaceDatabaseConfiguration(organization).Sql.Database
+	namespacedOrganizationTable := c.GetNamespaceDatabaseConfiguration(organization).Sql.Table
 
 	sqlElement, convertError := ConvertToSqlElement(content)
 	if convertError != nil {
@@ -347,7 +348,7 @@ func (c *Core) AddArtifact(organization string, environment string, content stri
 		if generateTokenError != nil {
 			return generateTokenError
 		}
-		insertTokenError := client.InsertOrReplace(namespacedOrganizationName, databaseConfig.Sql.Table, sqlElement.Name, "tokens", tokenSqlElementAsString)
+		insertTokenError := client.InsertOrReplace(namespacedOrganizationName, namespacedOrganizationTable, sqlElement.Name, "tokens", tokenSqlElementAsString)
 		if insertTokenError != nil {
 			return insertTokenError
 		}
@@ -697,7 +698,7 @@ func (c *Core) GenerateTokenForWorkflow(namespace string, workflowName string, r
 		Namespace: namespace,
 		Kind:      kind,
 		Roles:     []string{role},
-		Metadata:  map[string]string{"a": "b"},
+		Metadata:  map[string]string{},
 	}
 
 	artifactAsJson, artifactJsonError := json.Marshal(artifact)
@@ -712,7 +713,7 @@ func (c *Core) GenerateTokenForWorkflow(namespace string, workflowName string, r
 		Version:   models.BackendVersion,
 		Instance:  util.UUID(),
 		Timestamp: util.Timestamp(),
-		Name:      workflowName,
+		Name:      tokenName,
 		Kind:      kind,
 		Artifact:  artifactAsJsonString,
 	}
