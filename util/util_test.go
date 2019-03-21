@@ -66,4 +66,10 @@ func TestEncodeString(t *testing.T) {
 	text2 := "class io.vamp.common.Namespace@vampio-testorg2-testenv"
 	result2 := util.EncodeString(text2, "SHA-1", "v1")
 	assert.Equal(t, expected2, result2)
+
+	expected3 := "6d1339c7c7a1ac54246a57320bb1dd15176ce29"
+
+	text3 := "class io.vamp.common.Namespace@vampio-organization-environment"
+	result3 := util.EncodeString(text3, "SHA-1", "v1")
+	assert.Equal(t, expected3, result3)
 }
