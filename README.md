@@ -203,7 +203,7 @@ The above configuration can also be provided in Json format.
 Once created, you can list Organization by running
 
 ```shell
-forklift list organization
+forklift list organizations
 ```
 
 update them with
