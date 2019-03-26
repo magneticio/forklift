@@ -209,8 +209,12 @@ func (c *VaultKeyValueStoreClient) List(key string) ([]string, error) {
 	logging.Info("Getting list from Vault with key %v\n", key)
 	secretData, listErr := c.ListData(fixPath(key))
 	if listErr != nil {
+		if strings.HasPrefix(listErr.Error(), "No value found") {
+			return []string{}, nil
+		}
+
 		logging.Error("Error while getting list from Vault with key %v - %v\n", key, listErr.Error())
-		return []string{}, nil
+		return nil, listErr
 	}
 	if secretData == nil {
 		return nil, errors.New("List is not available for path: " + key)
