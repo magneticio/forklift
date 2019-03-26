@@ -74,7 +74,7 @@ var updateorganizationCmd = &cobra.Command{
 		if createOrganizationError != nil {
 			return createOrganizationError
 		}
-		fmt.Printf("Organization %v is created\n", name)
+		fmt.Printf("Organization %v is updated\n", name)
 		return nil
 	},
 }

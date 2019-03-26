@@ -90,7 +90,7 @@ var updateenvironmentCmd = &cobra.Command{
 		if createOrganizationError != nil {
 			return createOrganizationError
 		}
-		fmt.Printf("Environment %v is created\n", name)
+		fmt.Printf("Environment %v is updated\n", name)
 		return nil
 	},
 }
