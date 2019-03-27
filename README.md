@@ -474,10 +474,10 @@ environment_variables:
 Just like other resources, artifacts can be listed with
 
 ```shell
-forklift list artifact --kind artifact-kind --organization organization-name --environment environment-name
+forklift list artifacts --kind artifact-kind --organization organization-name --environment environment-name
 ```
 
-Where kind is the kind of the artifact (breed or workflow).
+Where kind is the kind of the artifact (breeds or workflow).
 Artifacts can also be deleted  with
 
 ```shell
