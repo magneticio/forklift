@@ -38,7 +38,7 @@ var environmentCmd = &cobra.Command{
 	Short: "Create a new environment",
 	Long: AddAppName(`Create a new environment
     Example:
-    $AppName create environment env1 --organization org --file ./somepath.json`),
+    $AppName create environment env1 --organization org --file ./somepath.json --artifacts ./artifactspath.json`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
