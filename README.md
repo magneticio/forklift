@@ -477,7 +477,7 @@ Just like other resources, artifacts can be listed with
 forklift list artifacts --kind artifact-kind --organization organization-name --environment environment-name
 ```
 
-Where kind is the kind of the artifact (breeds or workflow).
+Where kind is the kind of the artifact (breeds or workflows).
 Artifacts can also be deleted  with
 
 ```shell
