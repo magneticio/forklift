@@ -38,7 +38,7 @@ var organizationCmd = &cobra.Command{
 	Short: "Create a new organization",
 	Long: AddAppName(`Create a new organization
     Example:
-    $AppName create organization org1 --file ./somepath.json`),
+    $AppName create organization org1 --file ./organizationdefinition.yaml`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {

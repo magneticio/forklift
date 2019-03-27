@@ -29,10 +29,10 @@ import (
 // listCmd represents the list command
 var listCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List an organization or environment",
-	Long: AddAppName(`List an organization or environment
+	Short: "List organizations, environments, artifacts or users",
+	Long: AddAppName(`List organizations, environments, artifacts or users
     Example:
-    $AppName create organization organization1`),
+    $AppName list organizations`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {

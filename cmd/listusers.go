@@ -32,7 +32,7 @@ import (
 // environmentsCmd represents the environments command
 var listUsersCmd = &cobra.Command{
 	Use:   "users",
-	Short: "list environments in an organization",
+	Short: "list users in an organization",
 	Long: AddAppName(`List users
     Example:
     $AppName list users --organization organizaionname`),
