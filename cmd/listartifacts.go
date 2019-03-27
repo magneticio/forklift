@@ -32,7 +32,7 @@ import (
 // environmentsCmd represents the environments command
 var listArtifactsCmd = &cobra.Command{
 	Use:   "artifacts",
-	Short: "list environments in an organization",
+	Short: "list artifacts in an environment",
 	Long: AddAppName(`List artifacts
     Example:
     $AppName list artifacts --kind k --organization org --environment env`),
