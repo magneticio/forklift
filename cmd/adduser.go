@@ -34,7 +34,7 @@ var addUserCmd = &cobra.Command{
 	Short: "Add a new user",
 	Long: AddAppName(`Add a new user
     Example:
-    $AppName add user --organization org --file ./somepath.json`),
+    $AppName add user --organization org --file ./userdefinition.yaml`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -53,7 +53,12 @@ var addUserCmd = &cobra.Command{
 			return userErr
 		}
 
-		userText := string(userBytes)
+		userJson, jsonError := util.Convert(configFileType, "json", userBytes)
+		if jsonError != nil {
+			return jsonError
+		}
+
+		userText := string(userJson)
 
 		createUserError := core.AddUser(namespaced, userText)
 		if createUserError != nil {

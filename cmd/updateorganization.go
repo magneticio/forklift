@@ -38,7 +38,7 @@ var updateorganizationCmd = &cobra.Command{
 	Short: "Update a new organization",
 	Long: AddAppName(`Update a new organization
     Example:
-    $AppName update organization org1 --file ./somepath.json`),
+    $AppName update organization org1 --file ./organizationdefinition.yaml`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {

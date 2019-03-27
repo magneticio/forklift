@@ -62,11 +62,13 @@ vamp:
       vamp-url: http://vamp.default.svc.cluster.local:8080
     type: kubernetes
   pulse:
+    nats:
+      url: nats://nats-streaming.default.svc.cluster.local:4222
+    type: nats
     elasticsearch:
       index:
         name: vamp-pulse-${namespace}
       url: http://elasticsearch.default.svc.cluster.local:9200
-    type: elasticsearch
   operation:
     synchronization:
       period: 3 seconds
