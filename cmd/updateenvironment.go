@@ -38,7 +38,7 @@ var updateenvironmentCmd = &cobra.Command{
 	Short: "Update a new environment",
 	Long: AddAppName(`Update a new environment
     Example:
-    $AppName update environment env1 --organization org --file ./somepath.json --artifacts ./artifactspath.json`),
+    $AppName update environment env1 --organization org --file ./somepath.json --artifacts ./artifactsfolder`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
