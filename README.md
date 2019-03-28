@@ -5,28 +5,26 @@ Vamp Forklift is a command line client written in golang and allows to easily se
 Forklift requires running and reachable instances of MySql and Vault tied to a Vamp installation.
 Please check How to Setup Vamp at the following link https://vamp.io/documentation/installation/v1.0.0/overview/
 
+## Table of Contents
+================
+* [Development](#development)
+* [Build](#build)
+* [Installation](#installation)
+	* [Verifying installation](#verifying-installation)
+* [Usage](#usage)
+	* [Organizations](#organizations)
+	* [Users](#users)
+	* [Environments](#environments)
+	* [Artifacts](#artifacts)
 
-##Table of Contents
-=================
-
-    * [development](#development)
-    * [build](#build)
-    * [installation](#installation)
-       * [Verifying installation](#verifying-installation)
-    * [Usage](#usage)
-       * [Organizations](#organizations)
-       * [Users](#users)
-       * [Environments](#environments)
-       * [Artifacts](#artifacts)
-
-## development
+## Development
 
 if you have golang installed, it is recommended to git clone Forklift to $GOPATH/src/github.com/magneticio/forklift
 This is a requirement for docker builder to work.
 
 It is also recommended to read and follow golang setup for a development environment setup: https://golang.org/doc/install
 
-## build
+## Build
 
 If you get errors about missing libraries while building, run:
 ```shell
@@ -44,7 +42,7 @@ for local build:
 
 binaries will be under bin directory
 
-## installation
+## Installation
 If you have binaries built locally:
 For mac run:
 ```shell
