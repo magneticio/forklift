@@ -20,7 +20,7 @@ type ForkliftConfiguration struct {
 	KeyValueStoreClientTlsKey      string `yaml:"key-value-store-client-tls-key,omitempty" json:"key-value-store-client-tls-key,omitempty"`
 	KeyValueStoreClientTlsCert     string `yaml:"key-value-store-client-tls-cert,omitempty" json:"key-value-store-client-tls-cert,omitempty"`
 	KeyValueStoreKvMode            string `yaml:"key-value-store-kv-mode,omitempty" json:"key-value-store-kv-mode,omitempty"`
-	KeyValueStoreFallbackKvVersion int    `yaml:"key-value-store-fallback-kv-version,omitempty" json:"key-value-store-fallback-kv-version,omitempty"`
+	KeyValueStoreFallbackKvVersion string `yaml:"key-value-store-fallback-kv-version,omitempty" json:"key-value-store-fallback-kv-version,omitempty"`
 }
 
 type VampConfiguration struct {
@@ -228,7 +228,7 @@ type VaultKeyValueStoreConfiguration struct {
 	Url               string `yaml:"url,omitempty" json:"url,omitempty"`
 	Token             string `yaml:"token,omitempty" json:"token,omitempty"`
 	KvMode            string `yaml:"kv-mode,omitempty" json:"kv-mode,omitempty"`
-	FallbackKvVersion int    `yaml:"fallback-kv-version,omitempty" json:"fallback-kv-version,omitempty"`
+	FallbackKvVersion string `yaml:"fallback-kv-version,omitempty" json:"fallback-kv-version,omitempty"`
 	ServerTlsCert     string `yaml:"server-tls-cert,omitempty" json:"server-tls-cert,omitempty"`
 	ClientTlsKey      string `yaml:"client-tls-key,omitempty" json:"client-tls-key,omitempty"`
 	ClientTlsCert     string `yaml:"client-tls-cert,omitempty" json:"client-tls-cert,omitempty"`
