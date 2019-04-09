@@ -42,7 +42,7 @@ func TestOperationTemplateModel(t *testing.T) {
 	remarshalledYaml, convertErr := util.Convert("json", "yaml", remarshalledText)
 
 	result := string(remarshalledYaml)
-	assert.Equal(t, configText, result)
+	assert.Equal(t, result, configText)
 
 }
 

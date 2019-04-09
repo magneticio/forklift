@@ -37,7 +37,8 @@ vamp:
         memory: 256MB
     gateway:
       selector: namespace(${namespace})
-      virtual-hosts: {}
+      virtual-hosts:
+        enabled: true
     synchronization:
       check:
         cpu: true
