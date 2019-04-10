@@ -102,7 +102,7 @@ type Gateway struct {
 }
 
 type VirtualHosts struct {
-	Enabled bool `yaml:"enabled,omitempty" json:"enabled,omitempty"`
+	Enabled bool `yaml:"enabled" json:"enabled"`
 }
 
 type Deployable struct {

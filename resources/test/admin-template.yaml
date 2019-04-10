@@ -16,7 +16,8 @@ vamp:
       arguments: null
       scale: {}
     gateway:
-      virtual-hosts: {}
+      virtual-hosts:
+        enabled: false
     synchronization:
       check: {}
       deployment: {}
