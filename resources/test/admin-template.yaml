@@ -35,6 +35,7 @@ vamp:
       base-path: /secret/vamp/${namespace}
       type: vault
       vault:
+        fallback-kv-version: ${env://VAMP_PERSISTENCE_KEY_VALUE_STORE_VAULT_FALLBACK_KV_VERSION}
         token: ${env://VAMP_PERSISTENCE_KEY_VALUE_STORE_VAULT_TOKEN}
         url: ${env://VAMP_PERSISTENCE_KEY_VALUE_STORE_VAULT_URL}
     transformers:
