@@ -68,9 +68,6 @@ func TestAdminTemplateModel(t *testing.T) {
 		panic(unmarshallError)
 	}
 
-	expectedFallbackVersion := "${env://VAMP_PERSISTENCE_KEY_VALUE_STORE_VAULT_FALLBACK_KV_VERSION}"
-	assert.Equal(t, vampConfig.Vamp.Persistence.KeyValueStore.Vault.FallbackKvVersion, expectedFallbackVersion)
-
 	remarshalledJson, marshalError := json.Marshal(vampConfig)
 	if marshalError != nil {
 		panic(marshalError)
