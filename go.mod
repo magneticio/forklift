@@ -23,4 +23,5 @@ require (
 	golang.org/x/net v0.0.0-20190415214537-1da14a5a36f2 // indirect
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4 // indirect
 	gopkg.in/yaml.v2 v2.2.2
+  github.com/hashicorp/consul v1.4.4
 )
