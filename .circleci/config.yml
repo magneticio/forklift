@@ -6,7 +6,6 @@ jobs:
     steps:
       - checkout
       - run: mkdir -p ./artifacts
-      - run: ./dependencies.sh
       - run: ./test.sh
       - run: ./build.sh local
       - run: cp ./bin/* ./artifacts
