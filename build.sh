@@ -4,6 +4,9 @@
 
 echo using GOPATH as $GOPATH
 
+# this is the official image
+GOIMAGE="dockercore/golang-cross:1.12.3"
+
 if [ "$1" = "local" ]; then
   for GOOS in darwin linux windows; do
     for GOARCH in 386 amd64; do
@@ -19,7 +22,7 @@ if [ "$1" = "local" ]; then
   unset GOOS
   unset GOARCH
 else
-  docker run --rm -it -v "$GOPATH":/go -w /go/src/github.com/magneticio/forklift dockercore/golang-cross:1.11.1 sh -c '
+  docker run --rm -it -v $(pwd):/src -w /src $GOIMAGE sh -c '
   for GOOS in darwin linux windows; do
     for GOARCH in 386 amd64; do
       echo "Building $GOOS-$GOARCH"

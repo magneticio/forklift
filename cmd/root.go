@@ -39,7 +39,7 @@ import (
 const AppName string = "forklift"
 
 // version should be in format d.d.d where d is a decimal number
-const Version string = "0.1.14"
+const Version string = "v0.1.15"
 
 /*
 Application name can change over time so it is made parameteric

@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"strings"
 
-	vaultapi "github.com/hashicorp/vault/api"
+	"github.com/hashicorp/vault/api"
 	"github.com/magneticio/forklift/logging"
 	"github.com/magneticio/forklift/models"
 )
@@ -26,7 +26,7 @@ type VaultKeyValueStoreClient struct {
 	Url    string
 	Token  string
 	Params map[string]string
-	Client *vaultapi.Client
+	Client *api.Client
 }
 
 func NewKeyValueStoreClient(config models.KeyValueStoreConfiguration) (KeyValueStoreClient, error) {
@@ -55,7 +55,7 @@ func NewVaultKeyValueStoreClient(address string, token string, params map[string
 		return nil, configErr
 	}
 
-	client, err := vaultapi.NewClient(config)
+	client, err := api.NewClient(config)
 	if err != nil {
 		logging.Error("Error initialising client %v\n", err.Error())
 		return nil, err
@@ -71,7 +71,7 @@ func NewVaultKeyValueStoreClient(address string, token string, params map[string
 	}, nil
 }
 
-func (c *VaultKeyValueStoreClient) getClient() (*vaultapi.Client, error) {
+func (c *VaultKeyValueStoreClient) getClient() (*api.Client, error) {
 
 	logging.Info("Retrieving token")
 
@@ -136,8 +136,8 @@ func (c *VaultKeyValueStoreClient) Delete(keyName string) error {
 	return nil
 }
 
-func getConfig(address, cert, key, caCert string) (*vaultapi.Config, error) {
-	conf := vaultapi.DefaultConfig()
+func getConfig(address, cert, key, caCert string) (*api.Config, error) {
+	conf := api.DefaultConfig()
 	conf.Address = address
 
 	tlsConfig := &tls.Config{}
