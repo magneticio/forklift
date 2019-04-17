@@ -16,3 +16,6 @@ bin/
 .idea/
 temp/
 local/
+
+#forklift executable
+forklift
