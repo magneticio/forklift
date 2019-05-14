@@ -320,6 +320,39 @@ func (c *Core) ListUsers(namespace string) ([]string, error) {
 	return names, nil
 }
 
+func ValidateReleasingPolicy(content string) error {
+	var releasingPolcies []models.ReleasingPolicy
+	if marshalError := json.Unmarshal([]byte(content), &releasingPolcies); marshalError != nil {
+		return marshalError
+	}
+	for _, releasingPolicy := range releasingPolcies {
+		for _, step := range releasingPolicy.Steps {
+			if step.Source.Weight+step.Target.Weight != 100 {
+				return errors.New("Sum of Source and Target weights should be 100.")
+			}
+		}
+	}
+	return nil
+}
+
+func (c *Core) AddReleasingPolicy(organization string, environment string, content string) error {
+	if validationError := ValidateReleasingPolicy(content); validationError != nil {
+		return validationError
+	}
+	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(environment)
+	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
+	if keyValueStoreClientError != nil {
+		return keyValueStoreClientError
+	}
+	key := keyValueStoreConfig.BasePath + "/release/policies"
+	logging.Info("Storing Config Under Key: %v\n", key)
+	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, content)
+	if keyValueStoreClientPutError != nil {
+		return keyValueStoreClientPutError
+	}
+	return nil
+}
+
 func (c *Core) AddArtifact(organization string, environment string, content string) error {
 
 	databaseConfig := c.GetNamespaceDatabaseConfiguration(environment)
