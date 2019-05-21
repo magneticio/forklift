@@ -196,7 +196,27 @@ func (c *Core) DeleteUser(namespace string, user string) error {
 
 func (c *Core) AddUser(namespace string, user string) error {
 
-	sqlElement, convertError := ConvertToSqlElement(user)
+	// get organization Configuration using namespace
+	configuration, configurationError := c.getConfig(namespace)
+	if configurationError != nil {
+		return configurationError
+	}
+
+	var userArtifact models.Artifact
+
+	marshallError := json.Unmarshal([]byte(user), &userArtifact)
+	if marshallError != nil {
+		return marshallError
+	}
+
+	userArtifact.Password = util.EncodeString(userArtifact.Password, configuration.Vamp.Security.PasswordHashAlgorithm, configuration.Vamp.Security.PasswordHashSalt)
+
+	userJson, marshalError := json.Marshal(userArtifact)
+	if marshalError != nil {
+		return marshalError
+	}
+
+	sqlElement, convertError := ConvertToSqlElement(string(userJson))
 	if convertError != nil {
 		return convertError
 	}
