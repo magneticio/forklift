@@ -21,6 +21,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/magneticio/forklift/core"
@@ -34,10 +35,19 @@ var addReleasingpolicyCmd = &cobra.Command{
 	Short: "Add a new releasingpolicy",
 	Long: AddAppName(`Add a new releasingpolicy
     Example:
-    $AppName add releasingpolicy --organization org --environment env --file ./releasingpolicydefinition.yson -i json`),
+    $AppName add releasingpolicy name --organization org --environment env --file ./releasingpolicydefinition.json -i json`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if len(args) < 1 {
+			return errors.New("Not Enough Arguments, Releasing Policy name needed.")
+		}
+		name := args[0]
+
+		if !util.ValidateName(name) {
+			return errors.New("Releasing Policy name should be only lowercase alphanumerics")
+		}
+
 		logging.Info("Adding new releasingpolicy to environment %v in organization %v\n", organization, environment)
 		namespacedEnvironment := Config.Namespace + "-" + organization + "-" + environment
 		namespacedOrganization := Config.Namespace + "-" + organization
@@ -59,7 +69,7 @@ var addReleasingpolicyCmd = &cobra.Command{
 
 		releasingpolicyText := string(releasingpolicyJSON)
 
-		createreleasingpolicyError := core.AddReleasingPolicy(namespacedOrganization, namespacedEnvironment, releasingpolicyText)
+		createreleasingpolicyError := core.AddReleasingPolicy(namespacedOrganization, namespacedEnvironment, name, releasingpolicyText)
 		if createreleasingpolicyError != nil {
 			return createreleasingpolicyError
 		}

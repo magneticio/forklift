@@ -341,21 +341,19 @@ func (c *Core) ListUsers(namespace string) ([]string, error) {
 }
 
 func ValidateReleasingPolicy(content string) error {
-	var releasingPolcies []models.ReleasingPolicy
-	if marshalError := json.Unmarshal([]byte(content), &releasingPolcies); marshalError != nil {
+	var releasingPolicy models.ReleasingPolicy
+	if marshalError := json.Unmarshal([]byte(content), &releasingPolicy); marshalError != nil {
 		return marshalError
 	}
-	for _, releasingPolicy := range releasingPolcies {
-		for _, step := range releasingPolicy.Steps {
-			if step.Source.Weight+step.Target.Weight != 100 {
-				return errors.New("Sum of Source and Target weights should be 100.")
-			}
+	for _, step := range releasingPolicy.Steps {
+		if step.Source.Weight+step.Target.Weight != 100 {
+			return errors.New("Sum of Source and Target weights should be 100.")
 		}
 	}
 	return nil
 }
 
-func (c *Core) AddReleasingPolicy(organization string, environment string, content string) error {
+func (c *Core) AddReleasingPolicy(organization string, environment string, name string, content string) error {
 	if validationError := ValidateReleasingPolicy(content); validationError != nil {
 		return validationError
 	}
@@ -364,7 +362,7 @@ func (c *Core) AddReleasingPolicy(organization string, environment string, conte
 	if keyValueStoreClientError != nil {
 		return keyValueStoreClientError
 	}
-	key := keyValueStoreConfig.BasePath + "/release/policies"
+	key := keyValueStoreConfig.BasePath + "/release/policies/" + name
 	logging.Info("Storing Config Under Key: %v\n", key)
 	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, content)
 	if keyValueStoreClientPutError != nil {

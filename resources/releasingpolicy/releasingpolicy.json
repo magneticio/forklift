@@ -1,26 +1,23 @@
-[
-  {
-    "name": "basic",
-    "maxStartRetries": 10,
-    "steps": [
-      {
-        "duration": "5m",
-        "source": { "weight": 100 },
-        "target": {
-          "weight": 0,
-          "condition": "user-agent = iPhone",
-          "conditionStrength": 100
-        }
-      },
-      {
-        "duration": "5m",
-        "source": { "weight": 50 },
-        "target": { "weight": 50 }
-      },
-      {
-        "source": { "weight": 0 },
-        "target": { "weight": 100 }
+{
+  "maxStartRetries": 10,
+  "steps": [
+    {
+      "duration": "5m",
+      "source": { "weight": 100 },
+      "target": {
+        "weight": 0,
+        "condition": "user-agent = iPhone",
+        "conditionStrength": 100
       }
-    ]
-  }
-]
+    },
+    {
+      "duration": "5m",
+      "source": { "weight": 50 },
+      "target": { "weight": 50 }
+    },
+    {
+      "source": { "weight": 0 },
+      "target": { "weight": 100 }
+    }
+  ]
+}
