@@ -1,0 +1,28 @@
+{
+  "maxStartRetries": 10,
+  "steps": [
+    {
+      "duration": "24h",
+      "source": { "weight": 100 },
+      "target": {
+        "weight": 0,
+        "condition": "user-agent = Mobile",
+        "conditionStrength": 100
+      }
+    },
+    {
+      "duration": "1h",
+      "source": { "weight": 90 },
+      "target": { "weight": 10 }
+    },
+    {
+      "duration": "1h",
+      "source": { "weight": 50 },
+      "target": { "weight": 50 }
+    },
+    {
+      "source": { "weight": 0 },
+      "target": { "weight": 100 }
+    }
+  ]
+}

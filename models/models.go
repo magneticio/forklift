@@ -258,3 +258,21 @@ type Artifact struct {
 	Roles     []string          `yaml:"roles,omitempty" json:"roles,omitempty"`
 	Metadata  map[string]string `yaml:"metadata,omitempty" json:"metadata,omitempty"`
 }
+
+type ReleasingPolicyStepState struct {
+	Weight            int    `yaml:"weight" json:"weight"`
+	Condition         string `yaml:"condition,omitempty" json:"condition,omitempty"`
+	ConditionStrenght int    `yaml:"conditionStrength,omitempty" json:"conditionStrength,omitempty"`
+}
+
+type ReleasingPolicyStep struct {
+	Duration string                   `yaml:"duration,omitempty" json:"duration,omitempty"`
+	Source   ReleasingPolicyStepState `yaml:"source" json:"source"`
+	Target   ReleasingPolicyStepState `yaml:"target" json:"target"`
+}
+
+type ReleasingPolicy struct {
+	Name            string                `yaml:"name,omitempty" json:"name,omitempty"`
+	MaxStartRetries int                   `yaml:"maxStartRetries,omitempty" json:"maxStartRetries,omitempty"`
+	Steps           []ReleasingPolicyStep `yaml:"steps" json:"steps"`
+}
