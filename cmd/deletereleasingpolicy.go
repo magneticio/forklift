@@ -35,7 +35,7 @@ var deleteReleasingpolicyCmd = &cobra.Command{
 	Short: "Delete a releasingpolicy",
 	Long: AddAppName(`Delete a new releasingpolicy
     Example:
-    $AppName delete releasingpolicy name --organization org --environment env --file ./releasingpolicydefinition.json -i json`),
+    $AppName delete releasingpolicy name --organization org --environment env`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
