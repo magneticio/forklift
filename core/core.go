@@ -363,10 +363,25 @@ func (c *Core) AddReleasingPolicy(organization string, environment string, name 
 		return keyValueStoreClientError
 	}
 	key := keyValueStoreConfig.BasePath + "/release/policies/" + name
-	logging.Info("Storing Config Under Key: %v\n", key)
+	logging.Info("Storing Releasing Policy Under Key: %v\n", key)
 	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, content)
 	if keyValueStoreClientPutError != nil {
 		return keyValueStoreClientPutError
+	}
+	return nil
+}
+
+func (c *Core) DeleteReleasingPolicy(organization string, environment string, name string) error {
+	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(environment)
+	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
+	if keyValueStoreClientError != nil {
+		return keyValueStoreClientError
+	}
+	key := keyValueStoreConfig.BasePath + "/release/policies/" + name
+	logging.Info("Deleting Releasing Policy Under Key: %v\n", key)
+	keyValueStoreClientDeleteError := keyValueStoreClient.Delete(key)
+	if keyValueStoreClientDeleteError != nil {
+		return keyValueStoreClientDeleteError
 	}
 	return nil
 }
