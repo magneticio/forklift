@@ -259,20 +259,20 @@ type Artifact struct {
 	Metadata  map[string]string `yaml:"metadata,omitempty" json:"metadata,omitempty"`
 }
 
-type ReleasingPolicyStepState struct {
+type ReleasePolicyStepState struct {
 	Weight            int    `yaml:"weight" json:"weight"`
 	Condition         string `yaml:"condition,omitempty" json:"condition,omitempty"`
 	ConditionStrenght int    `yaml:"conditionStrength,omitempty" json:"conditionStrength,omitempty"`
 }
 
-type ReleasingPolicyStep struct {
-	Duration string                   `yaml:"duration,omitempty" json:"duration,omitempty"`
-	Source   ReleasingPolicyStepState `yaml:"source" json:"source"`
-	Target   ReleasingPolicyStepState `yaml:"target" json:"target"`
+type ReleasePolicyStep struct {
+	Duration string                 `yaml:"duration,omitempty" json:"duration,omitempty"`
+	Source   ReleasePolicyStepState `yaml:"source" json:"source"`
+	Target   ReleasePolicyStepState `yaml:"target" json:"target"`
 }
 
-type ReleasingPolicy struct {
-	Name            string                `yaml:"name,omitempty" json:"name,omitempty"`
-	MaxStartRetries int                   `yaml:"maxStartRetries,omitempty" json:"maxStartRetries,omitempty"`
-	Steps           []ReleasingPolicyStep `yaml:"steps" json:"steps"`
+type ReleasePolicy struct {
+	Name            string              `yaml:"name,omitempty" json:"name,omitempty"`
+	MaxStartRetries int                 `yaml:"maxStartRetries,omitempty" json:"maxStartRetries,omitempty"`
+	Steps           []ReleasePolicyStep `yaml:"steps" json:"steps"`
 }
