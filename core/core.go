@@ -340,12 +340,12 @@ func (c *Core) ListUsers(namespace string) ([]string, error) {
 	return names, nil
 }
 
-func ValidateReleasingPolicy(content string) error {
-	var releasingPolicy models.ReleasingPolicy
-	if marshalError := json.Unmarshal([]byte(content), &releasingPolicy); marshalError != nil {
+func ValidateReleasePolicy(content string) error {
+	var releasePolicy models.ReleasePolicy
+	if marshalError := json.Unmarshal([]byte(content), &releasePolicy); marshalError != nil {
 		return marshalError
 	}
-	for _, step := range releasingPolicy.Steps {
+	for _, step := range releasePolicy.Steps {
 		if step.Source.Weight+step.Target.Weight != 100 {
 			return errors.New("Sum of Source and Target weights should be 100.")
 		}
@@ -353,8 +353,8 @@ func ValidateReleasingPolicy(content string) error {
 	return nil
 }
 
-func (c *Core) AddReleasingPolicy(organization string, environment string, name string, content string) error {
-	if validationError := ValidateReleasingPolicy(content); validationError != nil {
+func (c *Core) AddReleasePolicy(organization string, environment string, name string, content string) error {
+	if validationError := ValidateReleasePolicy(content); validationError != nil {
 		return validationError
 	}
 	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(environment)
@@ -363,7 +363,7 @@ func (c *Core) AddReleasingPolicy(organization string, environment string, name 
 		return keyValueStoreClientError
 	}
 	key := keyValueStoreConfig.BasePath + "/release/policies/" + name
-	logging.Info("Storing Releasing Policy Under Key: %v\n", key)
+	logging.Info("Storing Release Policy Under Key: %v\n", key)
 	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, content)
 	if keyValueStoreClientPutError != nil {
 		return keyValueStoreClientPutError
@@ -371,14 +371,14 @@ func (c *Core) AddReleasingPolicy(organization string, environment string, name 
 	return nil
 }
 
-func (c *Core) DeleteReleasingPolicy(organization string, environment string, name string) error {
+func (c *Core) DeleteReleasePolicy(organization string, environment string, name string) error {
 	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(environment)
 	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
 	if keyValueStoreClientError != nil {
 		return keyValueStoreClientError
 	}
 	key := keyValueStoreConfig.BasePath + "/release/policies/" + name
-	logging.Info("Deleting Releasing Policy Under Key: %v\n", key)
+	logging.Info("Deleting Release Policy Under Key: %v\n", key)
 	keyValueStoreClientDeleteError := keyValueStoreClient.Delete(key)
 	if keyValueStoreClientDeleteError != nil {
 		return keyValueStoreClientDeleteError
