@@ -26,7 +26,6 @@ import (
 
 	"github.com/magneticio/forklift/core"
 	"github.com/magneticio/forklift/logging"
-	"github.com/magneticio/forklift/util"
 	"github.com/spf13/cobra"
 )
 
@@ -43,10 +42,6 @@ var deleteReleasepolicyCmd = &cobra.Command{
 			return errors.New("Not Enough Arguments, Release Policy name needed.")
 		}
 		name := args[0]
-
-		if !util.ValidateName(name) {
-			return errors.New("Release Policy name should be only lowercase alphanumerics")
-		}
 
 		logging.Info("Deleteing new releasepolicy to environment %v in organization %v\n", organization, environment)
 		namespacedEnvironment := Config.Namespace + "-" + organization + "-" + environment
