@@ -44,10 +44,6 @@ var addReleasepolicyCmd = &cobra.Command{
 		}
 		name := args[0]
 
-		if !util.ValidateName(name) {
-			return errors.New("Release Policy name should be only lowercase alphanumerics")
-		}
-
 		logging.Info("Adding new releasepolicy to environment %v in organization %v\n", organization, environment)
 		namespacedEnvironment := Config.Namespace + "-" + organization + "-" + environment
 		namespacedOrganization := Config.Namespace + "-" + organization
