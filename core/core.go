@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"path"
 	"strings"
 
 	"github.com/magneticio/forklift/keyvaluestoreclient"
@@ -362,7 +363,7 @@ func (c *Core) AddReleasePolicy(organization string, environment string, name st
 	if keyValueStoreClientError != nil {
 		return keyValueStoreClientError
 	}
-	key := keyValueStoreConfig.BasePath + "/release/policies/" + name
+	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleasePoliciesPath, name)
 	logging.Info("Storing Release Policy Under Key: %v\n", key)
 	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, content)
 	if keyValueStoreClientPutError != nil {
@@ -377,7 +378,7 @@ func (c *Core) DeleteReleasePolicy(organization string, environment string, name
 	if keyValueStoreClientError != nil {
 		return keyValueStoreClientError
 	}
-	key := keyValueStoreConfig.BasePath + "/release/policies/" + name
+	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleasePoliciesPath, name)
 	logging.Info("Deleting Release Policy Under Key: %v\n", key)
 	keyValueStoreClientDeleteError := keyValueStoreClient.Delete(key)
 	if keyValueStoreClientDeleteError != nil {
