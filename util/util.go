@@ -290,7 +290,8 @@ func EncodeString(value string, algorithm string, salt string) string {
 func RandomEncodedString(length int) string {
 
 	token := make([]byte, length)
-	rand.Read(token)
+
+	rand.New(src).Read(token)
 
 	return HexAsBigInt(token)
 }
