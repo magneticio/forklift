@@ -29,6 +29,7 @@ environment_variables:
   VAMP_HEALTH_TIME_WINDOW             : 500
   VAMP_METRICS                        : true
   VAMP_ELASTICSEARCH_METRICS_INDEX    : ${es://metrics}
+  VAMP_ELASTICSEARCH_METRICS_V2_INDEX : ${es://metricsv2}
   VAMP_METRICS_TIME_WINDOW            : 500
   VAMP_CAPACITY                       : true
   VAMP_ELASTICSEARCH_CAPACITY_INDEX   : ${es://capacity}
