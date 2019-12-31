@@ -363,7 +363,7 @@ func (c *Core) AddReleasePolicy(organization string, environment string, name st
 	if keyValueStoreClientError != nil {
 		return keyValueStoreClientError
 	}
-	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleasePoliciesPath, name)
+	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleaseAgentKeyValueStorePath, "policies", name)
 	logging.Info("Storing Release Policy Under Key: %v\n", key)
 	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, content)
 	if keyValueStoreClientPutError != nil {
@@ -378,7 +378,7 @@ func (c *Core) DeleteReleasePolicy(organization string, environment string, name
 	if keyValueStoreClientError != nil {
 		return keyValueStoreClientError
 	}
-	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleasePoliciesPath, name)
+	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleaseAgentKeyValueStorePath, "policies", name)
 	logging.Info("Deleting Release Policy Under Key: %v\n", key)
 	keyValueStoreClientDeleteError := keyValueStoreClient.Delete(key)
 	if keyValueStoreClientDeleteError != nil {
@@ -436,7 +436,7 @@ func (c *Core) addArtifactToVault(organization string, environment string, conte
 	if keyValueStoreClientError != nil {
 		return keyValueStoreClientError
 	}
-	key := path.Join(keyValueStoreConfig.BasePath, artifact.Kind, artifact.Name)
+	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleaseAgentKeyValueStorePath, artifact.Kind, artifact.Name)
 	logging.Info("Storing Artifact Under Key: %v\n", key)
 	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, content)
 	if keyValueStoreClientPutError != nil {
@@ -480,7 +480,7 @@ func (c *Core) deleteArtifactFromVault(organization string, environment string, 
 	if keyValueStoreClientError != nil {
 		return keyValueStoreClientError
 	}
-	key := path.Join(keyValueStoreConfig.BasePath, kind, name)
+	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleaseAgentKeyValueStorePath, kind, name)
 	logging.Info("Deleting Artifact Under Key: %v\n", key)
 	keyValueStoreClientDeleteError := keyValueStoreClient.Delete(key)
 	if keyValueStoreClientDeleteError != nil {
