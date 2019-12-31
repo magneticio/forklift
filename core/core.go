@@ -387,68 +387,7 @@ func (c *Core) DeleteReleasePolicy(organization string, environment string, name
 	return nil
 }
 
-func (c *Core) AddGateway(environment string, name string, content string) error {
-	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(environment)
-	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
-	if keyValueStoreClientError != nil {
-		return keyValueStoreClientError
-	}
-	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.GatewaysPath, name)
-	logging.Info("Storing Gateway Under Key: %v\n", key)
-	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, content)
-	if keyValueStoreClientPutError != nil {
-		return keyValueStoreClientPutError
-	}
-	return nil
-}
-
-func (c *Core) DeleteGateway(environment string, name string) error {
-	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(environment)
-	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
-	if keyValueStoreClientError != nil {
-		return keyValueStoreClientError
-	}
-	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.GatewaysPath, name)
-	logging.Info("Deleting Gateway Under Key: %v\n", key)
-	keyValueStoreClientDeleteError := keyValueStoreClient.Delete(key)
-	if keyValueStoreClientDeleteError != nil {
-		return keyValueStoreClientDeleteError
-	}
-	return nil
-}
-
-func (c *Core) ListGateways(environment string) ([]string, error) {
-	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(environment)
-	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
-	if keyValueStoreClientError != nil {
-		return nil, keyValueStoreClientError
-	}
-	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.GatewaysPath)
-	logging.Info("Listing Gateways Under Key: %v\n", key)
-	gateways, keyValueStoreClientDeleteError := keyValueStoreClient.List(key)
-	if keyValueStoreClientDeleteError != nil {
-		return nil, keyValueStoreClientDeleteError
-	}
-	return gateways, nil
-}
-
-func (c *Core) GetGateway(environment string, name string) (*string, error) {
-	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(environment)
-	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
-	if keyValueStoreClientError != nil {
-		return nil, keyValueStoreClientError
-	}
-	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.GatewaysPath, name)
-	logging.Info("Getting Gateway Under Key: %v\n", key)
-	gateway, keyValueStoreClientDeleteError := keyValueStoreClient.GetValue(key)
-	if keyValueStoreClientDeleteError != nil {
-		return nil, keyValueStoreClientDeleteError
-	}
-	return &gateway, nil
-}
-
-func (c *Core) AddArtifact(organization string, environment string, content string) error {
-
+func (c *Core) addArtifactToDatabase(organization string, environment string, content string) error {
 	databaseConfig := c.GetNamespaceDatabaseConfiguration(environment)
 
 	organizationDbConfiguration := c.GetNamespaceDatabaseConfiguration(organization)
@@ -481,11 +420,40 @@ func (c *Core) AddArtifact(organization string, environment string, content stri
 	}
 
 	return client.InsertOrReplace(organizationDbConfiguration.Sql.Database, databaseConfig.Sql.Table, sqlElement.Name, sqlElement.Kind, string(sqlElementString))
-
 }
 
-func (c *Core) DeleteArtifact(organization string, environment string, name string, kind string) error {
+func (c *Core) addArtifactToVault(organization string, environment string, content string) error {
+	var artifact models.Artifact
+	unmarshallError := json.Unmarshal([]byte(content), &artifact)
+	if unmarshallError != nil {
+		fmt.Printf("Unmarshalling error : %v\n", content)
+		fmt.Printf("Unmarshalling error : %v\n", unmarshallError.Error())
+		return unmarshallError
+	}
 
+	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(environment)
+	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
+	if keyValueStoreClientError != nil {
+		return keyValueStoreClientError
+	}
+	key := path.Join(keyValueStoreConfig.BasePath, artifact.Kind, artifact.Name)
+	logging.Info("Storing Artifact Under Key: %v\n", key)
+	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, content)
+	if keyValueStoreClientPutError != nil {
+		return keyValueStoreClientPutError
+	}
+	return nil
+}
+
+func (c *Core) AddArtifact(organization string, environment string, content string) error {
+	dbError := c.addArtifactToDatabase(organization, environment, content)
+	if dbError != nil {
+		return dbError
+	}
+	return c.addArtifactToVault(organization, environment, content)
+}
+
+func (c *Core) deleteArtifactFromDatabase(organization string, environment string, name string, kind string) error {
 	databaseConfig := c.GetNamespaceDatabaseConfiguration(environment)
 
 	organizationDatabaseConfig := c.GetNamespaceDatabaseConfiguration(organization)
@@ -504,7 +472,28 @@ func (c *Core) DeleteArtifact(organization string, environment string, name stri
 	}
 
 	return client.DeleteByNameAndKind(organizationDatabaseConfig.Sql.Database, databaseConfig.Sql.Table, name, kind)
+}
 
+func (c *Core) deleteArtifactFromVault(organization string, environment string, name string, kind string) error {
+	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(environment)
+	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
+	if keyValueStoreClientError != nil {
+		return keyValueStoreClientError
+	}
+	key := path.Join(keyValueStoreConfig.BasePath, kind, name)
+	logging.Info("Deleting Artifact Under Key: %v\n", key)
+	keyValueStoreClientDeleteError := keyValueStoreClient.Delete(key)
+	if keyValueStoreClientDeleteError != nil {
+		return keyValueStoreClientDeleteError
+	}
+	return nil
+}
+
+func (c *Core) DeleteArtifact(organization string, environment string, name string, kind string) error {
+	if dbError := c.deleteArtifactFromDatabase(organization, environment, name, kind); dbError != nil {
+		return dbError
+	}
+	return c.deleteArtifactFromVault(organization, environment, name, kind)
 }
 
 func (c *Core) CreateOrganization(namespace string, configuration models.VampConfiguration) error {
