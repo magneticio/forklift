@@ -22,6 +22,7 @@ type ForkliftConfiguration struct {
 	KeyValueStoreKvMode            string `yaml:"key-value-store-kv-mode,omitempty" json:"key-value-store-kv-mode,omitempty"`
 	KeyValueStoreFallbackKvVersion string `yaml:"key-value-store-fallback-kv-version,omitempty" json:"key-value-store-fallback-kv-version,omitempty"`
 	ReleasePoliciesPath            string `yaml:"release-policies-path,omitempty" json:"release-policies-path,omitempty"`
+	GatewaysPath                   string `yaml:"gateways-path,omitempty" json:"gateways-path,omitempty"`
 }
 
 type VampConfiguration struct {

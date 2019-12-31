@@ -387,6 +387,66 @@ func (c *Core) DeleteReleasePolicy(organization string, environment string, name
 	return nil
 }
 
+func (c *Core) AddGateway(environment string, name string, content string) error {
+	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(environment)
+	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
+	if keyValueStoreClientError != nil {
+		return keyValueStoreClientError
+	}
+	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.GatewaysPath, name)
+	logging.Info("Storing Gateway Under Key: %v\n", key)
+	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, content)
+	if keyValueStoreClientPutError != nil {
+		return keyValueStoreClientPutError
+	}
+	return nil
+}
+
+func (c *Core) DeleteGateway(environment string, name string) error {
+	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(environment)
+	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
+	if keyValueStoreClientError != nil {
+		return keyValueStoreClientError
+	}
+	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.GatewaysPath, name)
+	logging.Info("Deleting Gateway Under Key: %v\n", key)
+	keyValueStoreClientDeleteError := keyValueStoreClient.Delete(key)
+	if keyValueStoreClientDeleteError != nil {
+		return keyValueStoreClientDeleteError
+	}
+	return nil
+}
+
+func (c *Core) ListGateways(environment string) ([]string, error) {
+	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(environment)
+	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
+	if keyValueStoreClientError != nil {
+		return nil, keyValueStoreClientError
+	}
+	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.GatewaysPath)
+	logging.Info("Listing Gateways Under Key: %v\n", key)
+	gateways, keyValueStoreClientDeleteError := keyValueStoreClient.List(key)
+	if keyValueStoreClientDeleteError != nil {
+		return nil, keyValueStoreClientDeleteError
+	}
+	return gateways, nil
+}
+
+func (c *Core) GetGateway(environment string, name string) (*string, error) {
+	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(environment)
+	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
+	if keyValueStoreClientError != nil {
+		return nil, keyValueStoreClientError
+	}
+	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.GatewaysPath, name)
+	logging.Info("Getting Gateway Under Key: %v\n", key)
+	gateway, keyValueStoreClientDeleteError := keyValueStoreClient.GetValue(key)
+	if keyValueStoreClientDeleteError != nil {
+		return nil, keyValueStoreClientDeleteError
+	}
+	return &gateway, nil
+}
+
 func (c *Core) AddArtifact(organization string, environment string, content string) error {
 
 	databaseConfig := c.GetNamespaceDatabaseConfiguration(environment)
