@@ -426,8 +426,7 @@ func (c *Core) addArtifactToVault(organization string, environment string, conte
 	var artifact models.Artifact
 	unmarshallError := json.Unmarshal([]byte(content), &artifact)
 	if unmarshallError != nil {
-		fmt.Printf("Unmarshalling error : %v\n", content)
-		fmt.Printf("Unmarshalling error : %v\n", unmarshallError.Error())
+		logging.Error("Unmarshalling error : %v\n", unmarshallError)
 		return unmarshallError
 	}
 
@@ -445,6 +444,7 @@ func (c *Core) addArtifactToVault(organization string, environment string, conte
 	return nil
 }
 
+// AddArtifact : adds artifact to sql database and Vault
 func (c *Core) AddArtifact(organization string, environment string, content string) error {
 	dbError := c.addArtifactToDatabase(organization, environment, content)
 	if dbError != nil {
@@ -489,6 +489,7 @@ func (c *Core) deleteArtifactFromVault(organization string, environment string, 
 	return nil
 }
 
+// DeleteArtifact : deletes artifact from sql database and Vault
 func (c *Core) DeleteArtifact(organization string, environment string, name string, kind string) error {
 	if dbError := c.deleteArtifactFromDatabase(organization, environment, name, kind); dbError != nil {
 		return dbError
