@@ -363,7 +363,7 @@ func (c *Core) AddReleasePolicy(organization string, environment string, name st
 	if keyValueStoreClientError != nil {
 		return keyValueStoreClientError
 	}
-	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleasePoliciesPath, name)
+	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleaseAgentKeyValueStorePath, "policies", name)
 	logging.Info("Storing Release Policy Under Key: %v\n", key)
 	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, content)
 	if keyValueStoreClientPutError != nil {
@@ -378,7 +378,7 @@ func (c *Core) DeleteReleasePolicy(organization string, environment string, name
 	if keyValueStoreClientError != nil {
 		return keyValueStoreClientError
 	}
-	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleasePoliciesPath, name)
+	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleaseAgentKeyValueStorePath, "policies", name)
 	logging.Info("Deleting Release Policy Under Key: %v\n", key)
 	keyValueStoreClientDeleteError := keyValueStoreClient.Delete(key)
 	if keyValueStoreClientDeleteError != nil {
@@ -387,8 +387,7 @@ func (c *Core) DeleteReleasePolicy(organization string, environment string, name
 	return nil
 }
 
-func (c *Core) AddArtifact(organization string, environment string, content string) error {
-
+func (c *Core) addArtifactToDatabase(organization string, environment string, content string) error {
 	databaseConfig := c.GetNamespaceDatabaseConfiguration(environment)
 
 	organizationDbConfiguration := c.GetNamespaceDatabaseConfiguration(organization)
@@ -421,11 +420,40 @@ func (c *Core) AddArtifact(organization string, environment string, content stri
 	}
 
 	return client.InsertOrReplace(organizationDbConfiguration.Sql.Database, databaseConfig.Sql.Table, sqlElement.Name, sqlElement.Kind, string(sqlElementString))
-
 }
 
-func (c *Core) DeleteArtifact(organization string, environment string, name string, kind string) error {
+func (c *Core) addArtifactToVault(organization string, environment string, content string) error {
+	var artifact models.Artifact
+	unmarshallError := json.Unmarshal([]byte(content), &artifact)
+	if unmarshallError != nil {
+		logging.Error("Unmarshalling error : %v\n", unmarshallError)
+		return unmarshallError
+	}
 
+	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(environment)
+	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
+	if keyValueStoreClientError != nil {
+		return keyValueStoreClientError
+	}
+	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleaseAgentKeyValueStorePath, artifact.Kind, artifact.Name)
+	logging.Info("Storing Artifact Under Key: %v\n", key)
+	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, content)
+	if keyValueStoreClientPutError != nil {
+		return keyValueStoreClientPutError
+	}
+	return nil
+}
+
+// AddArtifact : adds artifact to sql database and Vault
+func (c *Core) AddArtifact(organization string, environment string, content string) error {
+	dbError := c.addArtifactToDatabase(organization, environment, content)
+	if dbError != nil {
+		return dbError
+	}
+	return c.addArtifactToVault(organization, environment, content)
+}
+
+func (c *Core) deleteArtifactFromDatabase(organization string, environment string, name string, kind string) error {
 	databaseConfig := c.GetNamespaceDatabaseConfiguration(environment)
 
 	organizationDatabaseConfig := c.GetNamespaceDatabaseConfiguration(organization)
@@ -444,7 +472,29 @@ func (c *Core) DeleteArtifact(organization string, environment string, name stri
 	}
 
 	return client.DeleteByNameAndKind(organizationDatabaseConfig.Sql.Database, databaseConfig.Sql.Table, name, kind)
+}
 
+func (c *Core) deleteArtifactFromVault(organization string, environment string, name string, kind string) error {
+	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(environment)
+	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
+	if keyValueStoreClientError != nil {
+		return keyValueStoreClientError
+	}
+	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleaseAgentKeyValueStorePath, kind, name)
+	logging.Info("Deleting Artifact Under Key: %v\n", key)
+	keyValueStoreClientDeleteError := keyValueStoreClient.Delete(key)
+	if keyValueStoreClientDeleteError != nil {
+		return keyValueStoreClientDeleteError
+	}
+	return nil
+}
+
+// DeleteArtifact : deletes artifact from sql database and Vault
+func (c *Core) DeleteArtifact(organization string, environment string, name string, kind string) error {
+	if dbError := c.deleteArtifactFromDatabase(organization, environment, name, kind); dbError != nil {
+		return dbError
+	}
+	return c.deleteArtifactFromVault(organization, environment, name, kind)
 }
 
 func (c *Core) CreateOrganization(namespace string, configuration models.VampConfiguration) error {

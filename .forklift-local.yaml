@@ -1,0 +1,12 @@
+namespace: vampio
+database-type: mysql
+database-name: vamp-${namespace}
+database-url: jdbc:mysql://127.0.0.1:3306/vamp-${namespace}
+database-user: root
+database-table: ${namespace}
+database-password: secret
+key-value-store-url: http://127.0.0.1:8200
+key-value-store-token: vamp
+key-value-store-base-path: /secret/vamp/${namespace}
+key-value-store-type: vault
+release-agent-key-value-store-path: /release
