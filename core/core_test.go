@@ -12,6 +12,7 @@ func TestGetNamespaceSqlConfiguration(t *testing.T) {
 	c := Core{
 		Conf: models.ForkliftConfiguration{
 			Namespace:             "namespace",
+			DatabaseEnabled:       true,
 			DatabaseType:          "database-type-${namespace}",
 			DatabaseName:          "database-name-${namespace}",
 			DatabaseURL:           "database-url-${namespace}",
@@ -25,7 +26,9 @@ func TestGetNamespaceSqlConfiguration(t *testing.T) {
 		},
 	}
 
-	result := c.GetNamespaceDatabaseConfiguration("namespace")
+	result, err := c.GetNamespaceDatabaseConfiguration("namespace")
+
+	assert.Nil(t, err)
 
 	assert.Equal(t, result.Sql.Database, "database-name-namespace")
 	assert.Equal(t, result.Sql.Table, "database-table-namespace")

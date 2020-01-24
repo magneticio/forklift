@@ -6,6 +6,7 @@ const UsersKind string = "users"
 
 type ForkliftConfiguration struct {
 	Namespace                      string `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+	DatabaseEnabled                bool   `yaml:"database-enabled,omitempty" json:"database-enabled,omitempty"`
 	DatabaseType                   string `yaml:"database-type,omitempty" json:"database-type,omitempty"`
 	DatabaseName                   string `yaml:"database-name,omitempty" json:"database-name,omitempty"`
 	DatabaseURL                    string `yaml:"database-url,omitempty" json:"database-url,omitempty"`

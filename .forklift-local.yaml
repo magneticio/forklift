@@ -1,4 +1,5 @@
 namespace: vampio
+database-enabled: true
 database-type: mysql
 database-name: vamp-${namespace}
 database-url: jdbc:mysql://127.0.0.1:3306/vamp-${namespace}

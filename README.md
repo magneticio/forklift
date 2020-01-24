@@ -77,6 +77,7 @@ Now make sure to have a "config.yaml" configuration file in your home under ".fo
 
 ```
 namespace: vampio
+database-enabled: true
 database-type: mysql
 database-name: vamp-${namespace}
 database-url: jdbc:mysql://mysql.default.svc.cluster.local:3306/vamp-${namespace}
@@ -90,6 +91,7 @@ key-value-store-type: vault
 
 ```
 
+Mind the fact that setting database-enabled to false (which is also the default value), will disable the database regardless of the values specified in other database related fields.
 The configuration path can be changed during the execution of any command by specifying the extra parameter
 
 ```shell
