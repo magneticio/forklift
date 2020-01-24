@@ -738,6 +738,7 @@ func (c *Core) UpdateEnvironment(namespace string, organization string, elements
 
 }
 
+// GetNamespaceDatabaseConfiguration retrieves the database configuration by namespace
 func (c *Core) GetNamespaceDatabaseConfiguration(namespace string) (models.Database, error) {
 
 	if !c.Conf.DatabaseEnabled {
