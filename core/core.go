@@ -27,9 +27,17 @@ func NewCore(conf models.ForkliftConfiguration) (*Core, error) {
 
 func (c *Core) GetArtifact(organization string, environment string, name string, kind string) (*models.SqlElement, error) {
 
-	databaseConfig := c.GetNamespaceDatabaseConfiguration(environment)
+	databaseConfig, err := c.GetNamespaceDatabaseConfiguration(environment)
+	if err != nil {
+		return nil, err
+	}
 
-	namespacedOrganizationName := c.GetNamespaceDatabaseConfiguration(organization).Sql.Database
+	organizationConfig, err := c.GetNamespaceDatabaseConfiguration(organization)
+	if err != nil {
+		return nil, err
+	}
+
+	namespacedOrganizationName := organizationConfig.Sql.Database
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
@@ -56,6 +64,11 @@ func (c *Core) GetArtifact(organization string, environment string, name string,
 }
 
 func (c *Core) CreateUser(namespace string, name string, role string, password string) error {
+
+	databaseConfig, err := c.GetNamespaceDatabaseConfiguration(namespace)
+	if err != nil {
+		return err
+	}
 
 	userElement, validationError := c.GetUser(namespace, name)
 	if validationError != nil {
@@ -106,8 +119,6 @@ func (c *Core) CreateUser(namespace string, name string, role string, password s
 
 	sqlElementAsJsonString := string(sqlElementAsJson)
 
-	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
-
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
 		fmt.Printf("Error: %v\n", clientError.Error())
@@ -119,6 +130,11 @@ func (c *Core) CreateUser(namespace string, name string, role string, password s
 }
 
 func (c *Core) UpdateUser(namespace string, name string, role string, password string) error {
+
+	databaseConfig, err := c.GetNamespaceDatabaseConfiguration(namespace)
+	if err != nil {
+		return err
+	}
 
 	userElement, validationError := c.GetUser(namespace, name)
 	if validationError != nil {
@@ -169,8 +185,6 @@ func (c *Core) UpdateUser(namespace string, name string, role string, password s
 
 	sqlElementAsJsonString := string(sqlElementAsJson)
 
-	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
-
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
 		fmt.Printf("Error: %v\n", clientError.Error())
@@ -183,7 +197,10 @@ func (c *Core) UpdateUser(namespace string, name string, role string, password s
 
 func (c *Core) DeleteUser(namespace string, user string) error {
 
-	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
+	databaseConfig, err := c.GetNamespaceDatabaseConfiguration(namespace)
+	if err != nil {
+		return err
+	}
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
@@ -196,6 +213,11 @@ func (c *Core) DeleteUser(namespace string, user string) error {
 }
 
 func (c *Core) AddUser(namespace string, user string) error {
+
+	databaseConfig, err := c.GetNamespaceDatabaseConfiguration(namespace)
+	if err != nil {
+		return err
+	}
 
 	// get organization Configuration using namespace
 	configuration, configurationError := c.getConfig(namespace)
@@ -222,8 +244,6 @@ func (c *Core) AddUser(namespace string, user string) error {
 		return convertError
 	}
 
-	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
-
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
 		fmt.Printf("Error: %v\n", clientError.Error())
@@ -241,7 +261,10 @@ func (c *Core) AddUser(namespace string, user string) error {
 
 func (c *Core) GetUser(namespace string, name string) (*models.SqlElement, error) {
 
-	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
+	databaseConfig, err := c.GetNamespaceDatabaseConfiguration(namespace)
+	if err != nil {
+		return nil, err
+	}
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
@@ -269,9 +292,17 @@ func (c *Core) GetUser(namespace string, name string) (*models.SqlElement, error
 
 func (c *Core) ListArtifacts(organization string, environment string, kind string) ([]string, error) {
 
-	databaseConfig := c.GetNamespaceDatabaseConfiguration(environment)
+	databaseConfig, err := c.GetNamespaceDatabaseConfiguration(environment)
+	if err != nil {
+		return nil, err
+	}
 
-	namespacedOrganizationName := c.GetNamespaceDatabaseConfiguration(organization).Sql.Database
+	organizationConfig, err := c.GetNamespaceDatabaseConfiguration(organization)
+	if err != nil {
+		return nil, err
+	}
+
+	namespacedOrganizationName := organizationConfig.Sql.Database
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
@@ -307,7 +338,10 @@ func (c *Core) ListArtifacts(organization string, environment string, kind strin
 
 func (c *Core) ListUsers(namespace string) ([]string, error) {
 
-	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
+	databaseConfig, err := c.GetNamespaceDatabaseConfiguration(namespace)
+	if err != nil {
+		return nil, err
+	}
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
@@ -388,9 +422,16 @@ func (c *Core) DeleteReleasePolicy(organization string, environment string, name
 }
 
 func (c *Core) addArtifactToDatabase(organization string, environment string, content string) error {
-	databaseConfig := c.GetNamespaceDatabaseConfiguration(environment)
 
-	organizationDbConfiguration := c.GetNamespaceDatabaseConfiguration(organization)
+	databaseConfig, err := c.GetNamespaceDatabaseConfiguration(environment)
+	if err != nil {
+		return err
+	}
+
+	organizationDbConfiguration, err := c.GetNamespaceDatabaseConfiguration(organization)
+	if err != nil {
+		return err
+	}
 
 	sqlElement, convertError := ConvertToSqlElement(content)
 	if convertError != nil {
@@ -446,17 +487,30 @@ func (c *Core) addArtifactToVault(organization string, environment string, conte
 
 // AddArtifact : adds artifact to sql database and Vault
 func (c *Core) AddArtifact(organization string, environment string, content string) error {
-	dbError := c.addArtifactToDatabase(organization, environment, content)
-	if dbError != nil {
-		return dbError
+
+	if c.Conf.DatabaseEnabled {
+
+		dbError := c.addArtifactToDatabase(organization, environment, content)
+		if dbError != nil {
+			return dbError
+		}
+
 	}
+
 	return c.addArtifactToVault(organization, environment, content)
 }
 
 func (c *Core) deleteArtifactFromDatabase(organization string, environment string, name string, kind string) error {
-	databaseConfig := c.GetNamespaceDatabaseConfiguration(environment)
 
-	organizationDatabaseConfig := c.GetNamespaceDatabaseConfiguration(organization)
+	databaseConfig, err := c.GetNamespaceDatabaseConfiguration(environment)
+	if err != nil {
+		return err
+	}
+
+	organizationDatabaseConfig, err := c.GetNamespaceDatabaseConfiguration(organization)
+	if err != nil {
+		return err
+	}
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
@@ -491,9 +545,15 @@ func (c *Core) deleteArtifactFromVault(organization string, environment string, 
 
 // DeleteArtifact : deletes artifact from sql database and Vault
 func (c *Core) DeleteArtifact(organization string, environment string, name string, kind string) error {
-	if dbError := c.deleteArtifactFromDatabase(organization, environment, name, kind); dbError != nil {
-		return dbError
+
+	if c.Conf.DatabaseEnabled {
+
+		if dbError := c.deleteArtifactFromDatabase(organization, environment, name, kind); dbError != nil {
+			return dbError
+		}
+
 	}
+
 	return c.deleteArtifactFromVault(organization, environment, name, kind)
 }
 
@@ -504,7 +564,15 @@ func (c *Core) CreateOrganization(namespace string, configuration models.VampCon
 		return putConfigError
 	}
 
-	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
+	if !c.Conf.DatabaseEnabled {
+		//If database is not enabled we return
+		return nil
+	}
+
+	databaseConfig, err := c.GetNamespaceDatabaseConfiguration(namespace)
+	if err != nil {
+		return err
+	}
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
@@ -587,8 +655,20 @@ func (c *Core) CreateEnvironment(namespace string, organization string, elements
 		return putConfigError
 	}
 
-	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
-	organizationDatabaseConfig := c.GetNamespaceDatabaseConfiguration(organization)
+	if !c.Conf.DatabaseEnabled {
+		//If database is not enabled we return
+		return nil
+	}
+
+	databaseConfig, err := c.GetNamespaceDatabaseConfiguration(namespace)
+	if err != nil {
+		return err
+	}
+
+	organizationDatabaseConfig, err := c.GetNamespaceDatabaseConfiguration(organization)
+	if err != nil {
+		return err
+	}
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
@@ -631,9 +711,22 @@ func (c *Core) UpdateEnvironment(namespace string, organization string, elements
 		return putConfigError
 	}
 
-	databaseConfig := c.GetNamespaceDatabaseConfiguration(namespace)
+	if !c.Conf.DatabaseEnabled {
+		//If database is not enabled we return
+		return nil
+	}
 
-	namespacedOrganizationName := c.GetNamespaceDatabaseConfiguration(organization).Sql.Database
+	databaseConfig, err := c.GetNamespaceDatabaseConfiguration(namespace)
+	if err != nil {
+		return err
+	}
+
+	organizationConfig, err := c.GetNamespaceDatabaseConfiguration(organization)
+	if err != nil {
+		return err
+	}
+
+	namespacedOrganizationName := organizationConfig.Sql.Database
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
@@ -645,7 +738,12 @@ func (c *Core) UpdateEnvironment(namespace string, organization string, elements
 
 }
 
-func (c *Core) GetNamespaceDatabaseConfiguration(namespace string) models.Database {
+// GetNamespaceDatabaseConfiguration retrieves the database configuration by namespace
+func (c *Core) GetNamespaceDatabaseConfiguration(namespace string) (models.Database, error) {
+
+	if !c.Conf.DatabaseEnabled {
+		return models.Database{}, errors.New("Database is not enabled")
+	}
 
 	return models.Database{
 		Sql: models.SqlConfiguration{
@@ -656,7 +754,7 @@ func (c *Core) GetNamespaceDatabaseConfiguration(namespace string) models.Databa
 			Url:      Namespaced(namespace, c.Conf.DatabaseURL),
 		},
 		Type: c.Conf.DatabaseType,
-	}
+	}, nil
 }
 
 func (c *Core) GetNamespaceKeyValueStoreConfiguration(namespace string) *models.KeyValueStoreConfiguration {

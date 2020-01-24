@@ -43,6 +43,7 @@ type Row struct {
 }
 
 func NewSqlClient(config models.Database) (SqlClient, error) {
+
 	if config.Type == "mysql" {
 		// TODO: add params
 		u, err_url := url.ParseRequestURI(strings.TrimPrefix(config.Sql.Url, "jdbc:"))
