@@ -421,6 +421,7 @@ func (c *Core) DeleteReleasePolicy(organization string, environment string, name
 	return nil
 }
 
+// AddReleasePlan - adds release plan to key value store
 func (c *Core) AddReleasePlan(name string, content string) error {
 	keyValueStoreConfig := c.GetKeyValueStoreConfiguration()
 	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
@@ -436,6 +437,7 @@ func (c *Core) AddReleasePlan(name string, content string) error {
 	return nil
 }
 
+// DeleteReleasePlan - deletes release plan from key value store
 func (c *Core) DeleteReleasePlan(name string) error {
 	keyValueStoreConfig := c.GetKeyValueStoreConfiguration()
 	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
@@ -803,6 +805,7 @@ func (c *Core) GetNamespaceKeyValueStoreConfiguration(namespace string) *models.
 	}
 }
 
+// GetKeyValueStoreConfiguration - gets key value store configuration
 func (c *Core) GetKeyValueStoreConfiguration() *models.KeyValueStoreConfiguration {
 
 	return &models.KeyValueStoreConfiguration{

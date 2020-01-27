@@ -39,7 +39,7 @@ var deleteReleasePlanCmd = &cobra.Command{
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
-			return errors.New("Not Enough Arguments, Release Plan name needed.")
+			return errors.New("Not Enough Arguments, Release Plan name needed")
 		}
 		name := args[0]
 
