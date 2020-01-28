@@ -11,3 +11,4 @@ key-value-store-token: vamp
 key-value-store-base-path: /secret/vamp/${namespace}
 key-value-store-type: vault
 release-agent-key-value-store-path: /release
+release-plans-key-value-store-path: /secret/vamp/release-plans

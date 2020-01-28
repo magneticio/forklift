@@ -421,6 +421,38 @@ func (c *Core) DeleteReleasePolicy(organization string, environment string, name
 	return nil
 }
 
+// AddReleasePlan - adds release plan to key value store
+func (c *Core) AddReleasePlan(name string, content string) error {
+	keyValueStoreConfig := c.GetKeyValueStoreConfiguration()
+	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
+	if keyValueStoreClientError != nil {
+		return keyValueStoreClientError
+	}
+	key := path.Join(c.Conf.ReleasePlansKeyValueStorePath, name)
+	logging.Info("Storing Release Plan Under Key: %v\n", key)
+	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, content)
+	if keyValueStoreClientPutError != nil {
+		return keyValueStoreClientPutError
+	}
+	return nil
+}
+
+// DeleteReleasePlan - deletes release plan from key value store
+func (c *Core) DeleteReleasePlan(name string) error {
+	keyValueStoreConfig := c.GetKeyValueStoreConfiguration()
+	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
+	if keyValueStoreClientError != nil {
+		return keyValueStoreClientError
+	}
+	key := path.Join(c.Conf.ReleasePlansKeyValueStorePath, name)
+	logging.Info("Deleting Release Plan Under Key: %v\n", key)
+	keyValueStoreClientDeleteError := keyValueStoreClient.Delete(key)
+	if keyValueStoreClientDeleteError != nil {
+		return keyValueStoreClientDeleteError
+	}
+	return nil
+}
+
 func (c *Core) addArtifactToDatabase(organization string, environment string, content string) error {
 
 	databaseConfig, err := c.GetNamespaceDatabaseConfiguration(environment)
@@ -758,10 +790,26 @@ func (c *Core) GetNamespaceDatabaseConfiguration(namespace string) (models.Datab
 }
 
 func (c *Core) GetNamespaceKeyValueStoreConfiguration(namespace string) *models.KeyValueStoreConfiguration {
-
 	return &models.KeyValueStoreConfiguration{
 		Type:     c.Conf.KeyValueStoreType,
 		BasePath: Namespaced(namespace, c.Conf.KeyValueStoreBasePath),
+		Vault: models.VaultKeyValueStoreConfiguration{
+			Url:               c.Conf.KeyValueStoreUrL,
+			Token:             c.Conf.KeyValueStoreToken,
+			ServerTlsCert:     c.Conf.KeyValueStoreServerTlsCert,
+			ClientTlsCert:     c.Conf.KeyValueStoreClientTlsCert,
+			ClientTlsKey:      c.Conf.KeyValueStoreClientTlsKey,
+			KvMode:            c.Conf.KeyValueStoreKvMode,
+			FallbackKvVersion: c.Conf.KeyValueStoreFallbackKvVersion,
+		},
+	}
+}
+
+// GetKeyValueStoreConfiguration - gets key value store configuration
+func (c *Core) GetKeyValueStoreConfiguration() *models.KeyValueStoreConfiguration {
+
+	return &models.KeyValueStoreConfiguration{
+		Type: c.Conf.KeyValueStoreType,
 		Vault: models.VaultKeyValueStoreConfiguration{
 			Url:               c.Conf.KeyValueStoreUrL,
 			Token:             c.Conf.KeyValueStoreToken,
