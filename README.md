@@ -61,17 +61,22 @@ If you don't have anything yet and automatically download an install, then follo
 keep in mind that this installation may not work since this is a private repository.
 Manual installation is recommended.
 
-Easy install for MacOS:
+Easy install for MacOS or Linux:
 ```shell
-base=base=https://github.com/magneticio/forklift/releases/download/0.1.3 &&
-  curl -L $base/forklift-$(uname -s)-$(uname -m) >/usr/local/bin/forklift &&
+version=$(curl -s https://api.github.com/repos/magneticio/forklift/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/') &&
+  base=https://github.com/magneticio/forklift/releases/download/$version &&
+  curl -sL $base/forklift-$(uname -s)-$(uname -m) >/usr/local/bin/forklift &&
   chmod +x /usr/local/bin/forklift
 ```
-TODO: add installation for other platforms
 
 For general users it is recommended to download the binary for your platform.
 Latest release can be found here:
 https://github.com/magneticio/forklift/releases/latest
+
+Run get version so see if it is installed correctly:
+```
+forklift version
+```
 
 Now make sure to have a "config.yaml" configuration file in your home under ".forklift" folder, like the one shown below, but with the correct parameters to connect to the database and the key-value store.
 
@@ -147,6 +152,10 @@ forklift help
 
 ## Usage
 
+Notes: 
+- Organization and environment names should be lowercase alphanumeric, please remove "-" while running examples and use a name proper for you.
+- Organization, Environment, User and Arfifact operations require SQL to be enabled.
+
 ### Organizations
 
 Forklift allows for the creation of a new Organization by running:
@@ -199,7 +208,7 @@ vamp:
       title: organization
 ```
 
-The above configuration can also be provided in Json format.
+The above configuration can also be provided in JSON format.
 Once created, you can list Organization by running
 
 ```shell
@@ -212,16 +221,16 @@ update them with
 forklift update organization organization-name --file ./resources/organization-config.yaml
 ```
 
-delete them with
-
-```shell
-forklift delete organization organization-name
-```
-
 and show current configuration with
 
 ```shell
 forklift show organization organization-name
+```
+
+delete them with
+
+```shell
+forklift delete organization organization-name
 ```
 
 ### Users
@@ -237,7 +246,7 @@ Upon running the command you will be asked to input a new password twice, taking
 It is also possible to create users not interactively by running:
 
 ```shell
-forklift add user --organization organization-name --file ./user-configuration.json
+forklift add user --organization organization-name --file ./resources/user-configuration.json
 ```
 
 Where user-configuration.json is a file specifying the user configuration and should look like this:
@@ -416,22 +425,23 @@ update them with
 forklift update environment environment-name --organization organization-name --file ./resources/environment-configuration.yaml --artifacts ./resources/artifacts
 ```
 
-and delete them with
-
-```shell
-forklift delete environment environment-name --organization organization-name
-```
-
 show current configuration with
 
 ```shell
 forklift show environment environment-name --organization organization-name
 ```
 
+and delete them with
+
+```shell
+forklift delete environment environment-name --organization organization-name
+```
+
 ### Artifacts
 
 Artifacts are breeds and workflows belonging to an environment.
-Artifacts can be created or replaced with the following commands
+
+Artifacts can be created or replaced with the following command:
 
 ```shell
 forklift add artifact artifact-name --organization organization-name --environment environment-name --file ./resources/artifact.yaml
@@ -488,4 +498,34 @@ and shown with
 
 ```shell
 forklift show artifact artifact-name --kind artifact-kind --organization organization-name --environment environment-name
+```
+
+
+### Release policy
+
+Release policies can be created with the following command:
+
+```shell
+forklift add releasepolicy name --organization org --environment env --file ./releasepolicydefinition.json -i json
+```
+
+Release policies can also be deleted with
+
+```shell
+forklift delete releasepolicy name --organization org --environment env
+```
+
+
+### Release plan
+
+Release plans can be created with the following command:
+
+```shell
+forklift add releaseplan name --file ./releaseplandefinition.json -i json
+```
+
+Release plan can also be deleted with
+
+```shell
+forklift delete releaseplan name
 ```

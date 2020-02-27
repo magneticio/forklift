@@ -47,6 +47,10 @@ var updateorganizationCmd = &cobra.Command{
 		}
 		name := args[0]
 
+		if !util.ValidateName(name) {
+			return errors.New("Organization name should be only lowercase alphanumerics")
+		}
+
 		logging.Info("Updating organization %v\n", name)
 
 		namespaced := Config.Namespace + "-" + name
