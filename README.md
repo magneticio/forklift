@@ -509,6 +509,35 @@ Release policies can be created with the following command:
 forklift add releasepolicy name --organization org --environment env --file ./releasepolicydefinition.json -i json
 ```
 
+Example release policy:
+
+```json
+{
+  "maxStartRetries": 10,
+  "steps": [
+    {
+      "duration": "5m",
+      "source": { "weight": 100 },
+      "target": {
+        "weight": 0,
+        "condition": "user-agent = iPhone",
+        "conditionStrength": 100
+      }
+    },
+    {
+      "duration": "5m",
+      "source": { "weight": 50 },
+      "target": { "weight": 50 }
+    },
+    {
+      "source": { "weight": 0 },
+      "target": { "weight": 100 }
+    }
+  ]
+}
+```
+
+
 Release policies can also be deleted with
 
 ```shell
