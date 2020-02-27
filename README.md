@@ -153,8 +153,8 @@ forklift help
 ## Usage
 
 Notes: 
-- Organization and environment names should be lowercase alphanumeric, please remove "-" while running examples and use a name proper for you.
-- Organization, Environment, User and Arfifact operations require SQL to be enabled.
+  * Organization and environment names should be lowercase alphanumeric, please remove "-" while running examples and use a name proper for you.
+  * Organization, Environment, User and Arfifact operations require SQL to be enabled.
 
 ### Organizations
 
@@ -500,7 +500,6 @@ and shown with
 forklift show artifact artifact-name --kind artifact-kind --organization organization-name --environment environment-name
 ```
 
-
 ### Release policy
 
 Release policies can be created with the following command:
@@ -537,13 +536,11 @@ Example release policy:
 }
 ```
 
-
 Release policies can also be deleted with
 
 ```shell
 forklift delete releasepolicy name --organization org --environment env
 ```
-
 
 ### Release plan
 
