@@ -153,8 +153,8 @@ forklift help
 ## Usage
 
 Notes: 
-  * Organization and environment names should be lowercase alphanumeric, please remove "-" while running examples and use a name proper for you.
-  * Organization, Environment, User and Arfifact operations require SQL to be enabled.
+* Organization and environment names should be lowercase alphanumeric, please remove "-" while running examples and use a name proper for you.
+* Organization, Environment, User and Arfifact operations require SQL to be enabled.
 
 ### Organizations
 
