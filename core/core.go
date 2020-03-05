@@ -41,7 +41,7 @@ func (c *Core) GetArtifact(organization string, environment string, name string,
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
-		fmt.Printf("Error: %v\n", clientError.Error())
+		logging.Error("Client error: %v\n", clientError.Error())
 		return nil, clientError
 	}
 
@@ -121,7 +121,7 @@ func (c *Core) CreateUser(namespace string, name string, role string, password s
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
-		fmt.Printf("Error: %v\n", clientError.Error())
+		logging.Error("Client error: %v\n", clientError.Error())
 		return clientError
 	}
 
@@ -187,7 +187,7 @@ func (c *Core) UpdateUser(namespace string, name string, role string, password s
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
-		fmt.Printf("Error: %v\n", clientError.Error())
+		logging.Error("Client error: %v\n", clientError.Error())
 		return clientError
 	}
 
@@ -204,7 +204,7 @@ func (c *Core) DeleteUser(namespace string, user string) error {
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
-		fmt.Printf("Error: %v\n", clientError.Error())
+		logging.Error("Client error: %v\n", clientError.Error())
 		return clientError
 	}
 
@@ -246,7 +246,7 @@ func (c *Core) AddUser(namespace string, user string) error {
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
-		fmt.Printf("Error: %v\n", clientError.Error())
+		logging.Error("Client error: %v\n", clientError.Error())
 		return clientError
 	}
 
@@ -268,7 +268,7 @@ func (c *Core) GetUser(namespace string, name string) (*models.SqlElement, error
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
-		fmt.Printf("Error: %v\n", clientError.Error())
+		logging.Error("Client error: %v\n", clientError.Error())
 		return nil, clientError
 	}
 
@@ -306,7 +306,7 @@ func (c *Core) ListArtifacts(organization string, environment string, kind strin
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
-		fmt.Printf("Error: %v\n", clientError.Error())
+		logging.Error("Client error: %v\n", clientError.Error())
 		return nil, clientError
 	}
 
@@ -345,7 +345,7 @@ func (c *Core) ListUsers(namespace string) ([]string, error) {
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
-		fmt.Printf("Error: %v\n", clientError.Error())
+		logging.Error("Client error: %v\n", clientError.Error())
 		return nil, clientError
 	}
 
@@ -472,7 +472,7 @@ func (c *Core) addArtifactToDatabase(organization string, environment string, co
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
-		fmt.Printf("Error: %v\n", clientError.Error())
+		logging.Error("Client error: %v\n", clientError.Error())
 		return clientError
 	}
 
@@ -546,7 +546,7 @@ func (c *Core) deleteArtifactFromDatabase(organization string, environment strin
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
-		fmt.Printf("Error: %v\n", clientError.Error())
+		logging.Error("Client error: %v\n", clientError.Error())
 		return clientError
 	}
 
@@ -608,7 +608,7 @@ func (c *Core) CreateOrganization(namespace string, configuration models.VampCon
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
-		fmt.Printf("Error: %v\n", clientError.Error())
+		logging.Error("Client error: %v\n", clientError.Error())
 		return clientError
 	}
 
@@ -704,7 +704,7 @@ func (c *Core) CreateEnvironment(namespace string, organization string, elements
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
-		fmt.Printf("Error: %v\n", clientError.Error())
+		logging.Error("Client error: %v\n", clientError.Error())
 		return clientError
 	}
 
@@ -762,7 +762,7 @@ func (c *Core) UpdateEnvironment(namespace string, organization string, elements
 
 	client, clientError := sql.NewSqlClient(databaseConfig)
 	if clientError != nil {
-		fmt.Printf("Error: %v\n", clientError.Error())
+		logging.Error("Client error: %v\n", clientError.Error())
 		return clientError
 	}
 

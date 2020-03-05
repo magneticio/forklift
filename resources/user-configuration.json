@@ -1,0 +1,6 @@
+{
+    "name": "user1",
+    "password":"user1password",
+    "kind":"users",
+    "roles":["admin"]
+  }
