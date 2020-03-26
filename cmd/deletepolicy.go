@@ -29,21 +29,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var deleteReleasepolicyCmd = &cobra.Command{
-	Use:   "releasepolicy",
-	Short: "Delete a releasepolicy",
-	Long: AddAppName(`Delete a new releasepolicy
+var deletePolicyCmd = &cobra.Command{
+	Use:   "policy",
+	Short: "Delete a policy",
+	Long: AddAppName(`Delete existing policy
     Example:
-    $AppName delete releasepolicy name --organization org --environment env`),
+    $AppName delete policy name --organization org --environment env`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
-			return errors.New("Not Enough Arguments, Release Policy name needed.")
+			return errors.New("Not Enough Arguments, Policy name needed.")
 		}
 		name := args[0]
 
-		logging.Info("Deleteing new releasepolicy to environment %v in organization %v\n", organization, environment)
+		logging.Info("Deleteing new policy to environment %v in organization %v\n", organization, environment)
 		namespacedEnvironment := Config.Namespace + "-" + organization + "-" + environment
 		namespacedOrganization := Config.Namespace + "-" + organization
 
@@ -52,24 +52,24 @@ var deleteReleasepolicyCmd = &cobra.Command{
 			return coreError
 		}
 
-		createreleasepolicyError := core.DeleteReleasePolicy(namespacedOrganization, namespacedEnvironment, name)
-		if createreleasepolicyError != nil {
-			return createreleasepolicyError
+		createpolicyError := core.DeleteReleasePolicy(namespacedOrganization, namespacedEnvironment, name)
+		if createpolicyError != nil {
+			return createpolicyError
 		}
 
-		fmt.Printf("Release Policy is deleted\n")
+		fmt.Printf("Policy has been deleted\n")
 
 		return nil
 	},
 }
 
 func init() {
-	deleteCmd.AddCommand(deleteReleasepolicyCmd)
+	deleteCmd.AddCommand(deletePolicyCmd)
 
-	deleteReleasepolicyCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the workflow")
-	deleteReleasepolicyCmd.MarkFlagRequired("organization")
+	deletePolicyCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the workflow")
+	deletePolicyCmd.MarkFlagRequired("organization")
 
-	deleteReleasepolicyCmd.Flags().StringVarP(&environment, "environment", "", "", "Environment of the workflow")
-	deleteReleasepolicyCmd.MarkFlagRequired("environment")
+	deletePolicyCmd.Flags().StringVarP(&environment, "environment", "", "", "Environment of the workflow")
+	deletePolicyCmd.MarkFlagRequired("environment")
 
 }
