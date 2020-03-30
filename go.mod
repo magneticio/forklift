@@ -1,6 +1,6 @@
 module github.com/magneticio/forklift
 
-go 1.12
+go 1.13
 
 // github.com/hashicorp/vault v1.0.3
 
