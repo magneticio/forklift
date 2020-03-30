@@ -8,7 +8,7 @@ Please check How to Setup Vamp at the following link https://vamp.io/documentati
 ## Table of Contents
 ================
 - [Vamp Forklift command line client](#vamp-forklift-command-line-client)
-- [## Table of Contents](#h2-id%22table-of-contents-16%22table-of-contentsh2)
+- [## Table of Contents](#h2-id%22table-of-contents-63%22table-of-contentsh2)
   - [Development](#development)
   - [Build](#build)
   - [Installation](#installation)
@@ -509,41 +509,51 @@ forklift show artifact artifact-name --kind artifact-kind --organization organiz
 Release policies can be created with the following command:
 
 ```shell
-forklift add releasepolicy name --organization org --environment env --file ./releasepolicydefinition.json -i json
+forklift add policy --organization org --environment env --file ./policydefinition.json -i json
 ```
 
 Example release policy:
 
 ```json
 {
-  "maxStartRetries": 10,
-  "steps": [
-    {
-      "duration": "5m",
-      "source": { "weight": 100 },
-      "target": {
-        "weight": 0,
-        "condition": "user-agent = iPhone",
-        "conditionStrength": 100
-      }
-    },
-    {
-      "duration": "5m",
-      "source": { "weight": 50 },
-      "target": { "weight": 50 }
-    },
-    {
-      "source": { "weight": 0 },
-      "target": { "weight": 100 }
-    }
-  ]
+    "name": "sava",
+    "type": "validation",
+    "steps": [
+        {
+            "endAfter": {
+                "value": "duration == 2m"
+            },
+            "conditions": [
+                {
+                    "value": "health >= baselines.minHealth",
+                    "gracePeriod": "1m"
+                }
+            ]
+        }
+    ],
+    "metrics": [
+        {
+            "name": "health",
+            "value": {
+                "source": "prometheus",
+                "query": "scalar(sava_health)"
+            }
+        }
+    ],
+    "baselines": [
+        {
+            "name": "minHealth",
+            "metric": "health",
+            "value": 0.9
+        }
+    ]
 }
 ```
 
 Release policies can also be deleted with
 
 ```shell
-forklift delete releasepolicy name --organization org --environment env
+forklift delete policy name --organization org --environment env
 ```
 
 ### Release plan
