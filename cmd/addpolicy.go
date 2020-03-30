@@ -21,7 +21,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/magneticio/forklift/core"
@@ -35,15 +34,10 @@ var addPolicyCmd = &cobra.Command{
 	Short: "Add a new policy",
 	Long: AddAppName(`Add a new policy
     Example:
-    $AppName add policy name --organization org --environment env --file ./policydefinition.json -i json`),
+    $AppName add policy --organization org --environment env --file ./policydefinition.json -i json`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 1 {
-			return errors.New("Not Enough Arguments, Policy name needed.")
-		}
-		name := args[0]
-
 		logging.Info("Adding new policy to environment %v in organization %v\n", organization, environment)
 		namespacedEnvironment := Config.Namespace + "-" + organization + "-" + environment
 		namespacedOrganization := Config.Namespace + "-" + organization
@@ -65,7 +59,7 @@ var addPolicyCmd = &cobra.Command{
 
 		policyText := string(policyJSON)
 
-		createpolicyError := core.AddReleasePolicy(namespacedOrganization, namespacedEnvironment, name, policyText)
+		createpolicyError := core.AddPolicy(namespacedOrganization, namespacedEnvironment, policyText)
 		if createpolicyError != nil {
 			return createpolicyError
 		}

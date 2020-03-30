@@ -12,6 +12,7 @@ import (
 	"github.com/magneticio/forklift/models"
 	"github.com/magneticio/forklift/sql"
 	"github.com/magneticio/forklift/util"
+	policies "github.com/magneticio/vamp-policies"
 )
 
 type Core struct {
@@ -375,50 +376,26 @@ func (c *Core) ListUsers(namespace string) ([]string, error) {
 	return names, nil
 }
 
-func ValidateReleasePolicy(content string) error {
-	var releasePolicy models.ReleasePolicy
-	if marshalError := json.Unmarshal([]byte(content), &releasePolicy); marshalError != nil {
-		return marshalError
-	}
-	for _, step := range releasePolicy.Steps {
-		if step.Source.Weight+step.Target.Weight != 100 {
-			return errors.New("Sum of Source and Target weights should be 100.")
-		}
-	}
-	return nil
-}
-
-func (c *Core) AddReleasePolicy(organization string, environment string, name string, content string) error {
-	if validationError := ValidateReleasePolicy(content); validationError != nil {
-		return validationError
-	}
+func (c *Core) AddPolicy(organization string, environment string, policyContent string) error {
+	logging.Info("Adding policy:\n")
 	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(environment)
 	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
 	if keyValueStoreClientError != nil {
 		return keyValueStoreClientError
 	}
-	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleaseAgentKeyValueStorePath, "policies", name)
-	logging.Info("Storing Release Policy Under Key: %v\n", key)
-	keyValueStoreClientPutError := keyValueStoreClient.Put(key, content)
-	if keyValueStoreClientPutError != nil {
-		return keyValueStoreClientPutError
-	}
-	return nil
+	policyAPI := policies.NewPolicyAPI(keyValueStoreClient, c.Conf.ReleaseAgentKeyValueStorePath)
+	return policyAPI.Save(policyContent)
 }
 
-func (c *Core) DeleteReleasePolicy(organization string, environment string, name string) error {
+func (c *Core) DeleteReleasePolicy(organization string, environment string, policyName string) error {
+	logging.Info("Deleting policy: %v\n", policyName)
 	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(environment)
 	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
 	if keyValueStoreClientError != nil {
 		return keyValueStoreClientError
 	}
-	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleaseAgentKeyValueStorePath, "policies", name)
-	logging.Info("Deleting Release Policy Under Key: %v\n", key)
-	keyValueStoreClientDeleteError := keyValueStoreClient.Delete(key)
-	if keyValueStoreClientDeleteError != nil {
-		return keyValueStoreClientDeleteError
-	}
-	return nil
+	policyAPI := policies.NewPolicyAPI(keyValueStoreClient, c.Conf.ReleaseAgentKeyValueStorePath)
+	return policyAPI.Delete(policyName)
 }
 
 // AddReleasePlan - adds release plan to key value store

@@ -9,6 +9,7 @@ import (
 
 type KeyValueStoreClient interface {
 	Get(string) (string, error)
+	Exists(key string) (bool, error)
 	Put(string, string) error
 	Delete(string) error
 	List(string) ([]string, error)
