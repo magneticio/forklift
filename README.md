@@ -7,15 +7,19 @@ Please check How to Setup Vamp at the following link https://vamp.io/documentati
 
 ## Table of Contents
 ================
-* [Development](#development)
-* [Build](#build)
-* [Installation](#installation)
-	* [Verifying installation](#verifying-installation)
-* [Usage](#usage)
-	* [Organizations](#organizations)
-	* [Users](#users)
-	* [Environments](#environments)
-	* [Artifacts](#artifacts)
+- [Vamp Forklift command line client](#vamp-forklift-command-line-client)
+- [## Table of Contents](#h2-id%22table-of-contents-16%22table-of-contentsh2)
+  - [Development](#development)
+  - [Build](#build)
+  - [Installation](#installation)
+    - [Verifying installation](#verifying-installation)
+  - [Usage](#usage)
+    - [Organizations](#organizations)
+    - [Users](#users)
+    - [Environments](#environments)
+    - [Artifacts](#artifacts)
+    - [Release policy](#release-policy)
+    - [Release plan](#release-plan)
 
 ## Development
 
@@ -28,7 +32,7 @@ It is also recommended to read and follow golang setup for a development environ
 
 If you get errors about missing libraries while building, run:
 ```shell
-go get
+GOPRIVATE=github.com/magneticio go get
 ```
 
 for docker build:

@@ -12,7 +12,7 @@ require (
 	github.com/magneticio/vamp-policies v0.0.4
 	github.com/magneticio/vamp-sdk-go v0.0.0-20190612094709-b89098f15d2b
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/spf13/cobra v0.0.6
+	github.com/spf13/cobra v0.0.7
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.4.0
 	github.com/stretchr/testify v1.5.1
