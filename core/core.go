@@ -399,7 +399,7 @@ func (c *Core) AddReleasePolicy(organization string, environment string, name st
 	}
 	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleaseAgentKeyValueStorePath, "policies", name)
 	logging.Info("Storing Release Policy Under Key: %v\n", key)
-	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, content)
+	keyValueStoreClientPutError := keyValueStoreClient.Put(key, content)
 	if keyValueStoreClientPutError != nil {
 		return keyValueStoreClientPutError
 	}
@@ -430,7 +430,7 @@ func (c *Core) AddReleasePlan(name string, content string) error {
 	}
 	key := path.Join(c.Conf.ReleasePlansKeyValueStorePath, name)
 	logging.Info("Storing Release Plan Under Key: %v\n", key)
-	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, content)
+	keyValueStoreClientPutError := keyValueStoreClient.Put(key, content)
 	if keyValueStoreClientPutError != nil {
 		return keyValueStoreClientPutError
 	}
@@ -510,7 +510,7 @@ func (c *Core) addArtifactToVault(organization string, environment string, conte
 	}
 	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleaseAgentKeyValueStorePath, artifact.Kind, artifact.Name)
 	logging.Info("Storing Artifact Under Key: %v\n", key)
-	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, content)
+	keyValueStoreClientPutError := keyValueStoreClient.Put(key, content)
 	if keyValueStoreClientPutError != nil {
 		return keyValueStoreClientPutError
 	}
@@ -865,7 +865,7 @@ func (c *Core) putConfig(namespace string, configuration models.VampConfiguratio
 	if jsonMarshallError != nil {
 		return jsonMarshallError
 	}
-	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, string(value))
+	keyValueStoreClientPutError := keyValueStoreClient.Put(key, string(value))
 	if keyValueStoreClientPutError != nil {
 		return keyValueStoreClientPutError
 	}
@@ -880,7 +880,7 @@ func (c *Core) getConfig(namespace string) (*models.VampConfiguration, error) {
 	}
 	key := keyValueStoreConfig.BasePath + "/configuration/applied"
 	logging.Info("Reading Config Under Key: %v\n", key)
-	configJson, keyValueStoreClientGetError := keyValueStoreClient.GetValue(key)
+	configJson, keyValueStoreClientGetError := keyValueStoreClient.Get(key)
 	if keyValueStoreClientGetError != nil {
 		return nil, keyValueStoreClientGetError
 	}
