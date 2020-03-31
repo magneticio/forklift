@@ -383,7 +383,8 @@ func (c *Core) AddPolicy(organization string, environment string, policyContent 
 	if keyValueStoreClientError != nil {
 		return keyValueStoreClientError
 	}
-	policyAPI := policies.NewPolicyAPI(keyValueStoreClient, c.Conf.ReleaseAgentKeyValueStorePath)
+	basePath := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleaseAgentKeyValueStorePath)
+	policyAPI := policies.NewPolicyAPI(keyValueStoreClient, basePath)
 	return policyAPI.Save(policyContent)
 }
 
@@ -394,7 +395,8 @@ func (c *Core) DeleteReleasePolicy(organization string, environment string, poli
 	if keyValueStoreClientError != nil {
 		return keyValueStoreClientError
 	}
-	policyAPI := policies.NewPolicyAPI(keyValueStoreClient, c.Conf.ReleaseAgentKeyValueStorePath)
+	basePath := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleaseAgentKeyValueStorePath)
+	policyAPI := policies.NewPolicyAPI(keyValueStoreClient, basePath)
 	return policyAPI.Delete(policyName)
 }
 
