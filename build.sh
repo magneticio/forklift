@@ -3,6 +3,7 @@
 # don't forget to export GOPATH
 
 echo using GOPATH as $GOPATH
+export GOPRIVATE=github.com/magneticio
 
 # this is the official image
 GOIMAGE="dockercore/golang-cross:1.12.3"

@@ -21,7 +21,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/magneticio/forklift/core"
@@ -30,21 +29,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var addReleasepolicyCmd = &cobra.Command{
-	Use:   "releasepolicy",
-	Short: "Add a new releasepolicy",
-	Long: AddAppName(`Add a new releasepolicy
+var addPolicyCmd = &cobra.Command{
+	Use:   "policy",
+	Short: "Add a new policy",
+	Long: AddAppName(`Add a new policy
     Example:
-    $AppName add releasepolicy name --organization org --environment env --file ./releasepolicydefinition.json -i json`),
+    $AppName add policy --organization org --environment env --file ./policydefinition.json -i json`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 1 {
-			return errors.New("Not Enough Arguments, Release Policy name needed.")
-		}
-		name := args[0]
-
-		logging.Info("Adding new releasepolicy to environment %v in organization %v\n", organization, environment)
+		logging.Info("Adding new policy to environment %v in organization %v\n", organization, environment)
 		namespacedEnvironment := Config.Namespace + "-" + organization + "-" + environment
 		namespacedOrganization := Config.Namespace + "-" + organization
 
@@ -53,40 +47,40 @@ var addReleasepolicyCmd = &cobra.Command{
 			return coreError
 		}
 
-		releasepolicyBytes, readErr := util.UseSourceUrl(configPath) // just pass the file name
+		policyBytes, readErr := util.UseSourceUrl(configPath) // just pass the file name
 		if readErr != nil {
 			return readErr
 		}
 
-		releasepolicyJSON, jsonError := util.Convert(configFileType, "json", releasepolicyBytes)
+		policyJSON, jsonError := util.Convert(configFileType, "json", policyBytes)
 		if jsonError != nil {
 			return jsonError
 		}
 
-		releasepolicyText := string(releasepolicyJSON)
+		policyText := string(policyJSON)
 
-		createreleasepolicyError := core.AddReleasePolicy(namespacedOrganization, namespacedEnvironment, name, releasepolicyText)
-		if createreleasepolicyError != nil {
-			return createreleasepolicyError
+		createpolicyError := core.AddPolicy(namespacedOrganization, namespacedEnvironment, policyText)
+		if createpolicyError != nil {
+			return createpolicyError
 		}
 
-		fmt.Printf("Release Policy is added\n")
+		fmt.Printf("Policy has been added\n")
 
 		return nil
 	},
 }
 
 func init() {
-	addCmd.AddCommand(addReleasepolicyCmd)
+	addCmd.AddCommand(addPolicyCmd)
 
-	addReleasepolicyCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the workflow")
-	addReleasepolicyCmd.MarkFlagRequired("organization")
+	addPolicyCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the workflow")
+	addPolicyCmd.MarkFlagRequired("organization")
 
-	addReleasepolicyCmd.Flags().StringVarP(&environment, "environment", "", "", "Environment of the workflow")
-	addReleasepolicyCmd.MarkFlagRequired("environment")
+	addPolicyCmd.Flags().StringVarP(&environment, "environment", "", "", "Environment of the workflow")
+	addPolicyCmd.MarkFlagRequired("environment")
 
-	addReleasepolicyCmd.Flags().StringVarP(&configPath, "file", "", "", "Release policy configuration file path")
-	addReleasepolicyCmd.MarkFlagRequired("file")
-	addReleasepolicyCmd.Flags().StringVarP(&configFileType, "input", "i", "yaml", "Release policy configuration file type yaml or json")
+	addPolicyCmd.Flags().StringVarP(&configPath, "file", "", "", "Policy configuration file path")
+	addPolicyCmd.MarkFlagRequired("file")
+	addPolicyCmd.Flags().StringVarP(&configFileType, "input", "i", "yaml", "Policy configuration file type yaml or json")
 
 }

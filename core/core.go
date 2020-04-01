@@ -12,6 +12,7 @@ import (
 	"github.com/magneticio/forklift/models"
 	"github.com/magneticio/forklift/sql"
 	"github.com/magneticio/forklift/util"
+	policies "github.com/magneticio/vamp-policies"
 )
 
 type Core struct {
@@ -375,50 +376,28 @@ func (c *Core) ListUsers(namespace string) ([]string, error) {
 	return names, nil
 }
 
-func ValidateReleasePolicy(content string) error {
-	var releasePolicy models.ReleasePolicy
-	if marshalError := json.Unmarshal([]byte(content), &releasePolicy); marshalError != nil {
-		return marshalError
-	}
-	for _, step := range releasePolicy.Steps {
-		if step.Source.Weight+step.Target.Weight != 100 {
-			return errors.New("Sum of Source and Target weights should be 100.")
-		}
-	}
-	return nil
-}
-
-func (c *Core) AddReleasePolicy(organization string, environment string, name string, content string) error {
-	if validationError := ValidateReleasePolicy(content); validationError != nil {
-		return validationError
-	}
+func (c *Core) AddPolicy(organization string, environment string, policyContent string) error {
+	logging.Info("Adding policy:\n")
 	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(environment)
 	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
 	if keyValueStoreClientError != nil {
 		return keyValueStoreClientError
 	}
-	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleaseAgentKeyValueStorePath, "policies", name)
-	logging.Info("Storing Release Policy Under Key: %v\n", key)
-	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, content)
-	if keyValueStoreClientPutError != nil {
-		return keyValueStoreClientPutError
-	}
-	return nil
+	basePath := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleaseAgentKeyValueStorePath)
+	policyAPI := policies.NewPolicyAPI(keyValueStoreClient, basePath)
+	return policyAPI.Save(policyContent)
 }
 
-func (c *Core) DeleteReleasePolicy(organization string, environment string, name string) error {
+func (c *Core) DeleteReleasePolicy(organization string, environment string, policyName string) error {
+	logging.Info("Deleting policy: %v\n", policyName)
 	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(environment)
 	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
 	if keyValueStoreClientError != nil {
 		return keyValueStoreClientError
 	}
-	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleaseAgentKeyValueStorePath, "policies", name)
-	logging.Info("Deleting Release Policy Under Key: %v\n", key)
-	keyValueStoreClientDeleteError := keyValueStoreClient.Delete(key)
-	if keyValueStoreClientDeleteError != nil {
-		return keyValueStoreClientDeleteError
-	}
-	return nil
+	basePath := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleaseAgentKeyValueStorePath)
+	policyAPI := policies.NewPolicyAPI(keyValueStoreClient, basePath)
+	return policyAPI.Delete(policyName)
 }
 
 // AddReleasePlan - adds release plan to key value store
@@ -430,7 +409,7 @@ func (c *Core) AddReleasePlan(name string, content string) error {
 	}
 	key := path.Join(c.Conf.ReleasePlansKeyValueStorePath, name)
 	logging.Info("Storing Release Plan Under Key: %v\n", key)
-	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, content)
+	keyValueStoreClientPutError := keyValueStoreClient.Put(key, content)
 	if keyValueStoreClientPutError != nil {
 		return keyValueStoreClientPutError
 	}
@@ -510,7 +489,7 @@ func (c *Core) addArtifactToVault(organization string, environment string, conte
 	}
 	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleaseAgentKeyValueStorePath, artifact.Kind, artifact.Name)
 	logging.Info("Storing Artifact Under Key: %v\n", key)
-	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, content)
+	keyValueStoreClientPutError := keyValueStoreClient.Put(key, content)
 	if keyValueStoreClientPutError != nil {
 		return keyValueStoreClientPutError
 	}
@@ -865,7 +844,7 @@ func (c *Core) putConfig(namespace string, configuration models.VampConfiguratio
 	if jsonMarshallError != nil {
 		return jsonMarshallError
 	}
-	keyValueStoreClientPutError := keyValueStoreClient.PutValue(key, string(value))
+	keyValueStoreClientPutError := keyValueStoreClient.Put(key, string(value))
 	if keyValueStoreClientPutError != nil {
 		return keyValueStoreClientPutError
 	}
@@ -880,7 +859,7 @@ func (c *Core) getConfig(namespace string) (*models.VampConfiguration, error) {
 	}
 	key := keyValueStoreConfig.BasePath + "/configuration/applied"
 	logging.Info("Reading Config Under Key: %v\n", key)
-	configJson, keyValueStoreClientGetError := keyValueStoreClient.GetValue(key)
+	configJson, keyValueStoreClientGetError := keyValueStoreClient.Get(key)
 	if keyValueStoreClientGetError != nil {
 		return nil, keyValueStoreClientGetError
 	}

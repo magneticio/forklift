@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+export GOPRIVATE=github.com/magneticio
 
 if [ "$1" != "indocker" ]; then
   go test ./...
