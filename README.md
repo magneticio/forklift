@@ -1,14 +1,9 @@
 # Vamp Forklift command line client
 
-Vamp Forklift is a command line client written in golang and allows to easily set up Organizations and Environments in Vamp.
-
-Forklift requires running and reachable instances of MySql and Vault tied to a Vamp installation.
-Please check How to Setup Vamp at the following link https://vamp.io/documentation/installation/v1.0.0/overview/
-
 ## Table of Contents
 ================
 - [Vamp Forklift command line client](#vamp-forklift-command-line-client)
-- [## Table of Contents](#h2-id%22table-of-contents-63%22table-of-contentsh2)
+- [## Table of Contents](#h2-idtable-of-contents-6table-of-contentsh2)
   - [Development](#development)
   - [Build](#build)
   - [Installation](#installation)

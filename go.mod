@@ -5,9 +5,7 @@ go 1.14
 // github.com/hashicorp/vault v1.0.3
 
 require (
-	github.com/DATA-DOG/go-sqlmock v1.3.3
 	github.com/ghodss/yaml v1.0.0
-	github.com/go-sql-driver/mysql v1.4.1
 	github.com/google/uuid v1.1.1
 	github.com/magneticio/vamp-policies v0.0.4
 	github.com/magneticio/vamp-sdk-go v0.0.0-20190612094709-b89098f15d2b

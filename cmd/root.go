@@ -55,11 +55,8 @@ var Config models.ForkliftConfiguration
 // Common code parameters
 var configPath string
 var configFileType string
-var organization string
-var environment string
-var artficatsPath string
-var role string
-var kind string
+var applicationID uint64
+var serviceID uint64
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -75,10 +72,6 @@ var rootCmd = &cobra.Command{
       VAMP_FORKLIFT_VAULT_CACERT
       VAMP_FORKLIFT_VAULT_CLIENT_CERT
       VAMP_FORKLIFT_VAULT_CLIENT_KEY
-      VAMP_FORKLIFT_MYSQL_HOST
-      VAMP_FORKLIFT_MYSQL_CONNECTION_PROPS
-      VAMP_FORKLIFT_MYSQL_USER
-      VAMP_FORKLIFT_MYSQL_PASSWORD
     `),
 }
 
@@ -164,9 +157,11 @@ func initConfig() {
 }
 
 func SetupConfigurationEnvrionmentVariables() {
+	// VAMP_FORKLIFT_PROJECT_ID
+	viper.BindEnv("project-id", "VAMP_FORKLIFT_PROJECT_ID")
 
-	// VAMP_FORKLIFT_VAULT_ADDR
-	viper.BindEnv("namespace", "VAMP_FORKLIFT_NAMESPACE")
+	// VAMP_FORKLIFT_CLUSTER_ID
+	viper.BindEnv("cluster-id", "VAMP_FORKLIFT_CLUSTER_ID")
 
 	// VAMP_FORKLIFT_VAULT_ADDR
 	viper.BindEnv("key-value-store-url", "VAMP_FORKLIFT_VAULT_ADDR")
@@ -182,22 +177,4 @@ func SetupConfigurationEnvrionmentVariables() {
 
 	// VAMP_FORKLIFT_VAULT_CLIENT_KEY
 	viper.BindEnv("key-value-store-client-tls-key", "VAMP_FORKLIFT_VAULT_CLIENT_KEY")
-
-	// VAMP_FORKLIFT_MYSQL_HOST - for example: mysql://<VAMP_FORKLIFT_MYSQL_HOST>/vamp-${namespace}?useSSL=false
-	viper.BindEnv("mysql_host", "VAMP_FORKLIFT_MYSQL_HOST")
-	if viper.GetString("mysql_host") != "" {
-		url := "mysql://" + viper.GetString("mysql_host") + "/vamp-${namespace}"
-		Config.DatabaseURL = url
-	}
-	// VAMP_FORKLIFT_MYSQL_PARAMS
-	viper.BindEnv("mysql_params", "VAMP_FORKLIFT_MYSQL_CONNECTION_PROPS")
-	if viper.GetString("mysql_params") != "" {
-		Config.DatabaseURL += "?" + viper.GetString("mysql_params")
-	}
-	// VAMP_FORKLIFT_MYSQL_USER
-	viper.BindEnv("database-user", "VAMP_FORKLIFT_MYSQL_USER")
-
-	// VAMP_FORKLIFT_MYSQL_PASSWORD
-	viper.BindEnv("database-password", "VAMP_FORKLIFT_MYSQL_PASSWORD")
-
 }

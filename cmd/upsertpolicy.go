@@ -21,7 +21,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/magneticio/forklift/core"
@@ -30,58 +29,48 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var createUserCmd = &cobra.Command{
-	Use:   "user",
-	Short: "Create a new user",
-	Long: AddAppName(`Create a new user
+var upsertPolicyCmd = &cobra.Command{
+	Use:   "policy",
+	Short: "Upsert a policy",
+	Long: AddAppName(`Upsert a policy
     Example:
-    $AppName create user name --role r --organization org`),
+    $AppName upsert policy --file ./policydefinition.json`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 1 {
-			return errors.New("Not Enough Arguments, User Name needed.")
-		}
-
-		name := args[0]
-
-		logging.Info("Creating user %v in organization %v\n", name, organization)
-
-		namespaced := Config.Namespace + "-" + organization
-
+		logging.Info("Upserting policy\n")
 		core, coreError := core.NewCore(Config)
 		if coreError != nil {
 			return coreError
 		}
 
-		passwd, passwdError := util.GetParameterFromTerminalAsSecret(
-			"Enter your password (password will not be visible):",
-			"Enter your password again (password will not be visible):",
-			"Passwords do not match.")
-		if passwdError != nil {
-			return passwdError
+		policyBytes, readErr := util.UseSourceUrl(configPath)
+		if readErr != nil {
+			return readErr
 		}
 
-		if len(passwd) < 6 {
-			return errors.New("Password should be 6 or more characters")
+		policyJSON, jsonError := util.Convert(configFileType, "json", policyBytes)
+		if jsonError != nil {
+			return jsonError
 		}
 
-		createUserError := core.CreateUser(namespaced, name, role, passwd)
-		if createUserError != nil {
-			return createUserError
+		policyText := string(policyJSON)
+
+		upsertPolicyError := core.UpsertPolicy(policyText)
+		if upsertPolicyError != nil {
+			return upsertPolicyError
 		}
-		fmt.Printf("User is created\n")
+
+		fmt.Printf("Policy has been upserted\n")
 
 		return nil
 	},
 }
 
 func init() {
-	createCmd.AddCommand(createUserCmd)
+	upsertCmd.AddCommand(upsertPolicyCmd)
 
-	createUserCmd.Flags().StringVarP(&role, "role", "", "", "Role of the user")
-	createUserCmd.MarkFlagRequired("role")
-	createUserCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the environment")
-	createUserCmd.MarkFlagRequired("organization")
-
+	upsertPolicyCmd.Flags().StringVarP(&configPath, "file", "", "", "Policy configuration file path")
+	upsertPolicyCmd.MarkFlagRequired("file")
+	upsertPolicyCmd.Flags().StringVarP(&configFileType, "input", "i", "json", "Policy configuration file type yaml or json")
 }

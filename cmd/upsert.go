@@ -22,45 +22,23 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
 
-	"github.com/magneticio/forklift/core"
-	"github.com/magneticio/forklift/logging"
 	"github.com/spf13/cobra"
 )
 
-// deleteorganizationCmd represents the deleteorganization command
-var deleteorganizationCmd = &cobra.Command{
-	Use:   "organization",
-	Short: "Delete an organization",
-	Long: AddAppName(`Delete an organizaton
+var upsertCmd = &cobra.Command{
+	Use:   "upsert",
+	Short: "Upsert an artifact",
+	Long: UpsertAppName(`Upsert an artifact
     Example:
-    $AppName delete organizaton organization1`),
+    $AppName upsert policy`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 1 {
-			return errors.New("Not Enough Arguments, Organization Name needed.")
-		}
-		name := args[0]
-
-		logging.Info("Deleting organization %v \n", name)
-
-		namespacedOrganization := Config.Namespace + "-" + name
-
-		core, coreError := core.NewCore(Config)
-		if coreError != nil {
-			return coreError
-		}
-		deleteError := core.DeleteOrganization(namespacedOrganization)
-		if deleteError != nil {
-			return deleteError
-		}
-		fmt.Printf("Organization %v deleted.\n", name)
-		return nil
+		return errors.New("A resource type expected.")
 	},
 }
 
 func init() {
-	deleteCmd.AddCommand(deleteorganizationCmd)
+	rootCmd.AddCommand(upsertCmd)
 }

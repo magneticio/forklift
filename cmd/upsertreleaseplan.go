@@ -26,46 +26,64 @@ import (
 
 	"github.com/magneticio/forklift/core"
 	"github.com/magneticio/forklift/logging"
+	"github.com/magneticio/forklift/util"
 	"github.com/spf13/cobra"
 )
 
-var deleteUserCmd = &cobra.Command{
-	Use:   "user",
-	Short: "Delete a user",
-	Long: AddAppName(`Delete a user
+var upsertReleasePlanCmd = &cobra.Command{
+	Use:   "releaseplan",
+	Short: "Upsert a release plan",
+	Long: AddAppName(`Upsert a release plan
     Example:
-    $AppName delete user name --organization org`),
+    $AppName upsert releaseplan name --application-id 10 --service-id 5 --file ./releaseplandefinition.json`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
-			return errors.New("Not Enough Arguments, Name needed.")
+			return errors.New("Not Enough Arguments, Release Plan name needed")
 		}
 		name := args[0]
 
-		logging.Info("Deleting user %v from organization %v\n", name, organization)
-
-		namespaced := Config.Namespace + "-" + organization
+		logging.Info("Adding new release plan: '%s'\n", name)
 
 		core, coreError := core.NewCore(Config)
 		if coreError != nil {
 			return coreError
 		}
 
-		deleteUserError := core.DeleteUser(namespaced, name)
-		if deleteUserError != nil {
-			return deleteUserError
+		releasePlanBytes, readErr := util.UseSourceUrl(configPath)
+		if readErr != nil {
+			return readErr
 		}
-		fmt.Printf("User is deleted\n")
+
+		releasePlanJSON, jsonError := util.Convert(configFileType, "json", releasePlanBytes)
+		if jsonError != nil {
+			return jsonError
+		}
+
+		releasePlanText := string(releasePlanJSON)
+
+		createReleasePlanError := core.AddReleasePlan(name, releasePlanText)
+		if createReleasePlanError != nil {
+			return createReleasePlanError
+		}
+
+		fmt.Printf("Release Plan '%s' is added\n", name)
 
 		return nil
 	},
 }
 
 func init() {
-	deleteCmd.AddCommand(deleteUserCmd)
+	upsertCmd.AddCommand(upsertReleasePlanCmd)
 
-	deleteUserCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the environment")
-	deleteUserCmd.MarkFlagRequired("organization")
+	upsertReleasePlanCmd.Flags().Uint64VarP(&applicationID, "application-id", "", "", "ID of the application")
+	upsertReleasePlanCmd.MarkFlagRequired("application-id")
 
+	upsertReleasePlanCmd.Flags().Uint64VarP(&serviceID, "service-id", "", "", "ID of the service")
+	upsertReleasePlanCmd.MarkFlagRequired("service-id")
+
+	upsertReleasePlanCmd.Flags().StringVarP(&configPath, "file", "", "", "Release plan configuration file path")
+	upsertReleasePlanCmd.MarkFlagRequired("file")
+	upsertReleasePlanCmd.Flags().StringVarP(&configFileType, "input", "i", "json", "Release plan configuration file type yaml or json")
 }
