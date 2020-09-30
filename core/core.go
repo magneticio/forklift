@@ -39,15 +39,15 @@ func NewCore(conf models.ForkliftConfiguration) (*Core, error) {
 }
 
 // UpsertPolicy - upserts policy in key value store
-func (c *Core) UpsertPolicy(policyContent string) error {
+func (c *Core) UpsertPolicy(policyID uint64, policyContent string) error {
 	policyAPI := policies.NewPolicyAPI(c.kvClient, c.projectPath)
-	return policyAPI.Save(policyContent)
+	return policyAPI.Save(strconv.FormatUint(policyID, 10), policyContent)
 }
 
 // DeletePolicy - deletes policy from key value store
-func (c *Core) DeletePolicy(policyName string) error {
+func (c *Core) DeletePolicy(policyID uint64) error {
 	policyAPI := policies.NewPolicyAPI(c.kvClient, c.projectPath)
-	return policyAPI.Delete(policyName)
+	return policyAPI.Delete(strconv.FormatUint(policyID, 10))
 }
 
 // UpsertReleasePlan - upserts release plan in key value store

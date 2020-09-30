@@ -22,6 +22,7 @@ package cmd
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/magneticio/forklift/core"
 	"github.com/magneticio/forklift/logging"
@@ -34,11 +35,20 @@ var upsertPolicyCmd = &cobra.Command{
 	Short: "Upsert a policy",
 	Long: AddAppName(`Upsert a policy
     Example:
-    $AppName upsert policy --file ./policydefinition.json`),
+    $AppName upsert policy 10 --file ./policydefinition.json`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logging.Info("Upserting policy\n")
+		if len(args) < 1 {
+			return fmt.Errorf("Not enough arguments - policy id needed")
+		}
+		policyIDString := args[0]
+
+		policyID, err := strconv.ParseUint(policyIDString, 10, 64)
+		if err != nil {
+			return fmt.Errorf("Policy id '%s' must be a natural number", policyIDString)
+		}
+		logging.Info("Upserting policy '%d'\n", policyID)
 		core, err := core.NewCore(Config)
 		if err != nil {
 			return err
@@ -56,12 +66,12 @@ var upsertPolicyCmd = &cobra.Command{
 
 		policyText := string(policyJSON)
 
-		err = core.UpsertPolicy(policyText)
+		err = core.UpsertPolicy(policyID, policyText)
 		if err != nil {
 			return err
 		}
 
-		fmt.Printf("Policy has been upserted\n")
+		fmt.Printf("Policy '%d' has been upserted\n", policyID)
 
 		return nil
 	},

@@ -21,8 +21,8 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/magneticio/forklift/core"
 	"github.com/magneticio/forklift/logging"
@@ -34,28 +34,33 @@ var deletePolicyCmd = &cobra.Command{
 	Short: "Delete existing policy",
 	Long: AddAppName(`Delete existing policy
     Example:
-    $AppName delete policy name`),
+    $AppName delete policy id`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
-			return errors.New("Not enough arguments - policy name needed")
+			return fmt.Errorf("Not enough arguments - policy id needed")
 		}
-		policyName := args[0]
+		policyIDString := args[0]
 
-		logging.Info("Deleting policy '%s'\n", policyName)
+		policyID, err := strconv.ParseUint(policyIDString, 10, 64)
+		if err != nil {
+			return fmt.Errorf("Policy id '%s' must be a natural number", policyIDString)
+		}
+
+		logging.Info("Deleting policy '%d'\n", policyID)
 
 		core, err := core.NewCore(Config)
 		if err != nil {
 			return err
 		}
 
-		err = core.DeletePolicy(policyName)
+		err = core.DeletePolicy(policyID)
 		if err != nil {
 			return err
 		}
 
-		fmt.Printf("Policy '%s' has been deleted\n", policyName)
+		fmt.Printf("Policy '%d' has been deleted\n", policyID)
 
 		return nil
 	},

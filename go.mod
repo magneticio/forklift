@@ -7,7 +7,7 @@ go 1.14
 require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/google/uuid v1.1.1
-	github.com/magneticio/vamp-policies v0.0.4
+	github.com/magneticio/vamp-policies v0.0.20
 	github.com/magneticio/vamp-sdk-go v0.0.0-20190612094709-b89098f15d2b
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/spf13/cobra v0.0.7
