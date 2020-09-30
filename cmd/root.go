@@ -54,8 +54,8 @@ var Config models.ForkliftConfiguration
 var cfgFile string
 var configPath string
 var configFileType string
-var applicationID uint64
 var serviceID uint64
+var applicationID uint64
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -65,8 +65,8 @@ var rootCmd = &cobra.Command{
 	It is required to have a default config.
 	Envrionment variables can be used in combination with the config.
 	Environment variables:
-		VAMP_FORKLIFT_PROJECT_ID
-		VAMP_FORKLIFT_CLUSTER_ID
+		VAMP_FORKLIFT_PROJECT
+		VAMP_FORKLIFT_CLUSTER
 		VAMP_FORKLIFT_VAULT_ADDR
 		VAMP_FORKLIFT_VAULT_TOKEN
 		VAMP_FORKLIFT_VAULT_CACERT
@@ -98,8 +98,8 @@ func init() {
 	// when this action is called directly.
 	rootCmd.PersistentFlags().BoolVarP(&logging.Verbose, "verbose", "v", false, "Verbose")
 
-	rootCmd.PersistentFlags().Uint64VarP(&Config.ProjectID, "project-id", "p", Config.ProjectID, "project id")
-	rootCmd.PersistentFlags().Uint64VarP(&Config.ClusterID, "cluster-id", "c", Config.ClusterID, "cluster id")
+	rootCmd.PersistentFlags().Uint64VarP(Config.ProjectID, "project", "p", *Config.ProjectID, "project id")
+	rootCmd.PersistentFlags().Uint64VarP(Config.ClusterID, "cluster", "c", *Config.ClusterID, "cluster id")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -158,8 +158,8 @@ func initConfig() {
 }
 
 func setupConfigurationEnvrionmentVariables() {
-	viper.BindEnv("project-id", "VAMP_FORKLIFT_PROJECT_ID")
-	viper.BindEnv("cluster-id", "VAMP_FORKLIFT_CLUSTER_ID")
+	viper.BindEnv("project", "VAMP_FORKLIFT_PROJECT")
+	viper.BindEnv("cluster", "VAMP_FORKLIFT_CLUSTER")
 	viper.BindEnv("key-value-store-url", "VAMP_FORKLIFT_VAULT_ADDR")
 	viper.BindEnv("key-value-store-token", "VAMP_FORKLIFT_VAULT_TOKEN")
 	viper.BindEnv("key-value-store-server-tls-cert", "VAMP_FORKLIFT_VAULT_CACERT")

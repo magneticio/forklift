@@ -14,11 +14,14 @@ import (
 type Core struct {
 	kvClient    keyvaluestoreclient.KeyValueStoreClient
 	projectPath string
-	clusterID   uint64
+	clusterID   *uint64
 }
 
 func NewCore(conf models.ForkliftConfiguration) (*Core, error) {
-	projectPath := path.Join(conf.KeyValueStoreBasePath, "projects", strconv.FormatUint(conf.ProjectID, 10))
+	if conf.ProjectID == nil {
+		return nil, fmt.Errorf("project id must be provided")
+	}
+	projectPath := path.Join(conf.KeyValueStoreBasePath, "projects", strconv.FormatUint(*conf.ProjectID, 10))
 	config := models.VaultKeyValueStoreConfiguration{
 		Url:               conf.KeyValueStoreUrL,
 		Token:             conf.KeyValueStoreToken,
@@ -40,7 +43,7 @@ func NewCore(conf models.ForkliftConfiguration) (*Core, error) {
 	}, nil
 }
 
-// UpsertPolicy - upserts policy in key value store
+// UpsertPolicy - upserts policy to key value store
 func (c *Core) UpsertPolicy(policyID uint64, policyContent string) error {
 	policyAPI := policies.NewPolicyAPI(c.kvClient, c.projectPath)
 	return policyAPI.Save(strconv.FormatUint(policyID, 10), policyContent)
@@ -57,7 +60,7 @@ func (c *Core) DeletePolicy(policyID uint64) error {
 	return policyAPI.Delete(policyKey)
 }
 
-// UpsertReleasePlan - upserts release plan in key value store
+// UpsertReleasePlan - upserts release plan to key value store
 func (c *Core) UpsertReleasePlan(serviceID uint64, serviceVersion string, releasePlanContent string) error {
 	releasePlanKey := c.getReleasePlansPath(serviceID, serviceVersion)
 	return c.kvClient.Put(releasePlanKey, releasePlanContent)
@@ -76,7 +79,7 @@ func (c *Core) DeleteReleasePlan(serviceID uint64, serviceVersion string) error 
 	return c.kvClient.Delete(releasePlanKey)
 }
 
-// UpsertReleaseAgentConfig - upserts Release Agent config in key value store
+// UpsertReleaseAgentConfig - upserts Release Agent config to key value store
 func (c *Core) UpsertReleaseAgentConfig(clusterID uint64, natsChannelName, optimiserNatsChannelName, natsToken string) error {
 	if natsChannelName == "" {
 		return fmt.Errorf("NATS channel name must not be empty")
@@ -104,12 +107,7 @@ func (c *Core) UpsertReleaseAgentConfig(clusterID uint64, natsChannelName, optim
 		}
 	}
 
-	releaseAgentConfigBytes, err := json.Marshal(releaseAgentConfig)
-	if err != nil {
-		return fmt.Errorf("cannot serialize Release Agent config: %v", err)
-	}
-
-	return c.kvClient.Put(releaseAgentConfigKey, string(releaseAgentConfigBytes))
+	return c.saveReleaseAgentConfig(releaseAgentConfigKey, releaseAgentConfig)
 }
 
 // DeleteReleaseAgentConfig - deletes Release Agent config from key value store
@@ -124,6 +122,51 @@ func (c *Core) DeleteReleaseAgentConfig(clusterID uint64) error {
 	}
 
 	return c.kvClient.Delete(releaseAgentConfigKey)
+}
+
+// UpsertApplication - upserts application to existing Release Agent config
+func (c *Core) UpsertApplication(applicationID uint64, namespace string) error {
+	upsertApplication := func(releaseAgentConfig *models.ReleaseAgentConfig) {
+		for configNamespace, configApplicationID := range releaseAgentConfig.K8SNamespaceToApplicationID {
+			if configApplicationID == applicationID {
+				delete(releaseAgentConfig.K8SNamespaceToApplicationID, configNamespace)
+			}
+		}
+		releaseAgentConfig.K8SNamespaceToApplicationID[namespace] = applicationID
+	}
+
+	return c.onReleaseAgentConfig(upsertApplication)
+}
+
+// DeleteApplication - deletes application from Release Agent config
+func (c *Core) DeleteApplication(applicationID uint64) error {
+	deleteApplication := func(releaseAgentConfig *models.ReleaseAgentConfig) {
+		for configNamespace, configApplicationID := range releaseAgentConfig.K8SNamespaceToApplicationID {
+			if configApplicationID == applicationID {
+				delete(releaseAgentConfig.K8SNamespaceToApplicationID, configNamespace)
+			}
+		}
+	}
+
+	return c.onReleaseAgentConfig(deleteApplication)
+}
+
+func (c *Core) onReleaseAgentConfig(apply func(*models.ReleaseAgentConfig)) error {
+	if c.clusterID == nil {
+		return fmt.Errorf("cluster id must be provided")
+	}
+	releaseAgentConfigKey := c.getReleaseAgentConfigKey(*c.clusterID)
+	releaseAgentConfig, exists, err := c.getReleaseAgentConfig(releaseAgentConfigKey)
+	if err != nil {
+		return fmt.Errorf("cannot find Release Agent config: %v", err)
+	}
+	if !exists {
+		return fmt.Errorf("Release Agent config does not exist. Please create cluster first")
+	}
+
+	apply(releaseAgentConfig)
+
+	return c.saveReleaseAgentConfig(releaseAgentConfigKey, *releaseAgentConfig)
 }
 
 func (c *Core) getReleasePlansPath(serviceID uint64, serviceVersion string) string {
@@ -157,4 +200,13 @@ func (c *Core) getReleaseAgentConfig(releaseAgentConfigKey string) (*models.Rele
 	}
 
 	return nil, false, nil
+}
+
+func (c *Core) saveReleaseAgentConfig(releaseAgentConfigKey string, releaseAgentConfig models.ReleaseAgentConfig) error {
+	releaseAgentConfigBytes, err := json.Marshal(releaseAgentConfig)
+	if err != nil {
+		return fmt.Errorf("cannot serialize Release Agent config: %v", err)
+	}
+
+	return c.kvClient.Put(releaseAgentConfigKey, string(releaseAgentConfigBytes))
 }
