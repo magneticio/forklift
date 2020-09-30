@@ -64,6 +64,6 @@ var deleteReleasePlanCmd = &cobra.Command{
 func init() {
 	deleteCmd.AddCommand(deleteReleasePlanCmd)
 
-	deleteReleasePlanCmd.Flags().Uint64VarP(&serviceID, "service-id", "", 0, "ID of the service")
+	deleteReleasePlanCmd.Flags().Uint64VarP(&serviceID, "service-id", "s", 0, "ID of the service")
 	deleteReleasePlanCmd.MarkFlagRequired("service-id")
 }

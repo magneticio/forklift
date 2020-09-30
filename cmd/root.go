@@ -97,6 +97,9 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.PersistentFlags().BoolVarP(&logging.Verbose, "verbose", "v", false, "Verbose")
+
+	rootCmd.PersistentFlags().Uint64VarP(&Config.ProjectID, "project-id", "p", Config.ProjectID, "project id")
+	rootCmd.PersistentFlags().Uint64VarP(&Config.ClusterID, "cluster-id", "c", Config.ClusterID, "cluster id")
 }
 
 // initConfig reads in config file and ENV variables if set.

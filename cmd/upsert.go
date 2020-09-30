@@ -31,7 +31,7 @@ var upsertCmd = &cobra.Command{
 	Short: "Upsert an artifact",
 	Long: AddAppName(`Upsert an artifact
     Example:
-    $AppName upsert policy --file ./policydefinition.json`),
+    $AppName upsert policy 10 --file ./policydefinition.json`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {

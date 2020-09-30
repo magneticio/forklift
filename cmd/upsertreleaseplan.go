@@ -77,7 +77,7 @@ var upsertReleasePlanCmd = &cobra.Command{
 func init() {
 	upsertCmd.AddCommand(upsertReleasePlanCmd)
 
-	upsertReleasePlanCmd.Flags().Uint64VarP(&serviceID, "service-id", "", 0, "ID of the service")
+	upsertReleasePlanCmd.Flags().Uint64VarP(&serviceID, "service-id", "s", 0, "ID of the service")
 	upsertReleasePlanCmd.MarkFlagRequired("service-id")
 
 	upsertReleasePlanCmd.Flags().StringVarP(&configPath, "file", "", "", "Release plan configuration file path")
