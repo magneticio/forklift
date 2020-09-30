@@ -21,66 +21,49 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/magneticio/forklift/core"
 	"github.com/magneticio/forklift/logging"
-	"github.com/magneticio/forklift/util"
 	"github.com/spf13/cobra"
 )
 
-var upsertReleasePlanCmd = &cobra.Command{
-	Use:   "releaseplan",
-	Short: "Upsert a release plan",
-	Long: AddAppName(`Upsert a release plan
+var deleteClusterCmd = &cobra.Command{
+	Use:   "cluster",
+	Short: "Delete existing cluster",
+	Long: AddAppName(`Delete existing cluster
     Example:
-    $AppName upsert releaseplan 1.0.1 --service-id 5 --file ./releaseplandefinition.json`),
+    $AppName delete cluster 10`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
-			return errors.New("Not Enough Arguments, Release Plan name needed")
+			return fmt.Errorf("Not enough arguments - cluster id needed")
 		}
-		serviceVersion := args[0]
+		clusterIDString := args[0]
 
-		logging.Info("Upserting release plan for service version: '%s'\n", serviceVersion)
-
+		clusterID, err := strconv.ParseUint(clusterIDString, 10, 64)
+		if err != nil {
+			return fmt.Errorf("Cluster id '%s' must be a natural number", clusterIDString)
+		}
+		logging.Info("Deleting cluster '%d'\n", clusterID)
 		core, err := core.NewCore(Config)
 		if err != nil {
 			return err
 		}
 
-		releasePlanBytes, err := util.UseSourceUrl(configPath)
+		err = core.DeleteReleaseAgentConfig(clusterID)
 		if err != nil {
 			return err
 		}
 
-		releasePlanJSON, err := util.Convert(configFileType, "json", releasePlanBytes)
-		if err != nil {
-			return err
-		}
-
-		releasePlanText := string(releasePlanJSON)
-
-		err = core.UpsertReleasePlan(serviceID, serviceVersion, releasePlanText)
-		if err != nil {
-			return err
-		}
-
-		fmt.Printf("Release plan for service version '%s' has been upserted\n", serviceVersion)
+		fmt.Printf("Cluster '%d' has been deleteed\n", clusterID)
 
 		return nil
 	},
 }
 
 func init() {
-	upsertCmd.AddCommand(upsertReleasePlanCmd)
-
-	upsertReleasePlanCmd.Flags().Uint64VarP(&serviceID, "service-id", "s", 0, "ID of the service")
-	upsertReleasePlanCmd.MarkFlagRequired("service-id")
-
-	upsertReleasePlanCmd.Flags().StringVarP(&configPath, "file", "", "", "Release plan configuration file path")
-	upsertReleasePlanCmd.MarkFlagRequired("file")
-	upsertReleasePlanCmd.Flags().StringVarP(&configFileType, "input", "i", "json", "Release plan configuration file type yaml or json")
+	deleteCmd.AddCommand(deleteClusterCmd)
 }

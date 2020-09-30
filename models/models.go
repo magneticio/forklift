@@ -22,3 +22,11 @@ type VaultKeyValueStoreConfiguration struct {
 	ClientTlsKey      string `yaml:"client-tls-key,omitempty" json:"client-tls-key,omitempty"`
 	ClientTlsCert     string `yaml:"client-tls-cert,omitempty" json:"client-tls-cert,omitempty"`
 }
+
+// ReleaseAgentConfig - config for Release Agent
+type ReleaseAgentConfig struct {
+	NatsChannel                 string            `json:"nats_channel"`
+	NatsToken                   string            `json:"nats_token"`
+	K8SNamespaceToApplicationID map[string]uint64 `json:"applications"`
+	OptimiserNatsChannel        string            `json:"optimiser_nats_channel"`
+}
