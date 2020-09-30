@@ -31,33 +31,31 @@ import (
 
 var deletePolicyCmd = &cobra.Command{
 	Use:   "policy",
-	Short: "Delete a policy",
+	Short: "Delete existing policy",
 	Long: AddAppName(`Delete existing policy
     Example:
-    $AppName delete policy name --organization org --environment env`),
+    $AppName delete policy name`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
-			return errors.New("Not Enough Arguments, Policy name needed.")
+			return errors.New("Not enough arguments - policy name needed")
 		}
-		name := args[0]
+		policyName := args[0]
 
-		logging.Info("Deleteing new policy to environment %v in organization %v\n", organization, environment)
-		namespacedEnvironment := Config.Namespace + "-" + organization + "-" + environment
-		namespacedOrganization := Config.Namespace + "-" + organization
+		logging.Info("Deleting policy '%s'\n", policyName)
 
-		core, coreError := core.NewCore(Config)
-		if coreError != nil {
-			return coreError
+		core, err := core.NewCore(Config)
+		if err != nil {
+			return err
 		}
 
-		createpolicyError := core.DeleteReleasePolicy(namespacedOrganization, namespacedEnvironment, name)
-		if createpolicyError != nil {
-			return createpolicyError
+		err = core.DeletePolicy(policyName)
+		if err != nil {
+			return err
 		}
 
-		fmt.Printf("Policy has been deleted\n")
+		fmt.Printf("Policy '%s' has been deleted\n", policyName)
 
 		return nil
 	},
@@ -65,11 +63,4 @@ var deletePolicyCmd = &cobra.Command{
 
 func init() {
 	deleteCmd.AddCommand(deletePolicyCmd)
-
-	deletePolicyCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the workflow")
-	deletePolicyCmd.MarkFlagRequired("organization")
-
-	deletePolicyCmd.Flags().StringVarP(&environment, "environment", "", "", "Environment of the workflow")
-	deletePolicyCmd.MarkFlagRequired("environment")
-
 }

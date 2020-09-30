@@ -39,26 +39,26 @@ var upsertPolicyCmd = &cobra.Command{
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		logging.Info("Upserting policy\n")
-		core, coreError := core.NewCore(Config)
-		if coreError != nil {
-			return coreError
+		core, err := core.NewCore(Config)
+		if err != nil {
+			return err
 		}
 
-		policyBytes, readErr := util.UseSourceUrl(configPath)
-		if readErr != nil {
-			return readErr
+		policyBytes, err := util.UseSourceUrl(configPath)
+		if err != nil {
+			return err
 		}
 
-		policyJSON, jsonError := util.Convert(configFileType, "json", policyBytes)
-		if jsonError != nil {
-			return jsonError
+		policyJSON, err := util.Convert(configFileType, "json", policyBytes)
+		if err != nil {
+			return err
 		}
 
 		policyText := string(policyJSON)
 
-		upsertPolicyError := core.UpsertPolicy(policyText)
-		if upsertPolicyError != nil {
-			return upsertPolicyError
+		err = core.UpsertPolicy(policyText)
+		if err != nil {
+			return err
 		}
 
 		fmt.Printf("Policy has been upserted\n")

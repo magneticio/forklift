@@ -29,14 +29,14 @@ import (
 // listCmd represents the list command
 var listCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List organizations, environments, artifacts or users",
-	Long: AddAppName(`List organizations, environments, artifacts or users
+	Short: "List artifacts",
+	Long: AddAppName(`List artifacts
     Example:
-    $AppName list organizations`),
+    $AppName list policies`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return errors.New("A resource type expected.")
+		return errors.New("A resource type expected")
 	},
 }
 

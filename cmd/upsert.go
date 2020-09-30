@@ -29,13 +29,13 @@ import (
 var upsertCmd = &cobra.Command{
 	Use:   "upsert",
 	Short: "Upsert an artifact",
-	Long: UpsertAppName(`Upsert an artifact
+	Long: AddAppName(`Upsert an artifact
     Example:
-    $AppName upsert policy`),
+    $AppName upsert policy --file ./policydefinition.json`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return errors.New("A resource type expected.")
+		return errors.New("A resource type expected")
 	},
 }
 

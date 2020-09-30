@@ -23,7 +23,6 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/magneticio/forklift/models"
 	"github.com/spf13/cobra"
 )
 
@@ -42,7 +41,6 @@ var versionCmd = &cobra.Command{
 			}
 		} else {
 			fmt.Printf("Version: %v\n", Version)
-			fmt.Printf("Backend Version: %v\n", models.BackendVersion)
 		}
 
 	},

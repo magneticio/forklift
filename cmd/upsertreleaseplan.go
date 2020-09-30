@@ -35,40 +35,40 @@ var upsertReleasePlanCmd = &cobra.Command{
 	Short: "Upsert a release plan",
 	Long: AddAppName(`Upsert a release plan
     Example:
-    $AppName upsert releaseplan name --application-id 10 --service-id 5 --file ./releaseplandefinition.json`),
+    $AppName upsert releaseplan 1.0.1 --service-id 5 --file ./releaseplandefinition.json`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
 			return errors.New("Not Enough Arguments, Release Plan name needed")
 		}
-		name := args[0]
+		serviceVersion := args[0]
 
-		logging.Info("Adding new release plan: '%s'\n", name)
+		logging.Info("Upserting release plan for service version: '%s'\n", serviceVersion)
 
-		core, coreError := core.NewCore(Config)
-		if coreError != nil {
-			return coreError
+		core, err := core.NewCore(Config)
+		if err != nil {
+			return err
 		}
 
-		releasePlanBytes, readErr := util.UseSourceUrl(configPath)
-		if readErr != nil {
-			return readErr
+		releasePlanBytes, err := util.UseSourceUrl(configPath)
+		if err != nil {
+			return err
 		}
 
-		releasePlanJSON, jsonError := util.Convert(configFileType, "json", releasePlanBytes)
-		if jsonError != nil {
-			return jsonError
+		releasePlanJSON, err := util.Convert(configFileType, "json", releasePlanBytes)
+		if err != nil {
+			return err
 		}
 
 		releasePlanText := string(releasePlanJSON)
 
-		createReleasePlanError := core.AddReleasePlan(name, releasePlanText)
-		if createReleasePlanError != nil {
-			return createReleasePlanError
+		err = core.UpsertReleasePlan(serviceID, serviceVersion, releasePlanText)
+		if err != nil {
+			return err
 		}
 
-		fmt.Printf("Release Plan '%s' is added\n", name)
+		fmt.Printf("Release plan for service version '%s' has been upserted\n", serviceVersion)
 
 		return nil
 	},
@@ -77,10 +77,7 @@ var upsertReleasePlanCmd = &cobra.Command{
 func init() {
 	upsertCmd.AddCommand(upsertReleasePlanCmd)
 
-	upsertReleasePlanCmd.Flags().Uint64VarP(&applicationID, "application-id", "", "", "ID of the application")
-	upsertReleasePlanCmd.MarkFlagRequired("application-id")
-
-	upsertReleasePlanCmd.Flags().Uint64VarP(&serviceID, "service-id", "", "", "ID of the service")
+	upsertReleasePlanCmd.Flags().Uint64VarP(&serviceID, "service-id", "", 0, "ID of the service")
 	upsertReleasePlanCmd.MarkFlagRequired("service-id")
 
 	upsertReleasePlanCmd.Flags().StringVarP(&configPath, "file", "", "", "Release plan configuration file path")

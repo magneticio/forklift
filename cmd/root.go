@@ -36,23 +36,22 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
+// AppName - application name
 const AppName string = "forklift"
 
-// version should be in format d.d.d where d is a decimal number
+// Version - should be in format d.d.d where d is a decimal number
 const Version string = "v1.0.0"
 
-/*
-Application name can change over time so it is made parameteric
-*/
+// AddAppName - Application name can change over time so it is made parameteric
 func AddAppName(str string) string {
 	return strings.Replace(str, "$AppName", AppName, -1)
 }
 
-var cfgFile string
-
+// Config - forklift configuration
 var Config models.ForkliftConfiguration
 
 // Common code parameters
+var cfgFile string
 var configPath string
 var configFileType string
 var applicationID uint64
@@ -62,17 +61,17 @@ var serviceID uint64
 var rootCmd = &cobra.Command{
 	Use:   AddAppName("$AppName"),
 	Short: AddAppName("A command line client for $AppName"),
-	Long: AddAppName(`$AppName is a organization and environment setup tool for vamp.
-    It requires a vamp deployment setup as a backend to work.
-    It is required to have a default config.
-    Envrionment variables can be used in combination with the config.
-    Environment variables:
-      VAMP_FORKLIFT_VAULT_ADDR
-      VAMP_FORKLIFT_VAULT_TOKEN
-      VAMP_FORKLIFT_VAULT_CACERT
-      VAMP_FORKLIFT_VAULT_CLIENT_CERT
-      VAMP_FORKLIFT_VAULT_CLIENT_KEY
-    `),
+	Long: AddAppName(`$AppName is a setup tool for vamp.
+	It is required to have a default config.
+	Envrionment variables can be used in combination with the config.
+	Environment variables:
+		VAMP_FORKLIFT_PROJECT_ID
+		VAMP_FORKLIFT_CLUSTER_ID
+		VAMP_FORKLIFT_VAULT_ADDR
+		VAMP_FORKLIFT_VAULT_TOKEN
+		VAMP_FORKLIFT_VAULT_CACERT
+		VAMP_FORKLIFT_VAULT_CLIENT_CERT
+		VAMP_FORKLIFT_VAULT_CLIENT_KEY`),
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -129,7 +128,7 @@ func initConfig() {
 		viper.SetConfigName("config")
 	}
 
-	SetupConfigurationEnvrionmentVariables()
+	setupConfigurationEnvrionmentVariables()
 
 	viper.AutomaticEnv() // read in environment variables that match
 
@@ -153,28 +152,14 @@ func initConfig() {
 	jsonConfig, _ := json.Marshal(Config)
 
 	logging.Info("Forklift configuration %v\n", util.PrettyJson(string(jsonConfig)))
-
 }
 
-func SetupConfigurationEnvrionmentVariables() {
-	// VAMP_FORKLIFT_PROJECT_ID
+func setupConfigurationEnvrionmentVariables() {
 	viper.BindEnv("project-id", "VAMP_FORKLIFT_PROJECT_ID")
-
-	// VAMP_FORKLIFT_CLUSTER_ID
 	viper.BindEnv("cluster-id", "VAMP_FORKLIFT_CLUSTER_ID")
-
-	// VAMP_FORKLIFT_VAULT_ADDR
 	viper.BindEnv("key-value-store-url", "VAMP_FORKLIFT_VAULT_ADDR")
-
-	// VAMP_FORKLIFT_VAULT_TOKEN
 	viper.BindEnv("key-value-store-token", "VAMP_FORKLIFT_VAULT_TOKEN")
-
-	// VAMP_FORKLIFT_VAULT_CACERT
 	viper.BindEnv("key-value-store-server-tls-cert", "VAMP_FORKLIFT_VAULT_CACERT")
-
-	// VAMP_FORKLIFT_VAULT_CLIENT_CERT
 	viper.BindEnv("key-value-store-client-tls-cert", "VAMP_FORKLIFT_VAULT_CLIENT_CERT")
-
-	// VAMP_FORKLIFT_VAULT_CLIENT_KEY
 	viper.BindEnv("key-value-store-client-tls-key", "VAMP_FORKLIFT_VAULT_CLIENT_KEY")
 }
