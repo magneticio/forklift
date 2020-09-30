@@ -1,0 +1,73 @@
+{
+	"type": "release",
+	"name": "testpolicy2",
+	"steps": [
+		{
+			"source": {
+				"weight": 90
+			},
+			"target": {
+				"weight": 10
+			},
+			"endAfter": {
+				"value": "duration == 2m0s"
+			},
+			"conditions": [
+				{
+					"value": "health >= baselines.minHealth",
+					"gracePeriod": "1m0s"
+				}
+			]
+		},
+		{
+			"source": {
+				"weight": 50
+			},
+			"target": {
+				"weight": 50
+			},
+			"endAfter": {
+				"value": "duration == 2m0s"
+			},
+			"conditions": [
+				{
+					"value": "health >= baselines.minHealth",
+					"gracePeriod": "1m0s"
+				}
+			]
+		},
+		{
+			"name": "final-step",
+			"source": {
+				"weight": 0
+			},
+			"target": {
+				"weight": 100
+			},
+			"endAfter": {
+				"value": "duration == 2m0s"
+			},
+			"conditions": [
+				{
+					"value": "health >= baselines.minHealth",
+					"gracePeriod": "1m0s"
+				}
+			]
+		}
+	],
+	"metrics": [
+		{
+			"name": "health",
+			"value": {
+				"source": "k8s-deployment-health"
+			}
+		}
+	],
+	"baselines": [
+		{
+			"name": "minHealth",
+			"metric": "health",
+			"value": 0.1
+		}
+	]
+}
