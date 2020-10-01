@@ -1,18 +1,55 @@
 package models
 
-type ForkliftConfiguration struct {
-	ProjectID                      *uint64 `yaml:"project,omitempty" json:"project,omitempty"`
-	ClusterID                      *uint64 `yaml:"cluster,omitempty" json:"cluster,omitempty"`
-	KeyValueStoreUrL               string  `yaml:"key-value-store-url,omitempty" json:"key-value-store-url,omitempty"`
-	KeyValueStoreToken             string  `yaml:"key-value-store-token,omitempty" json:"key-value-store-token,omitempty"`
-	KeyValueStoreBasePath          string  `yaml:"key-value-store-base-path,omitempty" json:"key-value-store-base-path,omitempty"`
-	KeyValueStoreServerTlsCert     string  `yaml:"key-value-store-server-tls-cert,omitempty" json:"key-value-store-server-tls-cert,omitempty"`
-	KeyValueStoreClientTlsKey      string  `yaml:"key-value-store-client-tls-key,omitempty" json:"key-value-store-client-tls-key,omitempty"`
-	KeyValueStoreClientTlsCert     string  `yaml:"key-value-store-client-tls-cert,omitempty" json:"key-value-store-client-tls-cert,omitempty"`
-	KeyValueStoreKvMode            string  `yaml:"key-value-store-kv-mode,omitempty" json:"key-value-store-kv-mode,omitempty"`
-	KeyValueStoreFallbackKvVersion string  `yaml:"key-value-store-fallback-kv-version,omitempty" json:"key-value-store-fallback-kv-version,omitempty"`
+import (
+	"fmt"
+	"strconv"
+)
+
+// NullableUint64 - custom uint64 type to be able to read it's value from both viper config and cobra flag
+type NullableUint64 uint64
+
+// Set - sets the value of the NullableUint64 type
+func (val *NullableUint64) Set(v string) error {
+	if v == "" {
+		return nil
+	}
+	parsedValue, err := strconv.ParseUint(v, 10, 64)
+	if err != nil {
+		return fmt.Errorf("value must be a natural number")
+	}
+	d := NullableUint64(parsedValue)
+	val = &d
+	return nil
 }
 
+// String - gets the string value of the NullableUint64 type
+func (val *NullableUint64) String() string {
+	if val == nil {
+		return ""
+	}
+	return strconv.FormatUint(uint64(*val), 10)
+}
+
+// Type - gets the type text for NullableUint64 type
+func (val *NullableUint64) Type() string {
+	return "NullableUint64"
+}
+
+// ForkliftConfiguration - configuration built from config file, environment variables and flags
+type ForkliftConfiguration struct {
+	ProjectID                      *NullableUint64 `yaml:"project,omitempty" json:"project,omitempty"`
+	ClusterID                      *NullableUint64 `yaml:"cluster,omitempty" json:"cluster,omitempty"`
+	KeyValueStoreUrL               string          `yaml:"key-value-store-url,omitempty" json:"key-value-store-url,omitempty"`
+	KeyValueStoreToken             string          `yaml:"key-value-store-token,omitempty" json:"key-value-store-token,omitempty"`
+	KeyValueStoreBasePath          string          `yaml:"key-value-store-base-path,omitempty" json:"key-value-store-base-path,omitempty"`
+	KeyValueStoreServerTlsCert     string          `yaml:"key-value-store-server-tls-cert,omitempty" json:"key-value-store-server-tls-cert,omitempty"`
+	KeyValueStoreClientTlsKey      string          `yaml:"key-value-store-client-tls-key,omitempty" json:"key-value-store-client-tls-key,omitempty"`
+	KeyValueStoreClientTlsCert     string          `yaml:"key-value-store-client-tls-cert,omitempty" json:"key-value-store-client-tls-cert,omitempty"`
+	KeyValueStoreKvMode            string          `yaml:"key-value-store-kv-mode,omitempty" json:"key-value-store-kv-mode,omitempty"`
+	KeyValueStoreFallbackKvVersion string          `yaml:"key-value-store-fallback-kv-version,omitempty" json:"key-value-store-fallback-kv-version,omitempty"`
+}
+
+// VaultKeyValueStoreConfiguration - Vault configuration
 type VaultKeyValueStoreConfiguration struct {
 	Url               string `yaml:"url,omitempty" json:"url,omitempty"`
 	Token             string `yaml:"token,omitempty" json:"token,omitempty"`

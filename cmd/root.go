@@ -98,8 +98,8 @@ func init() {
 	// when this action is called directly.
 	rootCmd.PersistentFlags().BoolVarP(&logging.Verbose, "verbose", "v", false, "Verbose")
 
-	rootCmd.PersistentFlags().Uint64VarP(Config.ProjectID, "project", "p", 0, "project id")
-	rootCmd.PersistentFlags().Uint64VarP(Config.ClusterID, "cluster", "c", 0, "cluster id")
+	rootCmd.PersistentFlags().VarP(Config.ProjectID, "project", "p", "project id")
+	rootCmd.PersistentFlags().VarP(Config.ClusterID, "cluster", "c", "cluster id")
 }
 
 // initConfig reads in config file and ENV variables if set.

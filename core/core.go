@@ -14,14 +14,14 @@ import (
 type Core struct {
 	kvClient    keyvaluestoreclient.KeyValueStoreClient
 	projectPath string
-	clusterID   *uint64
+	clusterID   *models.NullableUint64
 }
 
 func NewCore(conf models.ForkliftConfiguration) (*Core, error) {
 	if conf.ProjectID == nil {
 		return nil, fmt.Errorf("project id must be provided")
 	}
-	projectPath := path.Join(conf.KeyValueStoreBasePath, "projects", strconv.FormatUint(*conf.ProjectID, 10))
+	projectPath := path.Join(conf.KeyValueStoreBasePath, "projects", strconv.FormatUint(uint64(*conf.ProjectID), 10))
 	config := models.VaultKeyValueStoreConfiguration{
 		Url:               conf.KeyValueStoreUrL,
 		Token:             conf.KeyValueStoreToken,
@@ -181,7 +181,7 @@ func (c *Core) onReleaseAgentConfig(apply func(*models.ReleaseAgentConfig)) erro
 	if c.clusterID == nil {
 		return fmt.Errorf("cluster id must be provided")
 	}
-	releaseAgentConfigKey := c.getReleaseAgentConfigKey(*c.clusterID)
+	releaseAgentConfigKey := c.getReleaseAgentConfigKey(uint64(*c.clusterID))
 	releaseAgentConfig, exists, err := c.getReleaseAgentConfig(releaseAgentConfigKey)
 	if err != nil {
 		return fmt.Errorf("cannot find Release Agent config: %v", err)
