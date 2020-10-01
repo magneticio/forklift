@@ -43,8 +43,8 @@ func NewCore(conf models.ForkliftConfiguration) (*Core, error) {
 	}, nil
 }
 
-// UpsertPolicy - upserts policy to key value store
-func (c *Core) UpsertPolicy(policyID uint64, policyContent string) error {
+// PutPolicy - puts policy to key value store
+func (c *Core) PutPolicy(policyID uint64, policyContent string) error {
 	policyAPI := policies.NewPolicyAPI(c.kvClient, c.projectPath)
 	return policyAPI.Save(strconv.FormatUint(policyID, 10), policyContent)
 }
@@ -60,8 +60,8 @@ func (c *Core) DeletePolicy(policyID uint64) error {
 	return policyAPI.Delete(policyKey)
 }
 
-// UpsertReleasePlan - upserts release plan to key value store
-func (c *Core) UpsertReleasePlan(serviceID uint64, serviceVersion string, releasePlanContent string) error {
+// PutReleasePlan - puts release plan to key value store
+func (c *Core) PutReleasePlan(serviceID uint64, serviceVersion string, releasePlanContent string) error {
 	releasePlanKey := c.getReleasePlanKey(serviceID, serviceVersion)
 	return c.kvClient.Put(releasePlanKey, releasePlanContent)
 }
@@ -79,8 +79,8 @@ func (c *Core) DeleteReleasePlan(serviceID uint64, serviceVersion string) error 
 	return c.kvClient.Delete(releasePlanKey)
 }
 
-// UpsertReleaseAgentConfig - upserts Release Agent config to key value store
-func (c *Core) UpsertReleaseAgentConfig(clusterID uint64, natsChannelName, optimiserNatsChannelName, natsToken string) error {
+// PutReleaseAgentConfig - puts Release Agent config to key value store
+func (c *Core) PutReleaseAgentConfig(clusterID uint64, natsChannelName, optimiserNatsChannelName, natsToken string) error {
 	if natsChannelName == "" {
 		return fmt.Errorf("NATS channel name must not be empty")
 	}
@@ -124,9 +124,9 @@ func (c *Core) DeleteReleaseAgentConfig(clusterID uint64) error {
 	return c.kvClient.Delete(releaseAgentConfigKey)
 }
 
-// UpsertApplication - upserts application to existing Release Agent config
-func (c *Core) UpsertApplication(applicationID uint64, namespace string) error {
-	upsertApplication := func(releaseAgentConfig *models.ReleaseAgentConfig) {
+// PutApplication - puts application to existing Release Agent config
+func (c *Core) PutApplication(applicationID uint64, namespace string) error {
+	putApplication := func(releaseAgentConfig *models.ReleaseAgentConfig) {
 		for configNamespace, configApplicationID := range releaseAgentConfig.K8SNamespaceToApplicationID {
 			if configApplicationID == applicationID {
 				delete(releaseAgentConfig.K8SNamespaceToApplicationID, configNamespace)
@@ -135,7 +135,7 @@ func (c *Core) UpsertApplication(applicationID uint64, namespace string) error {
 		releaseAgentConfig.K8SNamespaceToApplicationID[namespace] = applicationID
 	}
 
-	return c.onReleaseAgentConfig(upsertApplication)
+	return c.onReleaseAgentConfig(putApplication)
 }
 
 // DeleteApplication - deletes application from Release Agent config
@@ -151,8 +151,8 @@ func (c *Core) DeleteApplication(applicationID uint64) error {
 	return c.onReleaseAgentConfig(deleteApplication)
 }
 
-// UpsertServiceConfig - upserts service to key value store
-func (c *Core) UpsertServiceConfig(serviceID uint64, serviceConfigText string) error {
+// PutServiceConfig - puts service to key value store
+func (c *Core) PutServiceConfig(serviceID uint64, serviceConfigText string) error {
 	var serviceConfig models.ServiceConfig
 	if err := json.Unmarshal([]byte(serviceConfigText), &serviceConfig); err != nil {
 		return fmt.Errorf("cannot deserialize service config: %v", err)

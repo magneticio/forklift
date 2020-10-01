@@ -21,8 +21,8 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
-	"strconv"
 
 	"github.com/magneticio/forklift/core"
 	"github.com/magneticio/forklift/logging"
@@ -30,58 +30,57 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var upsertServiceCmd = &cobra.Command{
-	Use:   "service",
-	Short: "Upsert a service",
-	Long: AddAppName(`Upsert a service
+var putReleasePlanCmd = &cobra.Command{
+	Use:   "releaseplan",
+	Short: "Put a release plan",
+	Long: AddAppName(`Put a release plan
     Example:
-    $AppName upsert service 10 --file ./servicedefinition.json`),
+    $AppName put releaseplan 1.0.1 --service-id 5 --file ./releaseplandefinition.json`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
-			return fmt.Errorf("Not enough arguments - service id needed")
+			return errors.New("Not Enough Arguments, Release Plan name needed")
 		}
-		serviceIDString := args[0]
+		serviceVersion := args[0]
 
-		serviceID, err := strconv.ParseUint(serviceIDString, 10, 64)
-		if err != nil {
-			return fmt.Errorf("Service id '%s' must be a natural number", serviceIDString)
-		}
+		logging.Info("Puting release plan for service version: '%s'\n", serviceVersion)
 
-		logging.Info("Upserting service '%d'\n", serviceID)
 		core, err := core.NewCore(Config)
 		if err != nil {
 			return err
 		}
 
-		serviceConfigBytes, err := util.UseSourceUrl(configPath)
+		releasePlanBytes, err := util.UseSourceUrl(configPath)
 		if err != nil {
 			return err
 		}
 
-		serviceConfigJSON, err := util.Convert(configFileType, "json", serviceConfigBytes)
+		releasePlanJSON, err := util.Convert(configFileType, "json", releasePlanBytes)
 		if err != nil {
 			return err
 		}
 
-		serviceConfigText := string(serviceConfigJSON)
+		releasePlanText := string(releasePlanJSON)
 
-		err = core.UpsertServiceConfig(serviceID, serviceConfigText)
+		err = core.PutReleasePlan(serviceID, serviceVersion, releasePlanText)
 		if err != nil {
 			return err
 		}
 
-		fmt.Printf("Service '%d' has been upserted\n", serviceID)
+		fmt.Printf("Release plan for service version '%s' has been puted\n", serviceVersion)
 
 		return nil
 	},
 }
 
 func init() {
-	upsertCmd.AddCommand(upsertServiceCmd)
+	putCmd.AddCommand(putReleasePlanCmd)
 
-	upsertReleasePlanCmd.Flags().StringVarP(&configPath, "file", "", "", "Service configuration file path")
-	upsertReleasePlanCmd.MarkFlagRequired("file")
-	upsertReleasePlanCmd.Flags().StringVarP(&configFileType, "input", "i", "json", "Service configuration file type yaml or json")
+	putReleasePlanCmd.Flags().Uint64VarP(&serviceID, "service-id", "s", 0, "ID of the service")
+	putReleasePlanCmd.MarkFlagRequired("service-id")
+
+	putReleasePlanCmd.Flags().StringVarP(&configPath, "file", "", "", "Release plan configuration file path")
+	putReleasePlanCmd.MarkFlagRequired("file")
+	putReleasePlanCmd.Flags().StringVarP(&configFileType, "input", "i", "json", "Release plan configuration file type yaml or json")
 }

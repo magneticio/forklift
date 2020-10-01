@@ -30,12 +30,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var upsertPolicyCmd = &cobra.Command{
+var putPolicyCmd = &cobra.Command{
 	Use:   "policy",
-	Short: "Upsert a policy",
-	Long: AddAppName(`Upsert a policy
+	Short: "Put a policy",
+	Long: AddAppName(`Put a policy
     Example:
-    $AppName upsert policy 10 --file ./policydefinition.json`),
+    $AppName put policy 10 --file ./policydefinition.json`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -48,7 +48,7 @@ var upsertPolicyCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("Policy id '%s' must be a natural number", policyIDString)
 		}
-		logging.Info("Upserting policy '%d'\n", policyID)
+		logging.Info("Puting policy '%d'\n", policyID)
 		core, err := core.NewCore(Config)
 		if err != nil {
 			return err
@@ -66,21 +66,21 @@ var upsertPolicyCmd = &cobra.Command{
 
 		policyText := string(policyJSON)
 
-		err = core.UpsertPolicy(policyID, policyText)
+		err = core.PutPolicy(policyID, policyText)
 		if err != nil {
 			return err
 		}
 
-		fmt.Printf("Policy '%d' has been upserted\n", policyID)
+		fmt.Printf("Policy '%d' has been puted\n", policyID)
 
 		return nil
 	},
 }
 
 func init() {
-	upsertCmd.AddCommand(upsertPolicyCmd)
+	putCmd.AddCommand(putPolicyCmd)
 
-	upsertPolicyCmd.Flags().StringVarP(&configPath, "file", "", "", "Policy configuration file path")
-	upsertPolicyCmd.MarkFlagRequired("file")
-	upsertPolicyCmd.Flags().StringVarP(&configFileType, "input", "i", "json", "Policy configuration file type yaml or json")
+	putPolicyCmd.Flags().StringVarP(&configPath, "file", "", "", "Policy configuration file path")
+	putPolicyCmd.MarkFlagRequired("file")
+	putPolicyCmd.Flags().StringVarP(&configFileType, "input", "i", "json", "Policy configuration file type yaml or json")
 }

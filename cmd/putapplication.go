@@ -21,24 +21,54 @@
 package cmd
 
 import (
-	"errors"
+	"fmt"
+	"strconv"
 
+	"github.com/magneticio/forklift/core"
+	"github.com/magneticio/forklift/logging"
 	"github.com/spf13/cobra"
 )
 
-var upsertCmd = &cobra.Command{
-	Use:   "upsert",
-	Short: "Upsert an artifact",
-	Long: AddAppName(`Upsert an artifact
+var namespace string
+
+var putApplicationCmd = &cobra.Command{
+	Use:   "application",
+	Short: "Put an application",
+	Long: AddAppName(`Put an application
     Example:
-    $AppName upsert policy 10 --file ./policydefinition.json`),
+    $AppName put application 10`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return errors.New("A resource type expected")
+		if len(args) < 1 {
+			return fmt.Errorf("Not enough arguments - application id needed")
+		}
+		applicationIDString := args[0]
+
+		applicationID, err := strconv.ParseUint(applicationIDString, 10, 64)
+		if err != nil {
+			return fmt.Errorf("Application id '%s' must be a natural number", applicationIDString)
+		}
+		logging.Info("Puting application '%d'\n", applicationID)
+		core, err := core.NewCore(Config)
+		if err != nil {
+			return err
+		}
+
+		err = core.PutApplication(applicationID, namespace)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("Application '%d' has been puted\n", applicationID)
+
+		return nil
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(upsertCmd)
+	putCmd.AddCommand(putApplicationCmd)
+
+	putApplicationCmd.Flags().StringVar(&namespace, "namespace", "", "Kubernetes namespace")
+	putApplicationCmd.MarkFlagRequired("namespace")
 }

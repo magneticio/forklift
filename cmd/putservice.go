@@ -26,54 +26,62 @@ import (
 
 	"github.com/magneticio/forklift/core"
 	"github.com/magneticio/forklift/logging"
+	"github.com/magneticio/forklift/util"
 	"github.com/spf13/cobra"
 )
 
-var natsChannelName string
-var optimiserNatsChannelName string
-var natsToken string
-
-var upsertClusterCmd = &cobra.Command{
-	Use:   "cluster",
-	Short: "Upsert a cluster",
-	Long: AddAppName(`Upsert a cluster
+var putServiceCmd = &cobra.Command{
+	Use:   "service",
+	Short: "Put a service",
+	Long: AddAppName(`Put a service
     Example:
-    $AppName upsert cluster 10 --nats-channel-name name --nats-token token`),
+    $AppName put service 10 --file ./servicedefinition.json`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
-			return fmt.Errorf("Not enough arguments - cluster id needed")
+			return fmt.Errorf("Not enough arguments - service id needed")
 		}
-		clusterIDString := args[0]
+		serviceIDString := args[0]
 
-		clusterID, err := strconv.ParseUint(clusterIDString, 10, 64)
+		serviceID, err := strconv.ParseUint(serviceIDString, 10, 64)
 		if err != nil {
-			return fmt.Errorf("Cluster id '%s' must be a natural number", clusterIDString)
+			return fmt.Errorf("Service id '%s' must be a natural number", serviceIDString)
 		}
-		logging.Info("Upserting cluster '%d'\n", clusterID)
+
+		logging.Info("Puting service '%d'\n", serviceID)
 		core, err := core.NewCore(Config)
 		if err != nil {
 			return err
 		}
 
-		err = core.UpsertReleaseAgentConfig(clusterID, natsChannelName, optimiserNatsChannelName, natsToken)
+		serviceConfigBytes, err := util.UseSourceUrl(configPath)
 		if err != nil {
 			return err
 		}
 
-		fmt.Printf("Cluster '%d' has been upserted\n", clusterID)
+		serviceConfigJSON, err := util.Convert(configFileType, "json", serviceConfigBytes)
+		if err != nil {
+			return err
+		}
+
+		serviceConfigText := string(serviceConfigJSON)
+
+		err = core.PutServiceConfig(serviceID, serviceConfigText)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("Service '%d' has been puted\n", serviceID)
 
 		return nil
 	},
 }
 
 func init() {
-	upsertCmd.AddCommand(upsertClusterCmd)
+	putCmd.AddCommand(putServiceCmd)
 
-	upsertClusterCmd.Flags().StringVar(&natsChannelName, "nats-channel-name", "", "NATS channel name")
-	upsertClusterCmd.MarkFlagRequired("nats-channel-name")
-
-	upsertClusterCmd.Flags().StringVar(&optimiserNatsChannelName, "optimiser-nats-channel-name", "", "optimiser NATS channel name")
-	upsertClusterCmd.Flags().StringVar(&natsToken, "nats-token", "", "NATS token")
+	putReleasePlanCmd.Flags().StringVarP(&configPath, "file", "", "", "Service configuration file path")
+	putReleasePlanCmd.MarkFlagRequired("file")
+	putReleasePlanCmd.Flags().StringVarP(&configFileType, "input", "i", "json", "Service configuration file type yaml or json")
 }
