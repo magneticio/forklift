@@ -26,44 +26,62 @@ import (
 
 	"github.com/magneticio/forklift/core"
 	"github.com/magneticio/forklift/logging"
+	"github.com/magneticio/forklift/util"
 	"github.com/spf13/cobra"
 )
 
-var deleteClusterCmd = &cobra.Command{
-	Use:   "cluster",
-	Short: "Delete existing cluster",
-	Long: AddAppName(`Delete existing cluster
+var upsertServiceCmd = &cobra.Command{
+	Use:   "service",
+	Short: "Upsert a service",
+	Long: AddAppName(`Upsert a service
     Example:
-    $AppName delete cluster 10`),
+    $AppName upsert service 10 --file ./servicedefinition.json`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
-			return fmt.Errorf("Not enough arguments - cluster id needed")
+			return fmt.Errorf("Not enough arguments - service id needed")
 		}
-		clusterIDString := args[0]
+		serviceIDString := args[0]
 
-		clusterID, err := strconv.ParseUint(clusterIDString, 10, 64)
+		serviceID, err := strconv.ParseUint(serviceIDString, 10, 64)
 		if err != nil {
-			return fmt.Errorf("Cluster id '%s' must be a natural number", clusterIDString)
+			return fmt.Errorf("Service id '%s' must be a natural number", serviceIDString)
 		}
-		logging.Info("Deleting cluster '%d'\n", clusterID)
+
+		logging.Info("Upserting service '%d'\n", serviceID)
 		core, err := core.NewCore(Config)
 		if err != nil {
 			return err
 		}
 
-		err = core.DeleteReleaseAgentConfig(clusterID)
+		serviceConfigBytes, err := util.UseSourceUrl(configPath)
 		if err != nil {
 			return err
 		}
 
-		fmt.Printf("Cluster '%d' has been deleted\n", clusterID)
+		serviceConfigJSON, err := util.Convert(configFileType, "json", serviceConfigBytes)
+		if err != nil {
+			return err
+		}
+
+		serviceConfigText := string(serviceConfigJSON)
+
+		err = core.UpsertServiceConfig(serviceID, serviceConfigText)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("Service '%d' has been upserted\n", serviceID)
 
 		return nil
 	},
 }
 
 func init() {
-	deleteCmd.AddCommand(deleteClusterCmd)
+	upsertCmd.AddCommand(upsertServiceCmd)
+
+	upsertReleasePlanCmd.Flags().StringVarP(&configPath, "file", "", "", "Service configuration file path")
+	upsertReleasePlanCmd.MarkFlagRequired("file")
+	upsertReleasePlanCmd.Flags().StringVarP(&configFileType, "input", "i", "json", "Service configuration file type yaml or json")
 }

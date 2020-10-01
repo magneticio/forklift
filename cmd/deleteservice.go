@@ -29,41 +29,41 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var deleteClusterCmd = &cobra.Command{
-	Use:   "cluster",
-	Short: "Delete existing cluster",
-	Long: AddAppName(`Delete existing cluster
+var deleteServiceCmd = &cobra.Command{
+	Use:   "service",
+	Short: "Delete existing service",
+	Long: AddAppName(`Delete existing service
     Example:
-    $AppName delete cluster 10`),
+    $AppName delete service 10`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
-			return fmt.Errorf("Not enough arguments - cluster id needed")
+			return fmt.Errorf("Not enough arguments - service id needed")
 		}
-		clusterIDString := args[0]
+		serviceIDString := args[0]
 
-		clusterID, err := strconv.ParseUint(clusterIDString, 10, 64)
+		serviceID, err := strconv.ParseUint(serviceIDString, 10, 64)
 		if err != nil {
-			return fmt.Errorf("Cluster id '%s' must be a natural number", clusterIDString)
+			return fmt.Errorf("Service id '%s' must be a natural number", serviceIDString)
 		}
-		logging.Info("Deleting cluster '%d'\n", clusterID)
+		logging.Info("Deleting service '%d'\n", serviceID)
 		core, err := core.NewCore(Config)
 		if err != nil {
 			return err
 		}
 
-		err = core.DeleteReleaseAgentConfig(clusterID)
+		err = core.DeleteServiceConfig(serviceID)
 		if err != nil {
 			return err
 		}
 
-		fmt.Printf("Cluster '%d' has been deleted\n", clusterID)
+		fmt.Printf("Service '%d' has been deleted\n", serviceID)
 
 		return nil
 	},
 }
 
 func init() {
-	deleteCmd.AddCommand(deleteClusterCmd)
+	deleteCmd.AddCommand(deleteServiceCmd)
 }

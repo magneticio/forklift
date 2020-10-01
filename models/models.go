@@ -30,3 +30,26 @@ type ReleaseAgentConfig struct {
 	K8SNamespaceToApplicationID map[string]uint64 `json:"applications"`
 	OptimiserNatsChannel        string            `json:"optimiser_nats_channel"`
 }
+
+// ServiceConfig - service config for Release Agent
+type ServiceConfig struct {
+	ApplicationID   *uint64                     `json:"application_id" validate:"required"`
+	ServiceID       *uint64                     `json:"service_id" validate:"required"`
+	K8SNamespace    string                      `json:"k8s_namespace" validate:"required,min=1"`
+	K8sLabels       map[string]string           `json:"k8s_labels" validate:"required,min=1"`
+	VersionSelector string                      `json:"version_selector" validate:"required,min=1"`
+	DefaultPolicyID *uint64                     `json:"default_policy_id" validate:"required_without_all=PatchPolicyID MinorPolicyID MajorPolicyID,ne=0"`
+	PatchPolicyID   *uint64                     `json:"patch_policy_id"`
+	MinorPolicyID   *uint64                     `json:"minor_policy_id"`
+	MajorPolicyID   *uint64                     `json:"major_policy_id"`
+	IngressRules    []*ServiceConfigIngressRule `json:"ingress_rules"`
+	IsHeadless      bool                        `json:"headless"`
+}
+
+// ServiceConfigIngressRule - service config ingress rule for Release Agent
+type ServiceConfigIngressRule struct {
+	Domain        string `json:"domain" validate:"required,min=4"`
+	TLSSecretName string `json:"tls_secret_name"`
+	Path          string `json:"path" validate:"required,min=1"`
+	Port          *int64 `json:"port" validate:"required"`
+}

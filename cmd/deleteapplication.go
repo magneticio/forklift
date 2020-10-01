@@ -58,7 +58,7 @@ var deleteApplicationCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Printf("Application '%d' has been deleteed\n", applicationID)
+		fmt.Printf("Application '%d' has been deleted\n", applicationID)
 
 		return nil
 	},

@@ -62,13 +62,13 @@ func (c *Core) DeletePolicy(policyID uint64) error {
 
 // UpsertReleasePlan - upserts release plan to key value store
 func (c *Core) UpsertReleasePlan(serviceID uint64, serviceVersion string, releasePlanContent string) error {
-	releasePlanKey := c.getReleasePlansPath(serviceID, serviceVersion)
+	releasePlanKey := c.getReleasePlanKey(serviceID, serviceVersion)
 	return c.kvClient.Put(releasePlanKey, releasePlanContent)
 }
 
 // DeleteReleasePlan - deletes release plan from key value store
 func (c *Core) DeleteReleasePlan(serviceID uint64, serviceVersion string) error {
-	releasePlanKey := c.getReleasePlansPath(serviceID, serviceVersion)
+	releasePlanKey := c.getReleasePlanKey(serviceID, serviceVersion)
 	exists, err := c.kvClient.Exists(releasePlanKey)
 	if err != nil {
 		return fmt.Errorf("cannot find release plan: %v", err)
@@ -151,6 +151,32 @@ func (c *Core) DeleteApplication(applicationID uint64) error {
 	return c.onReleaseAgentConfig(deleteApplication)
 }
 
+// UpsertServiceConfig - upserts service to key value store
+func (c *Core) UpsertServiceConfig(serviceID uint64, serviceConfigText string) error {
+	var serviceConfig models.ServiceConfig
+	if err := json.Unmarshal([]byte(serviceConfigText), &serviceConfig); err != nil {
+		return fmt.Errorf("cannot deserialize service config: %v", err)
+	}
+	if err := models.NewValidateDTO()(serviceConfig); err != nil {
+		return fmt.Errorf("service config validation failed: %v", err)
+	}
+	serviceConfigKey := c.getServiceConfigKey(serviceID)
+	return c.kvClient.Put(serviceConfigKey, serviceConfigText)
+}
+
+// DeleteServiceConfig - deletes service config from key value store
+func (c *Core) DeleteServiceConfig(serviceID uint64) error {
+	serviceConfigKey := c.getServiceConfigKey(serviceID)
+	exists, err := c.kvClient.Exists(serviceConfigKey)
+	if err != nil {
+		return fmt.Errorf("cannot find service config: %v", err)
+	}
+	if !exists {
+		return fmt.Errorf("service config does not exist")
+	}
+	return c.kvClient.Delete(serviceConfigKey)
+}
+
 func (c *Core) onReleaseAgentConfig(apply func(*models.ReleaseAgentConfig)) error {
 	if c.clusterID == nil {
 		return fmt.Errorf("cluster id must be provided")
@@ -169,16 +195,20 @@ func (c *Core) onReleaseAgentConfig(apply func(*models.ReleaseAgentConfig)) erro
 	return c.saveReleaseAgentConfig(releaseAgentConfigKey, *releaseAgentConfig)
 }
 
-func (c *Core) getReleasePlansPath(serviceID uint64, serviceVersion string) string {
-	return path.Join(c.projectPath, "release-plans", strconv.FormatUint(serviceID, 10), serviceVersion)
-}
-
 func (c *Core) getClusterPath(clusterID uint64) string {
 	return path.Join(c.projectPath, "clusters", strconv.FormatUint(clusterID, 10))
 }
 
+func (c *Core) getReleasePlanKey(serviceID uint64, serviceVersion string) string {
+	return path.Join(c.projectPath, "release-plans", strconv.FormatUint(serviceID, 10), serviceVersion)
+}
+
 func (c *Core) getReleaseAgentConfigKey(clusterID uint64) string {
 	return path.Join(c.getClusterPath(clusterID), "release-agent-config")
+}
+
+func (c *Core) getServiceConfigKey(serviceID uint64) string {
+	return path.Join(c.projectPath, "services", strconv.FormatUint(serviceID, 10))
 }
 
 func (c *Core) getReleaseAgentConfig(releaseAgentConfigKey string) (*models.ReleaseAgentConfig, bool, error) {
