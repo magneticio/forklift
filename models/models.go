@@ -17,8 +17,8 @@ func (val *NullableUint64) Set(v string) error {
 	if err != nil {
 		return fmt.Errorf("value must be a natural number")
 	}
-	d := NullableUint64(parsedValue)
-	val = &d
+	u := NullableUint64(parsedValue)
+	val = &u
 	return nil
 }
 
@@ -33,6 +33,26 @@ func (val *NullableUint64) String() string {
 // Type - gets the type text for NullableUint64 type
 func (val *NullableUint64) Type() string {
 	return "NullableUint64"
+}
+
+// UnmarshalYAML - implements the Unmarshaler interface of the yaml pkg
+func (val *NullableUint64) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var valueText string
+	err := unmarshal(&valueText)
+	if err != nil {
+		return err
+	}
+	if valueText == "" {
+		return nil
+	}
+	value, err := strconv.ParseUint(valueText, 10, 64)
+	if err != nil {
+		return fmt.Errorf("value must be a natural number")
+	}
+	u := NullableUint64(value)
+	val = &u
+	fmt.Printf("val3: %v\n", val)
+	return nil
 }
 
 // ForkliftConfiguration - configuration built from config file, environment variables and flags
