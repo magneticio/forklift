@@ -160,6 +160,9 @@ func (c *Core) PutServiceConfig(serviceID uint64, serviceConfigText string) erro
 	if err := models.NewValidateDTO()(serviceConfig); err != nil {
 		return fmt.Errorf("service config validation failed: %v", err)
 	}
+	if err := serviceConfig.Validate(); err != nil {
+		return fmt.Errorf("service config validation failed: %v", err)
+	}
 	serviceConfigKey := c.getServiceConfigKey(serviceID)
 	return c.kvClient.Put(serviceConfigKey, serviceConfigText)
 }

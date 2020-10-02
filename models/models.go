@@ -104,12 +104,21 @@ type ServiceConfig struct {
 	K8SNamespace    string                      `json:"k8s_namespace" validate:"required,min=1"`
 	K8sLabels       map[string]string           `json:"k8s_labels" validate:"required,min=1"`
 	VersionSelector string                      `json:"version_selector" validate:"required,min=1"`
-	DefaultPolicyID *uint64                     `json:"default_policy_id" validate:"required_without_all=PatchPolicyID MinorPolicyID MajorPolicyID,ne=0"`
+	DefaultPolicyID *uint64                     `json:"default_policy_id"`
 	PatchPolicyID   *uint64                     `json:"patch_policy_id"`
 	MinorPolicyID   *uint64                     `json:"minor_policy_id"`
 	MajorPolicyID   *uint64                     `json:"major_policy_id"`
 	IngressRules    []*ServiceConfigIngressRule `json:"ingress_rules"`
 	IsHeadless      bool                        `json:"headless"`
+}
+
+// Validate - additional validation of ServiceConfig structure
+// that cannot be achieved using go-playgroud validator
+func (sc ServiceConfig) Validate() error {
+	if (sc.MajorPolicyID == nil || sc.MinorPolicyID == nil || sc.PatchPolicyID == nil) && sc.DefaultPolicyID == nil {
+		return fmt.Errorf("DefaultPolicyID should be defined if any of other policies is not defined")
+	}
+	return nil
 }
 
 // ServiceConfigIngressRule - service config ingress rule for Release Agent
