@@ -34,7 +34,7 @@ var deleteReleasePlanCmd = &cobra.Command{
 	Short: "Delete existing release plan",
 	Long: AddAppName(`Delete existing release plan
     Example:
-    $AppName delete releaseplan name`),
+    $AppName delete releaseplan serviceVersion --service 5`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -65,5 +65,5 @@ func init() {
 	deleteCmd.AddCommand(deleteReleasePlanCmd)
 
 	deleteReleasePlanCmd.Flags().Uint64VarP(&serviceID, "service-id", "s", 0, "ID of the service")
-	deleteReleasePlanCmd.MarkFlagRequired("service-id")
+	deleteReleasePlanCmd.MarkFlagRequired("service")
 }
