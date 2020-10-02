@@ -62,7 +62,7 @@ var putClusterCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Printf("Cluster '%d' has been puted\n", clusterID)
+		fmt.Printf("Cluster '%d' has been put\n", clusterID)
 
 		return nil
 	},

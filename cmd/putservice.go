@@ -72,7 +72,7 @@ var putServiceCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Printf("Service '%d' has been puted\n", serviceID)
+		fmt.Printf("Service '%d' has been put\n", serviceID)
 
 		return nil
 	},

@@ -60,7 +60,7 @@ var putApplicationCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Printf("Application '%d' has been puted\n", applicationID)
+		fmt.Printf("Application '%d' has been put\n", applicationID)
 
 		return nil
 	},

@@ -68,7 +68,7 @@ var putReleasePlanCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Printf("Release plan for service version '%s' has been puted\n", serviceVersion)
+		fmt.Printf("Release plan for service version '%s' has been put\n", serviceVersion)
 
 		return nil
 	},

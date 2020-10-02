@@ -71,7 +71,7 @@ var putPolicyCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Printf("Policy '%d' has been puted\n", policyID)
+		fmt.Printf("Policy '%d' has been put\n", policyID)
 
 		return nil
 	},
