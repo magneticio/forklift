@@ -15,12 +15,12 @@ type KeyValueStoreClient interface {
 
 func NewKeyValueStoreClient(config models.VaultKeyValueStoreConfiguration) (KeyValueStoreClient, error) {
 	params := map[string]string{
-		"cert":   config.ClientTlsCert,
-		"key":    config.ClientTlsKey,
-		"caCert": config.ServerTlsCert,
+		"cert":   config.ClientTLSCert,
+		"key":    config.ClientTLSKey,
+		"caCert": config.ServerTLSCert,
 	}
 
-	vaultKVclient, vaultKVclientError := kvstore.NewVaultKeyValueStore(config.Url, config.Token, params)
+	vaultKVclient, vaultKVclientError := kvstore.NewVaultKeyValueStore(config.URL, config.Token, params)
 	if vaultKVclientError != nil {
 		return nil, vaultKVclientError
 	}

@@ -14,20 +14,20 @@ import (
 type Core struct {
 	kvClient    keyvaluestoreclient.KeyValueStoreClient
 	projectPath string
-	clusterID   *models.NullableUint64
+	clusterID   *uint64
 }
 
 func NewCore(conf models.ForkliftConfiguration) (*Core, error) {
 	if conf.ProjectID == nil {
 		return nil, fmt.Errorf("project id must be provided")
 	}
-	projectPath := path.Join(conf.KeyValueStoreBasePath, "projects", strconv.FormatUint(uint64(*conf.ProjectID), 10))
+	projectPath := path.Join(conf.KeyValueStoreBasePath, "projects", strconv.FormatUint(*conf.ProjectID, 10))
 	config := models.VaultKeyValueStoreConfiguration{
-		Url:               conf.KeyValueStoreUrL,
+		URL:               conf.KeyValueStoreURL,
 		Token:             conf.KeyValueStoreToken,
-		ServerTlsCert:     conf.KeyValueStoreServerTlsCert,
-		ClientTlsCert:     conf.KeyValueStoreClientTlsCert,
-		ClientTlsKey:      conf.KeyValueStoreClientTlsKey,
+		ServerTLSCert:     conf.KeyValueStoreServerTLSCert,
+		ClientTLSCert:     conf.KeyValueStoreClientTLSCert,
+		ClientTLSKey:      conf.KeyValueStoreClientTLSKey,
 		KvMode:            conf.KeyValueStoreKvMode,
 		FallbackKvVersion: conf.KeyValueStoreFallbackKvVersion,
 	}

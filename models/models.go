@@ -7,102 +7,67 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// NullableUint64 - custom uint64 type to be able to read it's value from both viper config and cobra flag
-type NullableUint64 uint64
-
-// Set - sets the value of the NullableUint64 type
-func (val *NullableUint64) Set(v string) error {
-	if v == "" {
-		return nil
-	}
-	parsedValue, err := strconv.ParseUint(v, 10, 64)
-	if err != nil {
-		return fmt.Errorf("value must be a natural number")
-	}
-	u := NullableUint64(parsedValue)
-	val = &u
-	return nil
-}
-
-// String - gets the string value of the NullableUint64 type
-func (val *NullableUint64) String() string {
-	if val == nil {
-		return ""
-	}
-	return strconv.FormatUint(uint64(*val), 10)
-}
-
-// Type - gets the type text for NullableUint64 type
-func (val *NullableUint64) Type() string {
-	return "NullableUint64"
-}
-
-// UnmarshalYAML - implements the Unmarshaler interface of the yaml pkg
-func (val *NullableUint64) UnmarshalYAML(node *yaml.Node) error {
-	v, err := getNullableUint64FromString(node)
-	if err != nil {
-		return err
-	}
-	val = v
-	return nil
-}
-
 // ForkliftConfiguration - configuration built from config file, environment variables and flags
 type ForkliftConfiguration struct {
-	ProjectID                      *NullableUint64 `yaml:"project,omitempty" json:"project,omitempty"`
-	ClusterID                      *NullableUint64 `yaml:"cluster,omitempty" json:"cluster,omitempty"`
-	KeyValueStoreUrL               string          `yaml:"key-value-store-url,omitempty" json:"key-value-store-url,omitempty"`
-	KeyValueStoreToken             string          `yaml:"key-value-store-token,omitempty" json:"key-value-store-token,omitempty"`
-	KeyValueStoreBasePath          string          `yaml:"key-value-store-base-path,omitempty" json:"key-value-store-base-path,omitempty"`
-	KeyValueStoreServerTlsCert     string          `yaml:"key-value-store-server-tls-cert,omitempty" json:"key-value-store-server-tls-cert,omitempty"`
-	KeyValueStoreClientTlsKey      string          `yaml:"key-value-store-client-tls-key,omitempty" json:"key-value-store-client-tls-key,omitempty"`
-	KeyValueStoreClientTlsCert     string          `yaml:"key-value-store-client-tls-cert,omitempty" json:"key-value-store-client-tls-cert,omitempty"`
-	KeyValueStoreKvMode            string          `yaml:"key-value-store-kv-mode,omitempty" json:"key-value-store-kv-mode,omitempty"`
-	KeyValueStoreFallbackKvVersion string          `yaml:"key-value-store-fallback-kv-version,omitempty" json:"key-value-store-fallback-kv-version,omitempty"`
+	ProjectID                      *uint64 `json:"project,omitempty"`
+	ClusterID                      *uint64 `json:"cluster,omitempty"`
+	KeyValueStoreURL               string  `json:"key-value-store-url,omitempty"`
+	KeyValueStoreToken             string  `json:"key-value-store-token,omitempty"`
+	KeyValueStoreBasePath          string  `json:"key-value-store-base-path,omitempty"`
+	KeyValueStoreServerTLSCert     string  `json:"key-value-store-server-tls-cert,omitempty"`
+	KeyValueStoreClientTLSKey      string  `json:"key-value-store-client-tls-key,omitempty"`
+	KeyValueStoreClientTLSCert     string  `json:"key-value-store-client-tls-cert,omitempty"`
+	KeyValueStoreKvMode            string  `json:"key-value-store-kv-mode,omitempty"`
+	KeyValueStoreFallbackKvVersion string  `json:"key-value-store-fallback-kv-version,omitempty"`
+}
+
+type tmpForkliftConfiguration struct {
+	ProjectID                      string `yaml:"project,omitempty"`
+	ClusterID                      string `yaml:"cluster,omitempty"`
+	KeyValueStoreURL               string `yaml:"key-value-store-url,omitempty"`
+	KeyValueStoreToken             string `yaml:"key-value-store-token,omitempty"`
+	KeyValueStoreBasePath          string `yaml:"key-value-store-base-path,omitempty"`
+	KeyValueStoreServerTLSCert     string `yaml:"key-value-store-server-tls-cert,omitempty"`
+	KeyValueStoreClientTLSKey      string `yaml:"key-value-store-client-tls-key,omitempty"`
+	KeyValueStoreClientTLSCert     string `yaml:"key-value-store-client-tls-cert,omitempty"`
+	KeyValueStoreKvMode            string `yaml:"key-value-store-kv-mode,omitempty"`
+	KeyValueStoreFallbackKvVersion string `yaml:"key-value-store-fallback-kv-version,omitempty"`
 }
 
 // UnmarshalYAML - implements the Unmarshaler interface of the yaml pkg
 func (conf *ForkliftConfiguration) UnmarshalYAML(node *yaml.Node) error {
-	type forkliftConfYAML ForkliftConfiguration
-	if err := node.Decode((*forkliftConfYAML)(conf)); err != nil {
-		return err
-	}
-
-	// workaround for possible gopkg.in/yaml.v3 bug
-	// node.Decode(...) above always sets project and cluster value to 0
-	type tmpForkliftConfYAML map[string]yaml.Node
-	var tmp tmpForkliftConfYAML
+	var tmp tmpForkliftConfiguration
 	if err := node.Decode(&tmp); err != nil {
 		return err
 	}
-	for tag, node := range tmp {
-		switch tag {
-		case "project":
-			project, err := getNullableUint64FromString(&node)
-			if err != nil {
-				return err
-			}
-			conf.ProjectID = project
-		case "cluster":
-			cluster, err := getNullableUint64FromString(&node)
-			if err != nil {
-				return err
-			}
-			conf.ClusterID = cluster
-		}
+
+	projectID, err := getUint64FromString(tmp.ProjectID)
+	if err != nil {
+		return fmt.Errorf("invalid project id: %v", err)
 	}
+
+	clusterID, err := getUint64FromString(tmp.ClusterID)
+	if err != nil {
+		return fmt.Errorf("invalid cluster id: %v", err)
+	}
+
+	*conf = ForkliftConfiguration{
+		ProjectID:                      projectID,
+		ClusterID:                      clusterID,
+		KeyValueStoreBasePath:          tmp.KeyValueStoreBasePath,
+		KeyValueStoreClientTLSCert:     tmp.KeyValueStoreClientTLSCert,
+		KeyValueStoreClientTLSKey:      tmp.KeyValueStoreClientTLSKey,
+		KeyValueStoreFallbackKvVersion: tmp.KeyValueStoreFallbackKvVersion,
+		KeyValueStoreKvMode:            tmp.KeyValueStoreKvMode,
+		KeyValueStoreServerTLSCert:     tmp.KeyValueStoreServerTLSCert,
+		KeyValueStoreToken:             tmp.KeyValueStoreToken,
+		KeyValueStoreURL:               tmp.KeyValueStoreURL,
+	}
+
 	return nil
 }
 
-func getNullableUint64FromString(node *yaml.Node) (*NullableUint64, error) {
-	if node == nil {
-		return nil, fmt.Errorf("cannot parse from empty node")
-	}
-	var valueText string
-	if err := node.Decode(&valueText); err != nil {
-		return nil, err
-	}
-
+func getUint64FromString(valueText string) (*uint64, error) {
 	if valueText == "" {
 		return nil, nil
 	}
@@ -110,19 +75,18 @@ func getNullableUint64FromString(node *yaml.Node) (*NullableUint64, error) {
 	if err != nil {
 		return nil, fmt.Errorf("value must be a natural number")
 	}
-	v := NullableUint64(value)
-	return &v, nil
+	return &value, nil
 }
 
 // VaultKeyValueStoreConfiguration - Vault configuration
 type VaultKeyValueStoreConfiguration struct {
-	Url               string `yaml:"url,omitempty" json:"url,omitempty"`
+	URL               string `yaml:"url,omitempty" json:"url,omitempty"`
 	Token             string `yaml:"token,omitempty" json:"token,omitempty"`
 	KvMode            string `yaml:"kv-mode,omitempty" json:"kv-mode,omitempty"`
 	FallbackKvVersion string `yaml:"fallback-kv-version,omitempty" json:"fallback-kv-version,omitempty"`
-	ServerTlsCert     string `yaml:"server-tls-cert,omitempty" json:"server-tls-cert,omitempty"`
-	ClientTlsKey      string `yaml:"client-tls-key,omitempty" json:"client-tls-key,omitempty"`
-	ClientTlsCert     string `yaml:"client-tls-cert,omitempty" json:"client-tls-cert,omitempty"`
+	ServerTLSCert     string `yaml:"server-tls-cert,omitempty" json:"server-tls-cert,omitempty"`
+	ClientTLSKey      string `yaml:"client-tls-key,omitempty" json:"client-tls-key,omitempty"`
+	ClientTLSCert     string `yaml:"client-tls-cert,omitempty" json:"client-tls-cert,omitempty"`
 }
 
 // ReleaseAgentConfig - config for Release Agent

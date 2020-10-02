@@ -98,8 +98,8 @@ func init() {
 	// when this action is called directly.
 	rootCmd.PersistentFlags().BoolVarP(&logging.Verbose, "verbose", "v", false, "Verbose")
 
-	rootCmd.PersistentFlags().VarP(Config.ProjectID, "project", "p", "project id")
-	rootCmd.PersistentFlags().VarP(Config.ClusterID, "cluster", "c", "cluster id")
+	rootCmd.PersistentFlags().Int64P("project", "p", -1, "project id")
+	rootCmd.PersistentFlags().Int64P("cluster", "c", -1, "cluster id")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -137,8 +137,18 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	viper.ReadInConfig() // TODO: handle config file autocreation
+	viper.BindPFlag("project", rootCmd.PersistentFlags().Lookup("project"))
+	viper.BindPFlag("cluster", rootCmd.PersistentFlags().Lookup("cluster"))
+
 	// unmarshal config
 	c := viper.AllSettings()
+	if viper.GetString("project") == "-1" {
+		delete(c, "project")
+	}
+	if viper.GetString("cluster") == "-1" {
+		delete(c, "cluster")
+	}
+
 	bs, err := yaml.Marshal(c)
 	if err != nil {
 		panic(err)
