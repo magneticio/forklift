@@ -35,7 +35,7 @@ var putReleasePlanCmd = &cobra.Command{
 	Short: "Put a release plan",
 	Long: AddAppName(`Put a release plan
     Example:
-    $AppName put releaseplan 1.0.1 --service-id 5 --file ./releaseplandefinition.json`),
+    $AppName put releaseplan 1.0.1 --service 5 --file ./releaseplandefinition.json`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -77,8 +77,8 @@ var putReleasePlanCmd = &cobra.Command{
 func init() {
 	putCmd.AddCommand(putReleasePlanCmd)
 
-	putReleasePlanCmd.Flags().Uint64VarP(&serviceID, "service-id", "s", 0, "ID of the service")
-	putReleasePlanCmd.MarkFlagRequired("service-id")
+	putReleasePlanCmd.Flags().Uint64VarP(&serviceID, "service", "s", 0, "ID of the service")
+	putReleasePlanCmd.MarkFlagRequired("service")
 
 	putReleasePlanCmd.Flags().StringVarP(&configPath, "file", "", "", "Release plan configuration file path")
 	putReleasePlanCmd.MarkFlagRequired("file")
