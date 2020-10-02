@@ -8,8 +8,10 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+// ValidateDTO - validation function
 type ValidateDTO func(obj interface{}) error
 
+// NewValidateDTO - go-playground/validator extended with custom validation messages
 func NewValidateDTO() ValidateDTO {
 	validate := validator.New()
 	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
