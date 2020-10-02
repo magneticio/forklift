@@ -33,7 +33,7 @@ import (
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	yaml "gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v3"
 )
 
 // AppName - application name
@@ -144,14 +144,10 @@ func initConfig() {
 		panic(err)
 	}
 
-	fmt.Printf("val: %v\n", string(bs))
-
 	unmarshallError := yaml.Unmarshal(bs, &Config)
 	if unmarshallError != nil {
 		panic(unmarshallError)
 	}
-
-	fmt.Printf("val2: %v\n", &Config)
 
 	// TODO: Setup Defaults for Config
 	// For Checking during development:

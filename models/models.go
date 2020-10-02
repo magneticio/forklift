@@ -3,6 +3,8 @@ package models
 import (
 	"fmt"
 	"strconv"
+
+	"gopkg.in/yaml.v3"
 )
 
 // NullableUint64 - custom uint64 type to be able to read it's value from both viper config and cobra flag
@@ -36,22 +38,12 @@ func (val *NullableUint64) Type() string {
 }
 
 // UnmarshalYAML - implements the Unmarshaler interface of the yaml pkg
-func (val *NullableUint64) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var valueText string
-	err := unmarshal(&valueText)
+func (val *NullableUint64) UnmarshalYAML(node *yaml.Node) error {
+	v, err := getNullableUint64FromString(node)
 	if err != nil {
 		return err
 	}
-	if valueText == "" {
-		return nil
-	}
-	value, err := strconv.ParseUint(valueText, 10, 64)
-	if err != nil {
-		return fmt.Errorf("value must be a natural number")
-	}
-	u := NullableUint64(value)
-	val = &u
-	fmt.Printf("val3: %v\n", val)
+	val = v
 	return nil
 }
 
@@ -67,6 +59,59 @@ type ForkliftConfiguration struct {
 	KeyValueStoreClientTlsCert     string          `yaml:"key-value-store-client-tls-cert,omitempty" json:"key-value-store-client-tls-cert,omitempty"`
 	KeyValueStoreKvMode            string          `yaml:"key-value-store-kv-mode,omitempty" json:"key-value-store-kv-mode,omitempty"`
 	KeyValueStoreFallbackKvVersion string          `yaml:"key-value-store-fallback-kv-version,omitempty" json:"key-value-store-fallback-kv-version,omitempty"`
+}
+
+// UnmarshalYAML - implements the Unmarshaler interface of the yaml pkg
+func (conf *ForkliftConfiguration) UnmarshalYAML(node *yaml.Node) error {
+	type forkliftConfYAML ForkliftConfiguration
+	if err := node.Decode((*forkliftConfYAML)(conf)); err != nil {
+		return err
+	}
+
+	// workaround for possible gopkg.in/yaml.v3 bug
+	// node.Decode(...) above always sets project and cluster value to 0
+	type tmpForkliftConfYAML map[string]yaml.Node
+	var tmp tmpForkliftConfYAML
+	if err := node.Decode(&tmp); err != nil {
+		return err
+	}
+	for tag, node := range tmp {
+		switch tag {
+		case "project":
+			project, err := getNullableUint64FromString(&node)
+			if err != nil {
+				return err
+			}
+			conf.ProjectID = project
+		case "cluster":
+			cluster, err := getNullableUint64FromString(&node)
+			if err != nil {
+				return err
+			}
+			conf.ClusterID = cluster
+		}
+	}
+	return nil
+}
+
+func getNullableUint64FromString(node *yaml.Node) (*NullableUint64, error) {
+	if node == nil {
+		return nil, fmt.Errorf("cannot parse from empty node")
+	}
+	var valueText string
+	if err := node.Decode(&valueText); err != nil {
+		return nil, err
+	}
+
+	if valueText == "" {
+		return nil, nil
+	}
+	value, err := strconv.ParseUint(valueText, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("value must be a natural number")
+	}
+	v := NullableUint64(value)
+	return &v, nil
 }
 
 // VaultKeyValueStoreConfiguration - Vault configuration

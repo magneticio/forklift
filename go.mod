@@ -18,5 +18,5 @@ require (
 	github.com/stretchr/testify v1.5.1
 	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
-	gopkg.in/yaml.v2 v2.2.2
+	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
 )
