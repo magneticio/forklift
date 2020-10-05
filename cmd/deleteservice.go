@@ -34,7 +34,7 @@ var deleteServiceCmd = &cobra.Command{
 	Short: "Delete existing service",
 	Long: AddAppName(`Delete existing service
     Example:
-    $AppName delete service 10`),
+    $AppName delete service 10 --cluster 7 --application 5`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -53,7 +53,7 @@ var deleteServiceCmd = &cobra.Command{
 			return err
 		}
 
-		err = core.DeleteServiceConfig(serviceID)
+		err = core.DeleteServiceConfig(applicationID, serviceID)
 		if err != nil {
 			return err
 		}
@@ -66,4 +66,7 @@ var deleteServiceCmd = &cobra.Command{
 
 func init() {
 	deleteCmd.AddCommand(deleteServiceCmd)
+
+	deleteServiceCmd.Flags().Uint64VarP(&applicationID, "application", "s", 0, "ID of the application")
+	deleteServiceCmd.MarkFlagRequired("application")
 }

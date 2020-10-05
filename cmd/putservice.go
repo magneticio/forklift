@@ -35,7 +35,7 @@ var putServiceCmd = &cobra.Command{
 	Short: "Put a service",
 	Long: AddAppName(`Put a service
     Example:
-    $AppName put service 10 --file ./servicedefinition.json`),
+    $AppName put service 10 --cluster 7 --application 5 --file ./servicedefinition.json`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -67,7 +67,7 @@ var putServiceCmd = &cobra.Command{
 
 		serviceConfigText := string(serviceConfigJSON)
 
-		err = core.PutServiceConfig(serviceID, serviceConfigText)
+		err = core.PutServiceConfig(serviceID, applicationID, serviceConfigText)
 		if err != nil {
 			return err
 		}
@@ -80,6 +80,9 @@ var putServiceCmd = &cobra.Command{
 
 func init() {
 	putCmd.AddCommand(putServiceCmd)
+
+	putServiceCmd.Flags().Uint64VarP(&applicationID, "application", "s", 0, "ID of the application")
+	putServiceCmd.MarkFlagRequired("application")
 
 	putServiceCmd.Flags().StringVarP(&configPath, "file", "", "", "Service configuration file path")
 	putServiceCmd.MarkFlagRequired("file")

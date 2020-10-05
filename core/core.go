@@ -152,7 +152,11 @@ func (c *Core) DeleteApplication(applicationID uint64) error {
 }
 
 // PutServiceConfig - puts service to key value store
-func (c *Core) PutServiceConfig(serviceID uint64, serviceConfigText string) error {
+func (c *Core) PutServiceConfig(serviceID, applicationID uint64, serviceConfigText string) error {
+	if c.clusterID == nil {
+		return fmt.Errorf("cluster id must be provided")
+	}
+
 	var serviceConfig models.ServiceConfig
 	if err := json.Unmarshal([]byte(serviceConfigText), &serviceConfig); err != nil {
 		return fmt.Errorf("cannot deserialize service config: %v", err)
@@ -163,13 +167,19 @@ func (c *Core) PutServiceConfig(serviceID uint64, serviceConfigText string) erro
 	if err := serviceConfig.Validate(); err != nil {
 		return fmt.Errorf("service config validation failed: %v", err)
 	}
-	serviceConfigKey := c.getServiceConfigKey(serviceID)
+
+	serviceConfigKey := c.getServiceConfigKey(*c.clusterID, serviceID, applicationID)
+
 	return c.kvClient.Put(serviceConfigKey, serviceConfigText)
 }
 
 // DeleteServiceConfig - deletes service config from key value store
-func (c *Core) DeleteServiceConfig(serviceID uint64) error {
-	serviceConfigKey := c.getServiceConfigKey(serviceID)
+func (c *Core) DeleteServiceConfig(serviceID, applicationID uint64) error {
+	if c.clusterID == nil {
+		return fmt.Errorf("cluster id must be provided")
+	}
+
+	serviceConfigKey := c.getServiceConfigKey(*c.clusterID, serviceID, applicationID)
 	exists, err := c.kvClient.Exists(serviceConfigKey)
 	if err != nil {
 		return fmt.Errorf("cannot find service config: %v", err)
@@ -177,6 +187,7 @@ func (c *Core) DeleteServiceConfig(serviceID uint64) error {
 	if !exists {
 		return fmt.Errorf("service config does not exist")
 	}
+
 	return c.kvClient.Delete(serviceConfigKey)
 }
 
@@ -210,8 +221,14 @@ func (c *Core) getReleaseAgentConfigKey(clusterID uint64) string {
 	return path.Join(c.getClusterPath(clusterID), "release-agent-config")
 }
 
-func (c *Core) getServiceConfigKey(serviceID uint64) string {
-	return path.Join(c.projectPath, "services", strconv.FormatUint(serviceID, 10))
+func (c *Core) getServiceConfigKey(clusterID, serviceID, applicationID uint64) string {
+	return path.Join(
+		c.getClusterPath(clusterID),
+		"applications",
+		strconv.FormatUint(applicationID, 10),
+		"service-configs",
+		strconv.FormatUint(serviceID, 10),
+	)
 }
 
 func (c *Core) getReleaseAgentConfig(releaseAgentConfigKey string) (*models.ReleaseAgentConfig, bool, error) {
