@@ -38,7 +38,7 @@ var putClusterCmd = &cobra.Command{
 	Short: "Put a cluster",
 	Long: AddAppName(`Put a cluster
     Example:
-    $AppName put cluster 10 --nats-channel-name name --nats-token token`),
+    $AppName put cluster 10 --nats-channel-name name --optimiser-nats-channel-name optimiser-name --nats-token token`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -75,5 +75,7 @@ func init() {
 	putClusterCmd.MarkFlagRequired("nats-channel-name")
 
 	putClusterCmd.Flags().StringVar(&optimiserNatsChannelName, "optimiser-nats-channel-name", "", "optimiser NATS channel name")
+	putClusterCmd.MarkFlagRequired("optimiser-nats-channel-name")
+
 	putClusterCmd.Flags().StringVar(&natsToken, "nats-token", "", "NATS token")
 }
