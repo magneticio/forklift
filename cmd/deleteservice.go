@@ -53,7 +53,7 @@ var deleteServiceCmd = &cobra.Command{
 			return err
 		}
 
-		err = core.DeleteServiceConfig(applicationID, serviceID)
+		err = core.DeleteServiceConfig(serviceID, applicationID)
 		if err != nil {
 			return err
 		}
