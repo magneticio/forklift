@@ -168,7 +168,7 @@ func (c *Core) PutServiceConfig(serviceID, applicationID uint64, serviceConfigTe
 		return fmt.Errorf("service config validation failed: %v", err)
 	}
 
-	serviceConfigKey := c.getServiceConfigKey(*c.clusterID, serviceID, applicationID)
+	serviceConfigKey := c.getServiceConfigKey(*c.clusterID, applicationID, serviceID)
 
 	return c.kvClient.Put(serviceConfigKey, serviceConfigText)
 }
@@ -179,7 +179,7 @@ func (c *Core) DeleteServiceConfig(serviceID, applicationID uint64) error {
 		return fmt.Errorf("cluster id must be provided")
 	}
 
-	serviceConfigKey := c.getServiceConfigKey(*c.clusterID, serviceID, applicationID)
+	serviceConfigKey := c.getServiceConfigKey(*c.clusterID, applicationID, serviceID)
 	exists, err := c.kvClient.Exists(serviceConfigKey)
 	if err != nil {
 		return fmt.Errorf("cannot find service config: %v", err)
@@ -221,7 +221,7 @@ func (c *Core) getReleaseAgentConfigKey(clusterID uint64) string {
 	return path.Join(c.getClusterPath(clusterID), "release-agent-config")
 }
 
-func (c *Core) getServiceConfigKey(clusterID, serviceID, applicationID uint64) string {
+func (c *Core) getServiceConfigKey(clusterID, applicationID, serviceID uint64) string {
 	return path.Join(
 		c.getClusterPath(clusterID),
 		"applications",
