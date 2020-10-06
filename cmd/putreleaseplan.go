@@ -40,7 +40,7 @@ var putReleasePlanCmd = &cobra.Command{
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
-			return errors.New("Not Enough Arguments, Release Plan name needed")
+			return errors.New("Not enough arguments, service version needed")
 		}
 		serviceVersion := args[0]
 
