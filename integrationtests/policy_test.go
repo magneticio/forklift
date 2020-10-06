@@ -31,7 +31,7 @@ func TestIntegrationPolicyCommands(t *testing.T) {
 		})
 
 		Convey("policy should be saved to Vault", func() {
-			vaultPolicy, _, err := readValueFromVault("/v1/secret/data/vamp/projects/1/policies/456")
+			vaultPolicy, _, err := readValueFromVault("/v1/secret/vamp/projects/1/policies/456")
 			snapshot, _ := readSnapshot("./snapshots/policy.txt")
 			So(err, ShouldBeNil)
 			So(vaultPolicy, ShouldEqual, snapshot)
@@ -53,7 +53,7 @@ func TestIntegrationPolicyCommands(t *testing.T) {
 			})
 
 			Convey("policy should be removed from Vault", func() {
-				_, exists, _ := readValueFromVault("/v1/secret/data/vamp/projects/1/policies/456")
+				_, exists, _ := readValueFromVault("/v1/secret/vamp/projects/1/policies/456")
 				So(exists, ShouldEqual, false)
 			})
 		})

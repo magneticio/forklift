@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 export GOPRIVATE=github.com/magneticio
 
-if [ "$1" != "indocker" ]; then
+if [ "$1" == "local" ]; then
   docker-compose up -d
   go test -v -tags=integration -run=Integration ./...
   docker-compose down
+elif [ "$1" == "circleci" ]; then
+   go test -v -tags=integration -run=Integration ./...
 else
-  docker-compose up -d
   GOIMAGE="dockercore/golang-cross:1.12.3"
   docker run --rm -it -v $(pwd):/src -w /src $GOIMAGE sh -c '
   for GOOS in darwin linux windows; do
@@ -21,5 +22,4 @@ else
     done
   done
   '
-  docker-compose down
 fi

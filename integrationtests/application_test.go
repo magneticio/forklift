@@ -47,7 +47,7 @@ func TestIntegrationApplicationCommands(t *testing.T) {
 			})
 
 			Convey("application should be saved to Vault", func() {
-				clusterConfig, _, err := readValueFromVault("/v1/secret/data/vamp/projects/1/clusters/4321/release-agent-config")
+				clusterConfig, _, err := readValueFromVault("/v1/secret/vamp/projects/1/clusters/4321/release-agent-config")
 				snapshot, _ := readSnapshot("./snapshots/applicationconfig.txt")
 				So(err, ShouldBeNil)
 				So(clusterConfig, ShouldEqual, snapshot)
@@ -70,7 +70,7 @@ func TestIntegrationApplicationCommands(t *testing.T) {
 				})
 
 				Convey("application should be removed from Vault", func() {
-					clusterConfig, _, err := readValueFromVault("/v1/secret/data/vamp/projects/1/clusters/4321/release-agent-config")
+					clusterConfig, _, err := readValueFromVault("/v1/secret/vamp/projects/1/clusters/4321/release-agent-config")
 					snapshot, _ := readSnapshot("./snapshots/clusterconfig.txt")
 					So(err, ShouldBeNil)
 					So(clusterConfig, ShouldEqual, snapshot)

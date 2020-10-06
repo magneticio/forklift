@@ -35,7 +35,7 @@ func TestIntegrationServiceCommands(t *testing.T) {
 		})
 
 		Convey("service config should be saved to Vault", func() {
-			vaultService, _, err := readValueFromVault("/v1/secret/data/vamp/projects/1/clusters/889/applications/112/services/4555")
+			vaultService, _, err := readValueFromVault("/v1/secret/vamp/projects/1/clusters/889/applications/112/services/4555")
 			snapshot, _ := readSnapshot("./snapshots/service.txt")
 			So(err, ShouldBeNil)
 			So(vaultService, ShouldEqual, snapshot)
@@ -59,7 +59,7 @@ func TestIntegrationServiceCommands(t *testing.T) {
 			})
 
 			Convey("service config should be removed from Vault", func() {
-				_, exists, _ := readValueFromVault("/v1/secret/data/vamp/projects/1/clusters/889/applications/112/services/4555")
+				_, exists, _ := readValueFromVault("/v1/secret/vamp/projects/1/clusters/889/applications/112/services/4555")
 				So(exists, ShouldEqual, false)
 			})
 		})

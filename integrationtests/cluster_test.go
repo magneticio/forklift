@@ -33,7 +33,7 @@ func TestIntegrationClusterCommands(t *testing.T) {
 		})
 
 		Convey("cluster should be saved to Vault", func() {
-			clusterConfig, _, err := readValueFromVault("/v1/secret/data/vamp/projects/1/clusters/1/release-agent-config")
+			clusterConfig, _, err := readValueFromVault("/v1/secret/vamp/projects/1/clusters/1/release-agent-config")
 			snapshot, _ := readSnapshot("./snapshots/clusterconfig.txt")
 			So(err, ShouldBeNil)
 			So(clusterConfig, ShouldEqual, snapshot)
@@ -51,7 +51,7 @@ func TestIntegrationClusterCommands(t *testing.T) {
 			})
 
 			Convey("cluster should be removed from Vault", func() {
-				_, exists, _ := readValueFromVault("/v1/secret/data/vamp/projects/1/clusters/1/release-agent-config")
+				_, exists, _ := readValueFromVault("/v1/secret/vamp/projects/1/clusters/1/release-agent-config")
 				So(exists, ShouldEqual, false)
 			})
 		})

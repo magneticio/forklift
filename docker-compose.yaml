@@ -2,9 +2,11 @@ version: "3"
 
 services:
   vault:
-    image: vault:1.1.2
+    image: circleci/vault-cci
     ports:
-      - 8200:8200
+      - "8200:8200"
+      - "8201:8201"
+    volumes:
+      - ./vault/file:/vault/file
     cap_add:
       - IPC_LOCK
-    entrypoint: vault server -dev -dev-root-token-id="vamp" -dev-listen-address="0.0.0.0:8200"

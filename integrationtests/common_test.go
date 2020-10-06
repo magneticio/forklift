@@ -1,3 +1,5 @@
+// +build integration
+
 package integrationtests
 
 import (
@@ -6,10 +8,12 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"reflect"
 	"strconv"
 	"strings"
+	"unicode"
 	"unsafe"
 
 	"github.com/hashicorp/vault/api"
@@ -20,15 +24,41 @@ import (
 
 const (
 	vaultAddress = "http://localhost:8200"
-	vaultToken   = "vamp"
 	projectID    = uint64(1)
 )
+
+var vaultToken = getVaultToken()
 
 // setEnvVariables - set environment variables needed by Forklift tests
 func setEnvVariables() {
 	os.Setenv("VAMP_FORKLIFT_PROJECT", strconv.FormatUint(projectID, 10))
 	os.Setenv("VAMP_FORKLIFT_VAULT_ADDR", vaultAddress)
 	os.Setenv("VAMP_FORKLIFT_VAULT_TOKEN", vaultToken)
+}
+
+// getVaultToken - gets Vault token for integration tests
+func getVaultToken() string {
+	resp, err := http.Get("http://localhost:8201/client-token")
+	if err != nil {
+		panic(err)
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	tokenWithUnprintableChars := string(body)
+
+	token := strings.Map(func(r rune) rune {
+		if unicode.IsPrint(r) {
+			return r
+		}
+		return -1
+	}, tokenWithUnprintableChars)
+
+	return token
 }
 
 // deleteEmpty - deletes empty strings from an array of strings
@@ -87,17 +117,7 @@ func readValueFromVault(path string) (string, bool, error) {
 		return "", true, fmt.Errorf("data in Vault response is of invalid type")
 	}
 
-	dataData, ok := dataMap["data"]
-	if !ok {
-		return "", true, fmt.Errorf("data not found in Vault response")
-	}
-
-	dataDataMap, ok := dataData.(map[string]interface{})
-	if !ok {
-		return "", true, fmt.Errorf("data in Vault response is of invalid type")
-	}
-
-	value, ok := dataDataMap["value"]
+	value, ok := dataMap["value"]
 	if !ok {
 		return "", true, fmt.Errorf("value not found in Vault response")
 	}

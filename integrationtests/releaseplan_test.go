@@ -32,7 +32,7 @@ func TestIntegrationReleasePlanCommands(t *testing.T) {
 		})
 
 		Convey("release plan should be saved to Vault", func() {
-			vaultPolicy, _, err := readValueFromVault("/v1/secret/data/vamp/projects/1/release-plans/56789/1.0.1")
+			vaultPolicy, _, err := readValueFromVault("/v1/secret/vamp/projects/1/release-plans/56789/1.0.1")
 			snapshot, _ := readSnapshot("./snapshots/releaseplan.txt")
 			So(err, ShouldBeNil)
 			So(vaultPolicy, ShouldEqual, snapshot)
@@ -55,7 +55,7 @@ func TestIntegrationReleasePlanCommands(t *testing.T) {
 			})
 
 			Convey("release plan should be removed from Vault", func() {
-				_, exists, _ := readValueFromVault("/v1/secret/data/vamp/projects/1/release-plans/56789/1.0.1")
+				_, exists, _ := readValueFromVault("/v1/secret/vamp/projects/1/release-plans/56789/1.0.1")
 				So(exists, ShouldEqual, false)
 			})
 		})
