@@ -8,6 +8,8 @@ jobs:
       - run: mkdir -p ./artifacts
       - run: git config --global url.git@github.com:.insteadOf https://github.com/
       - run: ./test.sh
+      - setup_remote_docker:
+          docker_layer_caching: true
       - run: ./integrationtest.sh
       - run: ./build.sh local
       - run: cp ./bin/* ./artifacts
