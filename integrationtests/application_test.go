@@ -9,16 +9,14 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-const (
-	natsChannelName      = "nats-channel"
-	optimiserChannelName = "optimiser-channel"
-	natsToken            = "nats-token"
-	applicationID        = uint64(12345)
-	clusterID            = uint64(4321)
-	namespace            = "test-namespace"
-)
-
 func TestIntegrationApplicationCommands(t *testing.T) {
+	var applicationID = uint64(12345)
+	var clusterID = uint64(4321)
+	var namespace = "test-namespace"
+	var natsChannelName = "nats-channel"
+	var optimiserChannelName = "optimiser-channel"
+	var natsToken = "nats-token"
+
 	Convey("When executing put application command with all necessary flags", t, func() {
 		command := fmt.Sprintf(
 			"put application %d --namespace %s --cluster %d",

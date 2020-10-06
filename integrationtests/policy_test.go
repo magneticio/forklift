@@ -9,13 +9,11 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-const (
-	validPolicyFilePath   = "./resources/validpolicy.json"
-	invalidPolicyFilePath = "./resources/invalidpolicy.json"
-	policyID              = uint64(456)
-)
-
 func TestIntegrationPolicyCommands(t *testing.T) {
+	var validPolicyFilePath = "./resources/validpolicy.json"
+	var invalidPolicyFilePath = "./resources/invalidpolicy.json"
+	var policyID = uint64(456)
+
 	Convey("When executing put policy command with valid policy", t, func() {
 		command := fmt.Sprintf(
 			"put policy %d --file %s",

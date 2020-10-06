@@ -9,15 +9,13 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-const (
-	validServicePath   = "./resources/validservice.json"
-	invalidServicePath = "./resources/invalidservice.json"
-	serviceID          = uint64(4555)
-	clusterID          = uint64(889)
-	applicationID      = uint64(112)
-)
-
 func TestIntegrationServiceCommands(t *testing.T) {
+	var clusterID = uint64(889)
+	var applicationID = uint64(112)
+	var serviceID = uint64(4555)
+	var validServicePath = "./resources/validservice.json"
+	var invalidServicePath = "./resources/invalidservice.json"
+
 	Convey("When executing put service command with valid service config", t, func() {
 		command := fmt.Sprintf(
 			"put service %d --cluster %d --application %d --file %s",

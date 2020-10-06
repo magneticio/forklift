@@ -9,13 +9,11 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-const (
-	releasePlanPath = "./resources/releaseplan.json"
-	serviceID       = uint64(56789)
-	serviceVersion  = "1.0.5"
-)
-
 func TestIntegrationReleasePlanCommands(t *testing.T) {
+	var releasePlanPath = "./resources/releaseplan.json"
+	var serviceID = uint64(56789)
+	var serviceVersion = "1.0.5"
+
 	Convey("When executing put release plan command with all necessary flags", t, func() {
 		command := fmt.Sprintf(
 			"put releaseplan %s --service %d --file %s",
