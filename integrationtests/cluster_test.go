@@ -15,7 +15,7 @@ const (
 	natsToken            = "nats-token"
 )
 
-func TestIntegrationPutClusterCommand(t *testing.T) {
+func TestIntegrationClusterCommands(t *testing.T) {
 	Convey("When executing put cluster command with all necessary flags", t, func() {
 		command := fmt.Sprintf(
 			"put cluster 1 --nats-channel-name %s --optimiser-nats-channel-name %s --nats-token %s",
