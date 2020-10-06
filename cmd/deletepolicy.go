@@ -34,7 +34,7 @@ var deletePolicyCmd = &cobra.Command{
 	Short: "Delete existing policy",
 	Long: AddAppName(`Delete existing policy
     Example:
-    $AppName delete policy id`),
+    $AppName delete policy 5`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {

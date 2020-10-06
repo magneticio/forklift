@@ -32,7 +32,7 @@ var deleteCmd = &cobra.Command{
 	Short: "Delete existing artifact",
 	Long: AddAppName(`Delete existing artifact
     Example:
-    $AppName delete policy name`),
+    $AppName delete policy 5`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
