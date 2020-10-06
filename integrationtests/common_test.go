@@ -125,6 +125,9 @@ func runCommand(commandText string) ([]string, error) {
 
 	command := cmd.RootCmd()
 	defer resetFlags(command)
+	defer func() {
+		os.Stdout = oldStdout
+	}()
 
 	args := strings.Split(commandText, " ")
 	command.SetArgs(args)
@@ -137,7 +140,6 @@ func runCommand(commandText string) ([]string, error) {
 
 	w.Close()
 	stdoutBytes, _ := ioutil.ReadAll(r)
-	os.Stdout = oldStdout
 	stdoutLines := strings.Split(string(stdoutBytes), "\n")
 
 	return deleteEmpty(stdoutLines), nil
