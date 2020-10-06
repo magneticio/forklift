@@ -1,5 +1,7 @@
 # Vamp Forklift command line client
 
+Vamp Forklift is a command line client written in Go and allows to easily set up Clusters, Applications, Services and Policies in Vamp.
+
 ## Table of Contents
 
 ================
@@ -152,7 +154,7 @@ forklift help
 Forklift allows for the creation and update of clusters by running:
 
 ```shell
-forklift put cluster 10 --nats-channel-name name --nats-token token
+forklift put cluster 10 --nats-channel-name name --optimiser-nats-channel-name optimiser-name --nats-token token
 ```
 
 delete them with
@@ -166,13 +168,13 @@ forklift delete cluster 10
 Forklift allows for the creation and update of applications by running:
 
 ```shell
-forklift put application 10 --namespace kubernetesNamespace
+forklift put application 10 --namespace kubernetesNamespace --cluster 8
 ```
 
 delete them with
 
 ```shell
-forklift delete application 10
+forklift delete application 10 --cluster 8
 ```
 
 ### Services
@@ -180,7 +182,7 @@ forklift delete application 10
 Forklift allows for the creation and update of services by running:
 
 ```shell
-forklift put service 10 --file ./serviceconfig.json`
+forklift put service 10 --cluster 7 --application 5 --file ./serviceconfig.json`
 ```
 
 Example of service service config:
@@ -208,7 +210,7 @@ Example of service service config:
 delete them with
 
 ```shell
-forklift delete service 10
+forklift delete service 10 --cluster 7 --application 5
 ```
 
 ### Policies
@@ -311,11 +313,11 @@ forklift delete policy 10
 Release plans can be created with the following command:
 
 ```shell
-forklift put releaseplan serviceVersion --service 5 --file ./releaseplandefinition.json
+forklift put releaseplan 1.0.1 --service 5 --file ./releaseplandefinition.json
 ```
 
 Release plan can also be deleted with
 
 ```shell
-forklift delete releaseplan serviceVersion --service 5
+forklift delete releaseplan 1.0.1 --service 5
 ```
