@@ -8,6 +8,7 @@ jobs:
       - run: mkdir -p ./artifacts
       - run: git config --global url.git@github.com:.insteadOf https://github.com/
       - run: ./test.sh
+      - run: ./integrationtest.sh
       - run: ./build.sh local
       - run: cp ./bin/* ./artifacts
       - run: cp ./bin/forklift-darwin-amd64 ./artifacts/forklift-darwin-x86_64
