@@ -8,9 +8,7 @@ jobs:
           SKIP_SETCAP: skip
     steps:
       - checkout
-      - run: |
-          VAULT_CLIENT_TOKEN=`curl localhost:8201/vault-token`
-          curl --fail -v -X POST -H "X-Vault-Token:$VAULT_CLIENT_TOKEN" -d '{"type":"transit"}' localhost:8200/v1/sys/mounts/transit
+      - run: ls vault/file
       - run: mkdir -p ./artifacts
       - run: git config --global url.git@github.com:.insteadOf https://github.com/
       - run: ./test.sh
