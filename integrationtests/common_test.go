@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	vaultAddress = "http://vault:8200"
+	vaultAddress = "http://localhost:8200"
 	vaultToken   = "vamp"
 	projectID    = uint64(1)
 )
