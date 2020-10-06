@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"unsafe"
 
@@ -20,10 +21,12 @@ import (
 const (
 	vaultAddress = "http://vault:8200"
 	vaultToken   = "vamp"
+	projectID    = uint64(1)
 )
 
 // setEnvVariables - set environment variables needed by Forklift tests
 func setEnvVariables() {
+	os.Setenv("VAMP_FORKLIFT_PROJECT", strconv.FormatUint(projectID, 10))
 	os.Setenv("VAMP_FORKLIFT_VAULT_ADDR", vaultAddress)
 	os.Setenv("VAMP_FORKLIFT_VAULT_TOKEN", vaultToken)
 }
