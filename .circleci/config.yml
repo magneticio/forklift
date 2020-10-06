@@ -8,6 +8,7 @@ jobs:
           SKIP_SETCAP: skip
     steps:
       - checkout
+      - run: curl localhost:8201/client-token
       - run: mkdir -p ./artifacts
       - run: git config --global url.git@github.com:.insteadOf https://github.com/
       - run: ./test.sh
