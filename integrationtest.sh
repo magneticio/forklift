@@ -3,10 +3,12 @@ export GOPRIVATE=github.com/magneticio
 
 if [ "$1" == "local" ]; then
   docker-compose up -d
+  sleep 10
   go test -v -tags=integration -run=Integration ./...
   docker-compose down
 elif [ "$1" == "circleci" ]; then
-   go test -v -tags=integration -run=Integration ./...
+  sleep 10
+  go test -v -tags=integration -run=Integration ./...
 else
   GOIMAGE="dockercore/golang-cross:1.12.3"
   docker run --rm -it -v $(pwd):/src -w /src $GOIMAGE sh -c '
