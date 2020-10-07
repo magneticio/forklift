@@ -131,6 +131,14 @@ type ServiceConfigIngressRule struct {
 
 // ApplicationView - view used as an output for list and show commands
 type ApplicationView struct {
-	ApplicationID uint64 `yaml:"id,omitempty"`
-	Namespace     string `yaml:"namespace,omitempty"`
+	ID        uint64 `yaml:"id"`
+	Namespace string `yaml:"namespace"`
+}
+
+// ClusterView - view used as an output for list and show commands
+type ClusterView struct {
+	ID                   uint64 `yaml:"id"`
+	NatsChannel          string `yaml:"nats-channel"`
+	NatsToken            string `yaml:"nats-token,omitempty"`
+	OptimiserNatsChannel string `yaml:"optimiser-nats-channel"`
 }

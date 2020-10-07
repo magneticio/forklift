@@ -124,6 +124,61 @@ func (c *Core) DeleteReleaseAgentConfig(clusterID uint64) error {
 	return c.kvClient.Delete(releaseAgentConfigKey)
 }
 
+// ListClusters - lists existing clusters
+func (c *Core) ListClusters() ([]models.ClusterView, error) {
+	clustersPath := path.Join(c.projectPath, "clusters")
+	clusterIDStrings, err := c.kvClient.List(clustersPath)
+	if err != nil {
+		return nil, fmt.Errorf("cannot list clusters: %v", err)
+	}
+	clusterIDs := make([]uint64, len(clusterIDStrings))
+	for i, clusterIDString := range clusterIDStrings {
+		clusterID, err := strconv.ParseUint(clusterIDString, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("found cluster with invalid id '%s'", clusterIDString)
+		}
+		clusterIDs[i] = clusterID
+	}
+
+	clusters := make([]models.ClusterView, len(clusterIDs))
+
+	for i, clusterID := range clusterIDs {
+		releaseAgentConfigKey := c.getReleaseAgentConfigKey(clusterID)
+		releaseAgentConfig, exists, err := c.getReleaseAgentConfig(releaseAgentConfigKey)
+		if err != nil {
+			return nil, fmt.Errorf("cannot get cluster '%d': %v", clusterID, err)
+		}
+		if !exists {
+			return nil, fmt.Errorf("cluster config for cluster '%d' does not exist", clusterID)
+		}
+		clusters[i] = models.ClusterView{
+			ID:                   clusterID,
+			NatsChannel:          releaseAgentConfig.NatsChannel,
+			OptimiserNatsChannel: releaseAgentConfig.OptimiserNatsChannel,
+		}
+	}
+
+	return clusters, nil
+}
+
+// GetCluster - gets existing cluster
+func (c *Core) GetCluster(clusterID uint64) (*models.ClusterView, error) {
+	releaseAgentConfigKey := c.getReleaseAgentConfigKey(clusterID)
+	releaseAgentConfig, exists, err := c.getReleaseAgentConfig(releaseAgentConfigKey)
+	if err != nil {
+		return nil, fmt.Errorf("cannot get cluster: %v", err)
+	}
+	if !exists {
+		return nil, fmt.Errorf("cluster config does not exist")
+	}
+	return &models.ClusterView{
+		ID:                   clusterID,
+		NatsChannel:          releaseAgentConfig.NatsChannel,
+		OptimiserNatsChannel: releaseAgentConfig.OptimiserNatsChannel,
+		NatsToken:            releaseAgentConfig.NatsToken,
+	}, nil
+}
+
 // PutApplication - puts application to existing Release Agent config
 func (c *Core) PutApplication(applicationID uint64, namespace string) error {
 	putApplication := func(releaseAgentConfig *models.ReleaseAgentConfig) {
@@ -168,8 +223,8 @@ func (c *Core) ListApplications() ([]models.ApplicationView, error) {
 	i := 0
 	for namespace, applicationID := range releaseAgentConfig.K8SNamespaceToApplicationID {
 		applications[i] = models.ApplicationView{
-			ApplicationID: applicationID,
-			Namespace:     namespace,
+			ID:        applicationID,
+			Namespace: namespace,
 		}
 		i++
 	}
@@ -194,8 +249,8 @@ func (c *Core) GetApplication(applicationID uint64) (*models.ApplicationView, er
 	for namespace, configApplicationID := range releaseAgentConfig.K8SNamespaceToApplicationID {
 		if applicationID == configApplicationID {
 			return &models.ApplicationView{
-				ApplicationID: applicationID,
-				Namespace:     namespace,
+				ID:        applicationID,
+				Namespace: namespace,
 			}, nil
 		}
 	}

@@ -29,27 +29,27 @@ import (
 	yaml "gopkg.in/yaml.v3"
 )
 
-var listApplicationsCmd = &cobra.Command{
-	Use:   "applications",
-	Short: "List existing applications",
-	Long: AddAppName(`List existing applications
+var listClustersCmd = &cobra.Command{
+	Use:   "clusters",
+	Short: "List existing clusters",
+	Long: AddAppName(`List existing clusters
     Usage:
-    $AppName list applications --cluster <cluster_id>`),
+    $AppName list clusters`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logging.Info("Listing applications")
+		logging.Info("Listing clusters")
 		core, err := core.NewCore(Config)
 		if err != nil {
 			return err
 		}
 
-		applications, err := core.ListApplications()
+		clusters, err := core.ListClusters()
 		if err != nil {
 			return err
 		}
 
-		output, err := yaml.Marshal(applications)
+		output, err := yaml.Marshal(clusters)
 		if err != nil {
 			return err
 		}
@@ -61,5 +61,5 @@ var listApplicationsCmd = &cobra.Command{
 }
 
 func init() {
-	listCmd.AddCommand(listApplicationsCmd)
+	listCmd.AddCommand(listClustersCmd)
 }

@@ -22,6 +22,7 @@ package cmd
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/magneticio/forklift/core"
 	"github.com/magneticio/forklift/logging"
@@ -29,27 +30,37 @@ import (
 	yaml "gopkg.in/yaml.v3"
 )
 
-var listApplicationsCmd = &cobra.Command{
-	Use:   "applications",
-	Short: "List existing applications",
-	Long: AddAppName(`List existing applications
+var showClusterCmd = &cobra.Command{
+	Use:   "cluster",
+	Short: "Show existing cluster",
+	Long: AddAppName(`Show existing cluster
     Usage:
-    $AppName list applications --cluster <cluster_id>`),
+    $AppName show cluster <cluster_id>`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logging.Info("Listing applications")
+		if len(args) < 1 {
+			return fmt.Errorf("Not enough arguments - cluster id needed")
+		}
+		clusterIDString := args[0]
+
+		clusterID, err := strconv.ParseUint(clusterIDString, 10, 64)
+		if err != nil {
+			return fmt.Errorf("Cluster id '%s' must be a natural number", clusterIDString)
+		}
+
+		logging.Info("Showing cluster '%d'\n", clusterID)
 		core, err := core.NewCore(Config)
 		if err != nil {
 			return err
 		}
 
-		applications, err := core.ListApplications()
+		cluster, err := core.GetCluster(clusterID)
 		if err != nil {
 			return err
 		}
 
-		output, err := yaml.Marshal(applications)
+		output, err := yaml.Marshal(cluster)
 		if err != nil {
 			return err
 		}
@@ -61,5 +72,5 @@ var listApplicationsCmd = &cobra.Command{
 }
 
 func init() {
-	listCmd.AddCommand(listApplicationsCmd)
+	showCmd.AddCommand(showClusterCmd)
 }
