@@ -9,7 +9,7 @@ jobs:
     steps:
       - checkout
       - run: |
-          VAULT_CLIENT_TOKEN=$(curl localhost:8201/vault-token)
+          VAULT_CLIENT_TOKEN=$(curl localhost:8201/client-token)
           curl --fail -v -H "X-Vault-Token:${VAULT_CLIENT_TOKEN}" localhost:8200/v1/sys/mounts
       - run: mkdir -p ./artifacts
       - run: git config --global url.git@github.com:.insteadOf https://github.com/
