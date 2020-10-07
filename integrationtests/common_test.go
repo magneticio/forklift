@@ -23,8 +23,9 @@ import (
 )
 
 const (
-	vaultAddress = "http://localhost:8200"
-	projectID    = uint64(1)
+	vaultAddress  = "http://localhost:8200"
+	vaultBasePath = "/secret/vamp/"
+	projectID     = uint64(1)
 )
 
 var vaultToken = getVaultToken()
@@ -34,6 +35,7 @@ func setEnvVariables() {
 	os.Setenv("VAMP_FORKLIFT_PROJECT", strconv.FormatUint(projectID, 10))
 	os.Setenv("VAMP_FORKLIFT_VAULT_ADDR", vaultAddress)
 	os.Setenv("VAMP_FORKLIFT_VAULT_TOKEN", vaultToken)
+	os.Setenv("VAMP_FORKLIFT_VAULT_BASE_PATH", vaultBasePath)
 }
 
 // getVaultToken - gets Vault token for integration tests

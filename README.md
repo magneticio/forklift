@@ -119,6 +119,8 @@ Environment variables:
     #  Vault address. Example: http://vault.default.svc.cluster.local:8200
   VAMP_FORKLIFT_VAULT_TOKEN
     # Vault token
+  VAMP_FORKLIFT_VAULT_BASE_PATH
+    # Vault base path
   VAMP_FORKLIFT_VAULT_CACERT
     # Path of the CA Certificate.
   VAMP_FORKLIFT_VAULT_CLIENT_CERT

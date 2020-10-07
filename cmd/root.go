@@ -69,6 +69,7 @@ var rootCmd = &cobra.Command{
 		VAMP_FORKLIFT_CLUSTER
 		VAMP_FORKLIFT_VAULT_ADDR
 		VAMP_FORKLIFT_VAULT_TOKEN
+		VAMP_FORKLIFT_VAULT_BASE_PATH
 		VAMP_FORKLIFT_VAULT_CACERT
 		VAMP_FORKLIFT_VAULT_CLIENT_CERT
 		VAMP_FORKLIFT_VAULT_CLIENT_KEY`),
@@ -174,6 +175,7 @@ func setupConfigurationEnvrionmentVariables() {
 	viper.BindEnv("cluster", "VAMP_FORKLIFT_CLUSTER")
 	viper.BindEnv("key-value-store-url", "VAMP_FORKLIFT_VAULT_ADDR")
 	viper.BindEnv("key-value-store-token", "VAMP_FORKLIFT_VAULT_TOKEN")
+	viper.BindEnv("key-value-store-base-path", "VAMP_FORKLIFT_VAULT_BASE_PATH")
 	viper.BindEnv("key-value-store-server-tls-cert", "VAMP_FORKLIFT_VAULT_CACERT")
 	viper.BindEnv("key-value-store-client-tls-cert", "VAMP_FORKLIFT_VAULT_CLIENT_CERT")
 	viper.BindEnv("key-value-store-client-tls-key", "VAMP_FORKLIFT_VAULT_CLIENT_KEY")
