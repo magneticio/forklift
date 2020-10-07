@@ -33,8 +33,8 @@ var deleteApplicationCmd = &cobra.Command{
 	Use:   "application",
 	Short: "Delete existing application",
 	Long: AddAppName(`Delete existing application
-    Example:
-    $AppName delete application 10`),
+    Usage:
+    $AppName delete application <application_id>`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {

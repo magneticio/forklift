@@ -33,8 +33,8 @@ var deleteClusterCmd = &cobra.Command{
 	Use:   "cluster",
 	Short: "Delete existing cluster",
 	Long: AddAppName(`Delete existing cluster
-    Example:
-    $AppName delete cluster 10`),
+    Usage:
+    $AppName delete cluster <cluster_id>`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {

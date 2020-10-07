@@ -34,8 +34,8 @@ var putPolicyCmd = &cobra.Command{
 	Use:   "policy",
 	Short: "Put a policy",
 	Long: AddAppName(`Put a policy
-    Example:
-    $AppName put policy 10 --file ./policydefinition.json`),
+    Usage:
+    $AppName put policy <policy_id> --file <policy_file_path>`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {

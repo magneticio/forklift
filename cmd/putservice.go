@@ -34,8 +34,8 @@ var putServiceCmd = &cobra.Command{
 	Use:   "service",
 	Short: "Put a service",
 	Long: AddAppName(`Put a service
-    Example:
-    $AppName put service 10 --cluster 7 --application 5 --file ./servicedefinition.json`),
+    Usage:
+    $AppName put service <service_id> --cluster <cluster_id> --application <application_id> --file <service_config_file_path>`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {

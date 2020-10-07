@@ -93,7 +93,7 @@ Now make sure to have a "config.yaml" configuration file in your home under ".fo
 ```
 key-value-store-url: ${env://VAMP_PERSISTENCE_KEY_VALUE_STORE_VAULT_URL}
 key-value-store-token: ${env://VAMP_PERSISTENCE_KEY_VALUE_STORE_VAULT_TOKEN}
-key-value-store-base-path: /secret/vamp/${namespace}
+key-value-store-base-path: /secret/vamp/
 
 ```
 
@@ -120,7 +120,7 @@ Environment variables:
   VAMP_FORKLIFT_VAULT_TOKEN
     # Vault token
   VAMP_FORKLIFT_VAULT_BASE_PATH
-    # Vault base path
+    # Vault base path. Example: /secret/vamp/
   VAMP_FORKLIFT_VAULT_CACERT
     # Path of the CA Certificate.
   VAMP_FORKLIFT_VAULT_CLIENT_CERT
@@ -191,8 +191,8 @@ Example of service service config:
 
 ```json
 {
-  "application_id": 1,
-  "service_id": 1,
+  "application_id": 5,
+  "service_id": 10,
   "k8s_namespace": "test",
   "k8s_labels": {
     "app": "nginx-test"
@@ -206,6 +206,23 @@ Example of service service config:
       "port": 8081
     }
   ]
+}
+```
+
+For headless services service config needs to have a `headless` flag set to true, for example:
+
+```json
+{
+  "application_id": 5,
+  "service_id": 10,
+  "k8s_namespace": "test",
+  "k8s_labels": {
+    "app": "headless-test"
+  },
+  "version_selector": "version",
+  "default_policy_id": 1,
+  "ingress_rules": [],
+  "headless": true
 }
 ```
 

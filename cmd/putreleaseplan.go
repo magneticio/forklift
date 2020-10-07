@@ -34,8 +34,8 @@ var putReleasePlanCmd = &cobra.Command{
 	Use:   "releaseplan",
 	Short: "Put a release plan",
 	Long: AddAppName(`Put a release plan
-    Example:
-    $AppName put releaseplan 1.0.1 --service 5 --file ./releaseplandefinition.json`),
+    Usage:
+    $AppName put releaseplan <service_version> --service <service_id> --file <release_plan_file_path>`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {

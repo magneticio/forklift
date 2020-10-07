@@ -63,7 +63,7 @@ var rootCmd = &cobra.Command{
 	Short: AddAppName("A command line client for $AppName"),
 	Long: AddAppName(`$AppName is a setup tool for vamp.
 	It is required to have a default config.
-	Envrionment variables can be used in combination with the config.
+	Envrionment variables can be used to override the values in the config.
 	Environment variables:
 		VAMP_FORKLIFT_PROJECT
 		VAMP_FORKLIFT_CLUSTER

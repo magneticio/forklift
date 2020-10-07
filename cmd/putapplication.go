@@ -35,8 +35,8 @@ var putApplicationCmd = &cobra.Command{
 	Use:   "application",
 	Short: "Put an application",
 	Long: AddAppName(`Put an application
-    Example:
-    $AppName put application 10 --namespace namespace`),
+    Usage:
+    $AppName put application <application_id> --namespace <namespace>`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {

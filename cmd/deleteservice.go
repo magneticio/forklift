@@ -33,8 +33,8 @@ var deleteServiceCmd = &cobra.Command{
 	Use:   "service",
 	Short: "Delete existing service",
 	Long: AddAppName(`Delete existing service
-    Example:
-    $AppName delete service 10 --cluster 7 --application 5`),
+    Usage:
+    $AppName delete service <service_id> --cluster <cluster_id> --application <application_id>`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
