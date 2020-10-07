@@ -142,3 +142,10 @@ type ClusterView struct {
 	NatsToken            string `yaml:"nats-token,omitempty"`
 	OptimiserNatsChannel string `yaml:"optimiser-nats-channel"`
 }
+
+// PolicyView - view used as an output for list command
+type PolicyView struct {
+	ID   uint64 `yaml:"id"`
+	Name string `yaml:"name,omitempty"`
+	Type string `yaml:"type"`
+}

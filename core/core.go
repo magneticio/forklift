@@ -1,6 +1,7 @@
 package core
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"path"
@@ -9,6 +10,9 @@ import (
 	"github.com/magneticio/forklift/keyvaluestoreclient"
 	"github.com/magneticio/forklift/models"
 	policies "github.com/magneticio/vamp-policies"
+	policiesModel "github.com/magneticio/vamp-policies/policy/domain/model/policy"
+	"github.com/magneticio/vamp-policies/policy/interface/api"
+	policiesDTO "github.com/magneticio/vamp-policies/policy/interface/persistence/vault/dto"
 )
 
 type Core struct {
@@ -58,6 +62,50 @@ func (c *Core) DeletePolicy(policyID uint64) error {
 		return fmt.Errorf("cannot find policy: %v", err)
 	}
 	return policyAPI.Delete(policyKey)
+}
+
+// ListPolicies - lists existing policies
+func (c *Core) ListPolicies() ([]models.PolicyView, error) {
+	policyAPI := policies.NewPolicyAPI(c.kvClient, c.projectPath)
+	apiPolicyViews, err := policyAPI.FindAll()
+	if err != nil {
+		return nil, fmt.Errorf("cannot list policies: %v", err)
+	}
+
+	policyViews := make([]models.PolicyView, len(apiPolicyViews))
+	for i, apiPolicyView := range apiPolicyViews {
+		policyViews[i] = models.PolicyView{
+			ID:   apiPolicyView.PolicyID,
+			Name: apiPolicyView.PolicyName,
+			Type: string(apiPolicyView.PolicyType),
+		}
+	}
+
+	return policyViews, nil
+}
+
+// GetPolicyString - gets exisiting policy string
+func (c *Core) GetPolicyString(policyID uint64) (string, error) {
+	policyAPI := policies.NewPolicyAPI(c.kvClient, c.projectPath)
+	policyView, err := policyAPI.FindByID(policyID)
+	if err != nil {
+		return "", fmt.Errorf("cannot get policy: %v", err)
+	}
+	switch policyView.PolicyType {
+	case api.ReleasePolicyType:
+		policy, err := policyAPI.GetReleasePolicyByID(policyID)
+		if err != nil {
+			return "", fmt.Errorf("cannot get release policy: %v", err)
+		}
+		return getReleasePolicyString(policy)
+	case api.ValidationPolicyType:
+		policy, err := policyAPI.GetValidationPolicyByID(policyID)
+		if err != nil {
+			return "", fmt.Errorf("cannot get validation policy: %v", err)
+		}
+		return getValidationPolicyString(policy)
+	}
+	return "", fmt.Errorf("unsupported policy type: %v", policyView.PolicyType)
 }
 
 // PutReleasePlan - puts release plan to key value store
@@ -366,4 +414,34 @@ func (c *Core) saveReleaseAgentConfig(releaseAgentConfigKey string, releaseAgent
 	}
 
 	return c.kvClient.Put(releaseAgentConfigKey, string(releaseAgentConfigBytes))
+}
+
+func getReleasePolicyString(policy *policiesModel.Policy) (string, error) {
+	policyDTO, err := policiesDTO.ToPolicyDTO(policy)
+	if err != nil {
+		return "", fmt.Errorf("cannot get release policy string: %v", err)
+	}
+	buf := new(bytes.Buffer)
+	enc := json.NewEncoder(buf)
+	enc.SetEscapeHTML(false)
+	err = enc.Encode(policyDTO)
+	if err != nil {
+		return "", fmt.Errorf("cannot marshal release policy: %v", err)
+	}
+	return buf.String(), nil
+}
+
+func getValidationPolicyString(policy *policiesModel.ValidationPolicy) (string, error) {
+	policyDTO, err := policiesDTO.ToValidationPolicyDTO(policy)
+	if err != nil {
+		return "", fmt.Errorf("cannot get validation policy string: %v", err)
+	}
+	buf := new(bytes.Buffer)
+	enc := json.NewEncoder(buf)
+	enc.SetEscapeHTML(false)
+	err = enc.Encode(policyDTO)
+	if err != nil {
+		return "", fmt.Errorf("cannot marshal validation policy: %v", err)
+	}
+	return buf.String(), nil
 }
