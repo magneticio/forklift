@@ -21,25 +21,45 @@
 package cmd
 
 import (
-	"errors"
+	"fmt"
 
+	"github.com/magneticio/forklift/core"
+	"github.com/magneticio/forklift/logging"
 	"github.com/spf13/cobra"
+	yaml "gopkg.in/yaml.v3"
 )
 
-// deleteCmd represents the delete command
-var deleteCmd = &cobra.Command{
-	Use:   "delete",
-	Short: "Delete existing artifact",
-	Long: AddAppName(`Delete existing artifact
-    Example:
-    $AppName delete policy <policy_id>`),
+var listApplicationCmd = &cobra.Command{
+	Use:   "applications",
+	Short: "List existing applications",
+	Long: AddAppName(`List existing applications
+    Usage:
+    $AppName list applications --cluster <cluster_id>`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return errors.New("A resource type expected")
+		logging.Info("Listing applications")
+		core, err := core.NewCore(Config)
+		if err != nil {
+			return err
+		}
+
+		applications, err := core.ListApplications()
+		if err != nil {
+			return err
+		}
+
+		output, err := yaml.Marshal(applications)
+		if err != nil {
+			return err
+		}
+
+		fmt.Print(string(output))
+
+		return nil
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(deleteCmd)
+	listCmd.AddCommand(listApplicationCmd)
 }

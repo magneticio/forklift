@@ -128,3 +128,9 @@ type ServiceConfigIngressRule struct {
 	Path          string `json:"path" validate:"required,min=1"`
 	Port          *int64 `json:"port" validate:"required"`
 }
+
+// ApplicationView - view used as an output for list and show commands
+type ApplicationView struct {
+	ApplicationID uint64 `yaml:"id,omitempty"`
+	Namespace     string `yaml:"namespace,omitempty"`
+}

@@ -151,6 +151,58 @@ func (c *Core) DeleteApplication(applicationID uint64) error {
 	return c.onReleaseAgentConfig(deleteApplication)
 }
 
+// ListApplications - lists existing applications
+func (c *Core) ListApplications() ([]models.ApplicationView, error) {
+	if c.clusterID == nil {
+		return nil, fmt.Errorf("cluster id must be provided")
+	}
+	releaseAgentConfigKey := c.getReleaseAgentConfigKey(uint64(*c.clusterID))
+	releaseAgentConfig, exists, err := c.getReleaseAgentConfig(releaseAgentConfigKey)
+	if err != nil {
+		return nil, fmt.Errorf("cannot find Release Agent config: %v", err)
+	}
+	if !exists {
+		return nil, fmt.Errorf("Release Agent config does not exist")
+	}
+	applications := make([]models.ApplicationView, len(releaseAgentConfig.K8SNamespaceToApplicationID))
+	i := 0
+	for namespace, applicationID := range releaseAgentConfig.K8SNamespaceToApplicationID {
+		applications[i] = models.ApplicationView{
+			ApplicationID: applicationID,
+			Namespace:     namespace,
+		}
+		i++
+	}
+
+	return applications, nil
+}
+
+// GetApplication - gets existing application
+func (c *Core) GetApplication(applicationID uint64) (*models.ApplicationView, error) {
+	if c.clusterID == nil {
+		return nil, fmt.Errorf("cluster id must be provided")
+	}
+	releaseAgentConfigKey := c.getReleaseAgentConfigKey(uint64(*c.clusterID))
+	releaseAgentConfig, exists, err := c.getReleaseAgentConfig(releaseAgentConfigKey)
+	if err != nil {
+		return nil, fmt.Errorf("cannot find Release Agent config: %v", err)
+	}
+	if !exists {
+		return nil, fmt.Errorf("Release Agent config does not exist")
+	}
+
+	for namespace, configApplicationID := range releaseAgentConfig.K8SNamespaceToApplicationID {
+		if applicationID == configApplicationID {
+			return &models.ApplicationView{
+				ApplicationID: applicationID,
+				Namespace:     namespace,
+			}, nil
+		}
+	}
+
+	return nil, fmt.Errorf("application '%d' not found", applicationID)
+}
+
 // PutServiceConfig - puts service to key value store
 func (c *Core) PutServiceConfig(serviceID, applicationID uint64, serviceConfigText string) error {
 	if c.clusterID == nil {

@@ -30,7 +30,7 @@ var putCmd = &cobra.Command{
 	Use:   "put",
 	Short: "Put an artifact",
 	Long: AddAppName(`Put an artifact
-    Usage:
+    Example:
     $AppName put policy <policy_id> --file <policy_file_path>`),
 	SilenceUsage:  true,
 	SilenceErrors: true,

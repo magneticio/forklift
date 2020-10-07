@@ -29,9 +29,9 @@ import (
 // listCmd represents the list command
 var listCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List artifacts",
+	Short: "List existing artifacts",
 	Long: AddAppName(`List artifacts
-    Usage:
+    Example:
     $AppName list policies`),
 	SilenceUsage:  true,
 	SilenceErrors: true,

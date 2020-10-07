@@ -26,13 +26,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// deleteCmd represents the delete command
-var deleteCmd = &cobra.Command{
-	Use:   "delete",
-	Short: "Delete existing artifact",
-	Long: AddAppName(`Delete existing artifact
+// showCmd represents the show command
+var showCmd = &cobra.Command{
+	Use:   "show",
+	Short: "Show existing artifact",
+	Long: AddAppName(`Show existing artifact
     Example:
-    $AppName delete policy <policy_id>`),
+    $AppName show policy <policy_id>`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -41,5 +41,5 @@ var deleteCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(deleteCmd)
+	rootCmd.AddCommand(showCmd)
 }
