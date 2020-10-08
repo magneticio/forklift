@@ -37,6 +37,37 @@ func TestIntegrationPolicyCommands(t *testing.T) {
 			So(vaultPolicy, ShouldEqual, snapshot)
 		})
 
+		Convey("and showing policy", func() {
+			showPolicyCommand := fmt.Sprintf(
+				"show policy %d",
+				policyID,
+			)
+
+			stdoutLines, err := runCommand(showPolicyCommand)
+
+			Convey("error should not be thrown", func() {
+				So(err, ShouldBeNil)
+			})
+
+			Convey("response should contain policy", func() {
+				So(len(stdoutLines), ShouldEqual, 79)
+			})
+		})
+
+		Convey("and listing policies", func() {
+			stdoutLines, err := runCommand("list policies")
+
+			Convey("error should not be thrown", func() {
+				So(err, ShouldBeNil)
+			})
+
+			Convey("response should contain policies list", func() {
+				So(stdoutLines[0], ShouldEqual, "- id: 456")
+				So(stdoutLines[1], ShouldEqual, "  name: policy-with-steps-names")
+				So(stdoutLines[2], ShouldEqual, "  type: release")
+			})
+		})
+
 		Convey("and deleting it afterwards", func() {
 			deletePolicyCommand := fmt.Sprintf(
 				"delete policy %d",
