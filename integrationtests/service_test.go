@@ -41,6 +41,43 @@ func TestIntegrationServiceCommands(t *testing.T) {
 			So(vaultService, ShouldEqual, snapshot)
 		})
 
+		Convey("and showing service", func() {
+			showServiceCommand := fmt.Sprintf(
+				"show service %d --cluster %d --application %d",
+				serviceID,
+				clusterID,
+				applicationID,
+			)
+
+			stdoutLines, err := runCommand(showServiceCommand)
+
+			Convey("error should not be thrown", func() {
+				So(err, ShouldBeNil)
+			})
+
+			Convey("response should contain service", func() {
+				snapshot, _ := readSnapshot("./snapshots/service_show.txt")
+				So(toText(stdoutLines), ShouldEqual, snapshot)
+			})
+		})
+
+		Convey("and listing services", func() {
+			listServicesCommand := fmt.Sprintf(
+				"list services --cluster %d --application %d",
+				clusterID,
+				applicationID,
+			)
+			stdoutLines, err := runCommand(listServicesCommand)
+
+			Convey("error should not be thrown", func() {
+				So(err, ShouldBeNil)
+			})
+
+			Convey("response should contain services list", func() {
+				So(stdoutLines[0], ShouldEqual, "- 4555")
+			})
+		})
+
 		Convey("and deleting it afterwards", func() {
 			deleteServiceCommand := fmt.Sprintf(
 				"delete service %d --cluster %d --application %d",

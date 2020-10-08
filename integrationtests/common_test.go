@@ -189,3 +189,8 @@ func resetFlags(cmd *cobra.Command) {
 		resetFlags(cmd)
 	}
 }
+
+// toText - joins slice of lines using a new line character
+func toText(lines []string) string {
+	return strings.Join(lines, "\n")
+}
