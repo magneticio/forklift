@@ -207,7 +207,7 @@ func (c *Core) ListClusters() ([]models.ClusterView, error) {
 	for i, clusterIDString := range clusterIDStrings {
 		clusterID, err := strconv.ParseUint(clusterIDString, 10, 64)
 		if err != nil {
-			return nil, fmt.Errorf("found cluster with invalid id '%s'", clusterIDString)
+			return nil, fmt.Errorf("found cluster with invalid id: '%s'", clusterIDString)
 		}
 		clusterIDs[i] = clusterID
 	}
@@ -370,6 +370,48 @@ func (c *Core) DeleteServiceConfig(serviceID, applicationID uint64) error {
 	return c.kvClient.Delete(serviceConfigKey)
 }
 
+// ListServices - lists existing services from key value store
+func (c *Core) ListServices(applicationID uint64) ([]uint64, error) {
+	if c.clusterID == nil {
+		return nil, fmt.Errorf("cluster id must be provided")
+	}
+	serviceConfigsPath := c.getServiceConfigsPath(*c.clusterID, applicationID)
+	serviceConfigsKeys, err := c.kvClient.List(serviceConfigsPath)
+	if err != nil {
+		return nil, fmt.Errorf("cannot list services: %v", err)
+	}
+
+	serviceIDs := make([]uint64, len(serviceConfigsKeys))
+
+	for i, serviceConfigKey := range serviceConfigsKeys {
+		serviceID, err := strconv.ParseUint(serviceConfigKey, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("found service with invalid id: '%s'", serviceConfigKey)
+		}
+		serviceIDs[i] = serviceID
+	}
+
+	return serviceIDs, nil
+}
+
+// GetServiceConfigText - gets service config json text from key value store
+func (c *Core) GetServiceConfigText(serviceID, applicationID uint64) (string, error) {
+	if c.clusterID == nil {
+		return "", fmt.Errorf("cluster id must be provided")
+	}
+
+	serviceConfigKey := c.getServiceConfigKey(*c.clusterID, applicationID, serviceID)
+	exists, err := c.kvClient.Exists(serviceConfigKey)
+	if err != nil {
+		return "", fmt.Errorf("cannot find service config: %v", err)
+	}
+	if !exists {
+		return "", fmt.Errorf("service config does not exist")
+	}
+
+	return c.kvClient.Get(serviceConfigKey)
+}
+
 func (c *Core) onReleaseAgentConfig(apply func(*models.ReleaseAgentConfig)) error {
 	if c.clusterID == nil {
 		return fmt.Errorf("cluster id must be provided")
@@ -404,14 +446,17 @@ func (c *Core) getReleaseAgentConfigKey(clusterID uint64) string {
 	return path.Join(c.getClusterPath(clusterID), "release-agent-config")
 }
 
-func (c *Core) getServiceConfigKey(clusterID, applicationID, serviceID uint64) string {
+func (c *Core) getServiceConfigsPath(clusterID, applicationID uint64) string {
 	return path.Join(
 		c.getClusterPath(clusterID),
 		"applications",
 		strconv.FormatUint(applicationID, 10),
 		"service-configs",
-		strconv.FormatUint(serviceID, 10),
 	)
+}
+
+func (c *Core) getServiceConfigKey(clusterID, applicationID, serviceID uint64) string {
+	return path.Join(c.getServiceConfigsPath(clusterID, applicationID), strconv.FormatUint(serviceID, 10))
 }
 
 func (c *Core) getReleaseAgentConfig(releaseAgentConfigKey string) (*models.ReleaseAgentConfig, bool, error) {
