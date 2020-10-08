@@ -39,6 +39,33 @@ func TestIntegrationClusterCommands(t *testing.T) {
 			So(clusterConfig, ShouldEqual, snapshot)
 		})
 
+		Convey("and showing cluster", func() {
+			stdoutLines, err := runCommand("show cluster 1")
+
+			Convey("error should not be thrown", func() {
+				So(err, ShouldBeNil)
+			})
+
+			Convey("response should contain cluster information", func() {
+				So(stdoutLines[0], ShouldEqual, "id: 1")
+				So(stdoutLines[1], ShouldEqual, "nats-channel: nats-channel")
+				So(stdoutLines[2], ShouldEqual, "nats-token: nats-token")
+				So(stdoutLines[3], ShouldEqual, "optimiser-nats-channel: optimiser-channel")
+			})
+		})
+
+		Convey("and listing clusters", func() {
+			stdoutLines, err := runCommand("list clusters")
+
+			Convey("error should not be thrown", func() {
+				So(err, ShouldBeNil)
+			})
+
+			Convey("response should contain cluster list", func() {
+				So(stdoutLines[0], ShouldEqual, "- id: 1")
+			})
+		})
+
 		Convey("and deleting it afterwards", func() {
 			stdoutLines, err := runCommand("delete cluster 1")
 

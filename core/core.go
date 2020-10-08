@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/magneticio/forklift/keyvaluestoreclient"
+	"github.com/magneticio/forklift/logging"
 	"github.com/magneticio/forklift/models"
 	policies "github.com/magneticio/vamp-policies"
 	policiesModel "github.com/magneticio/vamp-policies/policy/domain/model/policy"
@@ -212,22 +213,23 @@ func (c *Core) ListClusters() ([]models.ClusterView, error) {
 		clusterIDs[i] = clusterID
 	}
 
-	clusters := make([]models.ClusterView, len(clusterIDs))
+	clusters := make([]models.ClusterView, 0)
 
-	for i, clusterID := range clusterIDs {
+	for _, clusterID := range clusterIDs {
 		releaseAgentConfigKey := c.getReleaseAgentConfigKey(clusterID)
 		releaseAgentConfig, exists, err := c.getReleaseAgentConfig(releaseAgentConfigKey)
 		if err != nil {
 			return nil, fmt.Errorf("cannot get cluster '%d': %v", clusterID, err)
 		}
 		if !exists {
-			return nil, fmt.Errorf("cluster config for cluster '%d' does not exist", clusterID)
+			logging.Info("cluster config for cluster '%d' does not exist", clusterID)
+			continue
 		}
-		clusters[i] = models.ClusterView{
+		clusters = append(clusters, models.ClusterView{
 			ID:                   clusterID,
 			NatsChannel:          releaseAgentConfig.NatsChannel,
 			OptimiserNatsChannel: releaseAgentConfig.OptimiserNatsChannel,
-		}
+		})
 	}
 
 	return clusters, nil
