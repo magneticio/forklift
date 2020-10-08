@@ -4,6 +4,9 @@ export GOPRIVATE=github.com/magneticio
 if [ "$1" == "local" ]; then
   docker-compose up -d
   sleep 10
+  VAULT_CLIENT_TOKEN=$(curl localhost:8201/client-token)
+  curl --fail -v -H "X-Vault-Token:${VAULT_CLIENT_TOKEN}" localhost:8200/v1/sys/mounts
+  curl --fail -v -X POST -H "X-Vault-Token:${VAULT_CLIENT_TOKEN}" -d '{"type": "kv"}' localhost:8200/v1/sys/mounts/secret
   go test -v -tags=integration -run=Integration ./...
   docker-compose down
 elif [ "$1" == "circleci" ]; then
