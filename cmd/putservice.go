@@ -49,7 +49,7 @@ var putServiceCmd = &cobra.Command{
 			return fmt.Errorf("Service id '%s' must be a natural number", serviceIDString)
 		}
 
-		logging.Info("Puting service '%d'\n", serviceID)
+		logging.Info("Putting service '%d'\n", serviceID)
 		core, err := core.NewCore(Config)
 		if err != nil {
 			return err
