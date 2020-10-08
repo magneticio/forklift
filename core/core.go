@@ -333,7 +333,7 @@ func (c *Core) GetApplication(applicationID uint64) (*models.ApplicationView, er
 }
 
 // PutServiceConfig - puts service to key value store
-func (c *Core) PutServiceConfig(serviceID, applicationID uint64, serviceConfigText string) error {
+func (c *Core) PutServiceConfig(serviceConfigText string) error {
 	if c.clusterID == nil {
 		return fmt.Errorf("cluster id must be provided")
 	}
@@ -349,7 +349,7 @@ func (c *Core) PutServiceConfig(serviceID, applicationID uint64, serviceConfigTe
 		return fmt.Errorf("service config validation failed: %v", err)
 	}
 
-	serviceConfigKey := c.getServiceConfigKey(*c.clusterID, applicationID, serviceID)
+	serviceConfigKey := c.getServiceConfigKey(*c.clusterID, *serviceConfig.ApplicationID, *serviceConfig.ServiceID)
 
 	return c.kvClient.Put(serviceConfigKey, serviceConfigText)
 }

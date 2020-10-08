@@ -22,7 +22,6 @@ package cmd
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/magneticio/forklift/core"
 	"github.com/magneticio/forklift/logging"
@@ -35,21 +34,11 @@ var putServiceCmd = &cobra.Command{
 	Short: "Put a service",
 	Long: AddAppName(`Put a service
     Usage:
-    $AppName put service <service_id> --cluster <cluster_id> --application <application_id> --file <service_config_file_path>`),
+    $AppName put service --cluster <cluster_id> --file <service_config_file_path>`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 1 {
-			return fmt.Errorf("Not enough arguments - service id needed")
-		}
-		serviceIDString := args[0]
-
-		serviceID, err := strconv.ParseUint(serviceIDString, 10, 64)
-		if err != nil {
-			return fmt.Errorf("Service id '%s' must be a natural number", serviceIDString)
-		}
-
-		logging.Info("Putting service '%d'\n", serviceID)
+		logging.Info("Putting service\n")
 		core, err := core.NewCore(Config)
 		if err != nil {
 			return err
@@ -67,12 +56,12 @@ var putServiceCmd = &cobra.Command{
 
 		serviceConfigText := string(serviceConfigJSON)
 
-		err = core.PutServiceConfig(serviceID, applicationID, serviceConfigText)
+		err = core.PutServiceConfig(serviceConfigText)
 		if err != nil {
 			return err
 		}
 
-		fmt.Printf("Service '%d' has been put\n", serviceID)
+		fmt.Printf("Service has been put\n")
 
 		return nil
 	},
@@ -80,9 +69,6 @@ var putServiceCmd = &cobra.Command{
 
 func init() {
 	putCmd.AddCommand(putServiceCmd)
-
-	putServiceCmd.Flags().Uint64VarP(&applicationID, "application", "s", 0, "ID of the application")
-	putServiceCmd.MarkFlagRequired("application")
 
 	putServiceCmd.Flags().StringVarP(&configPath, "file", "", "", "Service configuration file path")
 	putServiceCmd.MarkFlagRequired("file")

@@ -1,6 +1,6 @@
 {
 	"application_id": 112,
-	"service_id": 15,
+	"service_id": 4555,
 	"k8s_namespace": "test",
 	"k8s_labels": {
 		"app": "nginx-test"

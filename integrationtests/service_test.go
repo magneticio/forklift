@@ -18,10 +18,8 @@ func TestIntegrationServiceCommands(t *testing.T) {
 
 	Convey("When executing put service command with valid service config", t, func() {
 		command := fmt.Sprintf(
-			"put service %d --cluster %d --application %d --file %s",
-			serviceID,
+			"put service --cluster %d --file %s",
 			clusterID,
-			applicationID,
 			validServicePath,
 		)
 		stdoutLines, err := runCommand(command)
@@ -31,7 +29,7 @@ func TestIntegrationServiceCommands(t *testing.T) {
 		})
 
 		Convey("response should contain information that service has been put", func() {
-			So(stdoutLines[0], ShouldEqual, "Service '4555' has been put")
+			So(stdoutLines[0], ShouldEqual, "Service has been put")
 		})
 
 		Convey("service config should be saved to Vault", func() {
@@ -104,10 +102,8 @@ func TestIntegrationServiceCommands(t *testing.T) {
 
 	Convey("When executing put service command with invalid service config", t, func() {
 		command := fmt.Sprintf(
-			"put service %d --cluster %d --application %d --file %s",
-			serviceID,
+			"put service --cluster %d --file %s",
 			clusterID,
-			applicationID,
 			invalidServicePath,
 		)
 		_, err := runCommand(command)
@@ -117,25 +113,9 @@ func TestIntegrationServiceCommands(t *testing.T) {
 		})
 	})
 
-	Convey("When executing put service command without service value", t, func() {
-		command := fmt.Sprintf(
-			"put service --cluster %d --application %d --file %s",
-			clusterID,
-			applicationID,
-			validServicePath,
-		)
-		_, err := runCommand(command)
-
-		Convey("error should be thrown", func() {
-			So(err.Error(), ShouldEqual, `Not enough arguments - service id needed`)
-		})
-	})
-
 	Convey("When executing put service command without cluster", t, func() {
 		command := fmt.Sprintf(
-			"put service %d --application %d --file %s",
-			serviceID,
-			applicationID,
+			"put service --file %s",
 			validServicePath,
 		)
 		_, err := runCommand(command)
@@ -145,26 +125,10 @@ func TestIntegrationServiceCommands(t *testing.T) {
 		})
 	})
 
-	Convey("When executing put service command without application flag", t, func() {
-		command := fmt.Sprintf(
-			"put service %d --cluster %d --file %s",
-			serviceID,
-			clusterID,
-			validServicePath,
-		)
-		_, err := runCommand(command)
-
-		Convey("error should be thrown", func() {
-			So(err.Error(), ShouldEqual, `required flag(s) "application" not set`)
-		})
-	})
-
 	Convey("When executing put service command without file flag", t, func() {
 		command := fmt.Sprintf(
-			"put service %d --cluster %d --application %d",
-			serviceID,
+			"put service --cluster %d",
 			clusterID,
-			applicationID,
 		)
 		_, err := runCommand(command)
 
