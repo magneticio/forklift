@@ -35,17 +35,11 @@ func TestValidateName(t *testing.T) {
 }
 
 func TestReadFilesIndirectory(t *testing.T) {
-	contents, error := util.ReadFilesIndirectory("../resources/artifacts")
+	contents, error := util.ReadFilesIndirectory("resources")
 
 	assert.Nil(t, error)
-	/* Example print
-	  for file, content := range contents {
-			fmt.Printf("File :%v size: %v\n", file, len(content))
-		}
-	*/
-	assert.Equal(t, 2513, len(contents["../resources/artifacts/breeds/quantification.yml"]))
-	assert.Equal(t, 194, len(contents["../resources/artifacts/workflows/quantification.yml"]))
-
+	assert.Equal(t, 4386, len(contents["resources/testpolicy1.json"]))
+	assert.Equal(t, 1031, len(contents["resources/testpolicy2.json"]))
 }
 
 func TestUUID(t *testing.T) {
@@ -72,4 +66,15 @@ func TestEncodeString(t *testing.T) {
 	text3 := "class io.vamp.common.Namespace@vampio-organization-environment"
 	result3 := util.EncodeString(text3, "SHA-1", "v1")
 	assert.Equal(t, expected3, result3)
+}
+
+func TestConvertJSONToJSON(t *testing.T) {
+	jsonWithEscapedChars := `{"value": "health \u003e= baselines.minHealth"}`
+	prettyJSON, err := util.Convert("json", "json", jsonWithEscapedChars)
+
+	assert.NoError(t, err)
+
+	expected := "{\n    \"value\": \"health >= baselines.minHealth\"\n}"
+
+	assert.Equal(t, expected, prettyJSON)
 }

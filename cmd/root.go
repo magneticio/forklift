@@ -1,4 +1,4 @@
-// Copyright © 2019 Developer <developer@vamp.io>
+// Copyright © 2020 Developer <developer@vamp.io>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -33,62 +33,57 @@ import (
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	yaml "gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v3"
 )
 
+// AppName - application name
 const AppName string = "forklift"
 
-// version should be in format d.d.d where d is a decimal number
-const Version string = "v1.0.0"
+// Version - should be in format d.d.d where d is a decimal number
+const Version string = "v2.0.0"
 
-/*
-Application name can change over time so it is made parameteric
-*/
+// AddAppName - Application name can change over time so it is made parameteric
 func AddAppName(str string) string {
 	return strings.Replace(str, "$AppName", AppName, -1)
 }
 
-var cfgFile string
-
+// Config - forklift configuration
 var Config models.ForkliftConfiguration
 
 // Common code parameters
+var cfgFile string
 var configPath string
 var configFileType string
-var organization string
-var environment string
-var artficatsPath string
-var role string
-var kind string
+var serviceID uint64
+var applicationID uint64
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   AddAppName("$AppName"),
 	Short: AddAppName("A command line client for $AppName"),
-	Long: AddAppName(`$AppName is a organization and environment setup tool for vamp.
-    It requires a vamp deployment setup as a backend to work.
-    It is required to have a default config.
-    Envrionment variables can be used in combination with the config.
-    Environment variables:
-      VAMP_FORKLIFT_VAULT_ADDR
-      VAMP_FORKLIFT_VAULT_TOKEN
-      VAMP_FORKLIFT_VAULT_CACERT
-      VAMP_FORKLIFT_VAULT_CLIENT_CERT
-      VAMP_FORKLIFT_VAULT_CLIENT_KEY
-      VAMP_FORKLIFT_MYSQL_HOST
-      VAMP_FORKLIFT_MYSQL_CONNECTION_PROPS
-      VAMP_FORKLIFT_MYSQL_USER
-      VAMP_FORKLIFT_MYSQL_PASSWORD
-    `),
+	Long: AddAppName(`$AppName is a setup tool for vamp.
+	It is required to have a default config.
+	Envrionment variables can be used to override the values in the config.
+	Environment variables:
+		VAMP_FORKLIFT_PROJECT
+		VAMP_FORKLIFT_CLUSTER
+		VAMP_FORKLIFT_VAULT_ADDR
+		VAMP_FORKLIFT_VAULT_TOKEN
+		VAMP_FORKLIFT_VAULT_BASE_PATH
+		VAMP_FORKLIFT_VAULT_CACERT
+		VAMP_FORKLIFT_VAULT_CLIENT_CERT
+		VAMP_FORKLIFT_VAULT_CLIENT_KEY`),
+}
+
+// RootCmd - returns root command for integration tests
+func RootCmd() *cobra.Command {
+	return rootCmd
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+func Execute() error {
+	return rootCmd.Execute()
 }
 
 func init() {
@@ -105,6 +100,9 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.PersistentFlags().BoolVarP(&logging.Verbose, "verbose", "v", false, "Verbose")
+
+	rootCmd.PersistentFlags().Int64P("project", "p", -1, "project id")
+	rootCmd.PersistentFlags().Int64P("cluster", "c", -1, "cluster id")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -136,14 +134,24 @@ func initConfig() {
 		viper.SetConfigName("config")
 	}
 
-	SetupConfigurationEnvrionmentVariables()
+	setupConfigurationEnvrionmentVariables()
 
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
 	viper.ReadInConfig() // TODO: handle config file autocreation
+	viper.BindPFlag("project", rootCmd.PersistentFlags().Lookup("project"))
+	viper.BindPFlag("cluster", rootCmd.PersistentFlags().Lookup("cluster"))
+
 	// unmarshal config
 	c := viper.AllSettings()
+	if viper.GetString("project") == "-1" {
+		delete(c, "project")
+	}
+	if viper.GetString("cluster") == "-1" {
+		delete(c, "cluster")
+	}
+
 	bs, err := yaml.Marshal(c)
 	if err != nil {
 		panic(err)
@@ -160,44 +168,15 @@ func initConfig() {
 	jsonConfig, _ := json.Marshal(Config)
 
 	logging.Info("Forklift configuration %v\n", util.PrettyJson(string(jsonConfig)))
-
 }
 
-func SetupConfigurationEnvrionmentVariables() {
-
-	// VAMP_FORKLIFT_VAULT_ADDR
-	viper.BindEnv("namespace", "VAMP_FORKLIFT_NAMESPACE")
-
-	// VAMP_FORKLIFT_VAULT_ADDR
+func setupConfigurationEnvrionmentVariables() {
+	viper.BindEnv("project", "VAMP_FORKLIFT_PROJECT")
+	viper.BindEnv("cluster", "VAMP_FORKLIFT_CLUSTER")
 	viper.BindEnv("key-value-store-url", "VAMP_FORKLIFT_VAULT_ADDR")
-
-	// VAMP_FORKLIFT_VAULT_TOKEN
 	viper.BindEnv("key-value-store-token", "VAMP_FORKLIFT_VAULT_TOKEN")
-
-	// VAMP_FORKLIFT_VAULT_CACERT
+	viper.BindEnv("key-value-store-base-path", "VAMP_FORKLIFT_VAULT_BASE_PATH")
 	viper.BindEnv("key-value-store-server-tls-cert", "VAMP_FORKLIFT_VAULT_CACERT")
-
-	// VAMP_FORKLIFT_VAULT_CLIENT_CERT
 	viper.BindEnv("key-value-store-client-tls-cert", "VAMP_FORKLIFT_VAULT_CLIENT_CERT")
-
-	// VAMP_FORKLIFT_VAULT_CLIENT_KEY
 	viper.BindEnv("key-value-store-client-tls-key", "VAMP_FORKLIFT_VAULT_CLIENT_KEY")
-
-	// VAMP_FORKLIFT_MYSQL_HOST - for example: mysql://<VAMP_FORKLIFT_MYSQL_HOST>/vamp-${namespace}?useSSL=false
-	viper.BindEnv("mysql_host", "VAMP_FORKLIFT_MYSQL_HOST")
-	if viper.GetString("mysql_host") != "" {
-		url := "mysql://" + viper.GetString("mysql_host") + "/vamp-${namespace}"
-		Config.DatabaseURL = url
-	}
-	// VAMP_FORKLIFT_MYSQL_PARAMS
-	viper.BindEnv("mysql_params", "VAMP_FORKLIFT_MYSQL_CONNECTION_PROPS")
-	if viper.GetString("mysql_params") != "" {
-		Config.DatabaseURL += "?" + viper.GetString("mysql_params")
-	}
-	// VAMP_FORKLIFT_MYSQL_USER
-	viper.BindEnv("database-user", "VAMP_FORKLIFT_MYSQL_USER")
-
-	// VAMP_FORKLIFT_MYSQL_PASSWORD
-	viper.BindEnv("database-password", "VAMP_FORKLIFT_MYSQL_PASSWORD")
-
 }

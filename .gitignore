@@ -19,3 +19,5 @@ local/
 
 #forklift executable
 forklift
+#vault folder for integration tests
+vault

@@ -1,0 +1,16 @@
+{
+	"application_id": 112,
+	"service_id": 15,
+	"k8s_labels": {
+		"app": "nginx-test"
+	},
+	"version_selector": "version",
+	"default_policy_id": 1,
+	"ingress_rules": [
+		{
+			"domain": "test.local",
+			"path": "/",
+			"port": 8081
+		}
+	]
+}

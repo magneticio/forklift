@@ -1,4 +1,4 @@
-// Copyright © 2019 Developer <developer@vamp.io>
+// Copyright © 2020 Developer <developer@vamp.io>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -29,14 +29,14 @@ import (
 // deleteCmd represents the delete command
 var deleteCmd = &cobra.Command{
 	Use:   "delete",
-	Short: "Delete an organization or environment",
-	Long: AddAppName(`Delete an organization or environment
+	Short: "Delete existing artifact",
+	Long: AddAppName(`Delete existing artifact
     Example:
-    $AppName delete organization organization1`),
+    $AppName delete policy <policy_id>`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return errors.New("A resource type expected.")
+		return errors.New("A resource type expected")
 	},
 }
 

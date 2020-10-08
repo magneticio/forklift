@@ -2,26 +2,11 @@ version: "3"
 
 services:
   vault:
-    image: vault:1.1.2
+    image: circleci/vault-cci
     ports:
-      - 8200:8200
+      - "8200:8200"
+      - "8201:8201"
+    volumes:
+      - ./vault/file:/vault/file
     cap_add:
       - IPC_LOCK
-    entrypoint: vault server -dev -dev-root-token-id="vamp" -dev-listen-address="0.0.0.0:8200"
-  db:
-    image: mysql:5.7
-    restart: always
-    environment:
-      MYSQL_DATABASE: "vamp-vampio-organization"
-      MYSQL_USER: "user"
-      MYSQL_PASSWORD: "secret"
-      MYSQL_ROOT_PASSWORD: "secret"
-    ports:
-      - "3306:3306"
-    expose:
-      - "3306"
-    volumes:
-      - my-db:/var/lib/mysql
-
-volumes:
-  my-db:

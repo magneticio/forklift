@@ -20,6 +20,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -67,12 +68,11 @@ func UseSourceUrl(resourceUrl string) (string, error) {
 }
 
 func Convert(inputFormat string, outputFormat string, input string) (string, error) {
-	if inputFormat == outputFormat {
+	if inputFormat == "yaml" && outputFormat == "yaml" {
 		return input, nil
 	}
-
 	inputSource := []byte(input)
-	if inputFormat == "yaml" {
+	if inputFormat == "yaml" && outputFormat == "json" {
 		json, err := yaml.YAMLToJSON(inputSource)
 		if err != nil {
 			return "", err
@@ -80,26 +80,31 @@ func Convert(inputFormat string, outputFormat string, input string) (string, err
 		inputSource = json
 	}
 
-	// convert everything to json as byte
-
-	outputSourceString := ""
-	if outputFormat == "yaml" {
+	if inputFormat == "json" && outputFormat == "yaml" {
 		yaml, errYaml := yaml.JSONToYAML(inputSource)
 		if errYaml != nil {
 			// fmt.Printf("YAML conversion error: %v\n", errYaml)
 			return "", errYaml
 		}
-		outputSourceString = string(yaml)
-	} else {
+		return string(yaml), nil
+	}
+
+	if inputFormat == "json" && outputFormat == "json" {
 		var prettyJSON bytes.Buffer
 		indentError := json.Indent(&prettyJSON, inputSource, "", "    ")
 		if indentError != nil {
-			// log.Println("JSON parse error: ", indentError)
 			return "", indentError
 		}
-		outputSourceString = string(prettyJSON.Bytes())
+
+		unescapedPrettyJSON, err := strconv.Unquote(strings.Replace(strconv.Quote(prettyJSON.String()), `\\u`, `\u`, -1))
+		if err != nil {
+			return "", err
+		}
+
+		return unescapedPrettyJSON, nil
 	}
-	return outputSourceString, nil
+
+	return "", fmt.Errorf("unsupported conversion from '%s' format to '%s' format", inputFormat, outputFormat)
 }
 
 // DownloadFile will download a url to a local file. It's efficient because it will

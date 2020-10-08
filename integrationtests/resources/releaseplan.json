@@ -1,0 +1,21 @@
+{
+	"status": "not started",
+	"service": {
+		"name": "sava",
+		"version": "1.0.5"
+	},
+	"releaseGroups": [
+		{
+			"group": 1,
+			"name": "group-1",
+			"status": "not started",
+			"environments": [
+				{
+					"id": "test",
+					"name": "test",
+					"status": "not started"
+				}
+			]
+		}
+	]
+}

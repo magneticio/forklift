@@ -1,4 +1,4 @@
-// Copyright © 2019 Developer <developer@vamp.io>
+// Copyright © 2020 Developer <developer@vamp.io>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -31,31 +31,31 @@ import (
 
 var deleteReleasePlanCmd = &cobra.Command{
 	Use:   "releaseplan",
-	Short: "Delete a release plan",
-	Long: AddAppName(`Delete a new release plan
-    Example:
-    $AppName delete releaseplan name`),
+	Short: "Delete existing release plan",
+	Long: AddAppName(`Delete existing release plan
+    Usage:
+    $AppName delete releaseplan <service_version> --service <service_id>`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
-			return errors.New("Not Enough Arguments, Release Plan name needed")
+			return errors.New("Not enough arguments - release plan name needed")
 		}
-		name := args[0]
+		serviceVersion := args[0]
 
-		logging.Info("Deleteing release plan '%s'\n", name)
+		logging.Info("Deleteing release plan for service version '%s'\n", serviceVersion)
 
-		core, coreError := core.NewCore(Config)
-		if coreError != nil {
-			return coreError
-		}
-
-		deleteReleasePlanError := core.DeleteReleasePlan(name)
-		if deleteReleasePlanError != nil {
-			return deleteReleasePlanError
+		core, err := core.NewCore(Config)
+		if err != nil {
+			return err
 		}
 
-		fmt.Printf("Release Plan '%s' is deleted\n", name)
+		err = core.DeleteReleasePlan(serviceID, serviceVersion)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("Release plan for service version '%s' has been deleted\n", serviceVersion)
 
 		return nil
 	},
@@ -63,4 +63,7 @@ var deleteReleasePlanCmd = &cobra.Command{
 
 func init() {
 	deleteCmd.AddCommand(deleteReleasePlanCmd)
+
+	deleteReleasePlanCmd.Flags().Uint64VarP(&serviceID, "service", "s", 0, "ID of the service")
+	deleteReleasePlanCmd.MarkFlagRequired("service")
 }

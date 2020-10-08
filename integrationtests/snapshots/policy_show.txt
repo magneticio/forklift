@@ -1,0 +1,79 @@
+{
+    "type": "release",
+    "name": "policy-with-steps-names",
+    "version": 0,
+    "steps": [
+        {
+            "name": "first step",
+            "source": {
+                "weight": 90
+            },
+            "target": {
+                "weight": 10
+            },
+            "endAfter": {
+                "value": "health >= baselines.minHealth",
+                "maxDuration": "0s"
+            },
+            "conditions": [
+                {
+                    "value": "health >= baselines.minHealth",
+                    "gracePeriod": "1m0s"
+                }
+            ]
+        },
+        {
+            "name": "second step",
+            "source": {
+                "weight": 50
+            },
+            "target": {
+                "weight": 50
+            },
+            "endAfter": {
+                "value": "duration == 2m0s"
+            },
+            "conditions": [
+                {
+                    "value": "health >= baselines.minHealth",
+                    "gracePeriod": "1m0s"
+                }
+            ]
+        },
+        {
+            "name": "third step",
+            "source": {
+                "weight": 0,
+                "condition": "header: my-header exists"
+            },
+            "target": {
+                "weight": 100,
+                "condition": "header: my-header exists"
+            },
+            "endAfter": {
+                "value": "duration == 2m0s"
+            },
+            "conditions": [
+                {
+                    "value": "health >= baselines.minHealth",
+                    "gracePeriod": "1m0s"
+                }
+            ]
+        }
+    ],
+    "metrics": [
+        {
+            "name": "health",
+            "value": {
+                "source": "k8s-deployment-health"
+            }
+        }
+    ],
+    "baselines": [
+        {
+            "name": "minHealth",
+            "metric": "health",
+            "value": 0.1
+        }
+    ]
+}

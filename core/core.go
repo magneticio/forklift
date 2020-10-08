@@ -1,986 +1,522 @@
 package core
 
 import (
+	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"path"
-	"strings"
+	"strconv"
 
 	"github.com/magneticio/forklift/keyvaluestoreclient"
 	"github.com/magneticio/forklift/logging"
 	"github.com/magneticio/forklift/models"
-	"github.com/magneticio/forklift/sql"
-	"github.com/magneticio/forklift/util"
 	policies "github.com/magneticio/vamp-policies"
+	policiesModel "github.com/magneticio/vamp-policies/policy/domain/model/policy"
+	"github.com/magneticio/vamp-policies/policy/interface/api"
+	policiesDTO "github.com/magneticio/vamp-policies/policy/interface/persistence/vault/dto"
 )
 
 type Core struct {
-	Conf models.ForkliftConfiguration
+	kvClient    keyvaluestoreclient.KeyValueStoreClient
+	projectPath string
+	clusterID   *uint64
 }
 
 func NewCore(conf models.ForkliftConfiguration) (*Core, error) {
+	if conf.ProjectID == nil {
+		return nil, fmt.Errorf("project id must be provided")
+	}
+	projectPath := path.Join(conf.KeyValueStoreBasePath, "projects", strconv.FormatUint(*conf.ProjectID, 10))
+	config := models.VaultKeyValueStoreConfiguration{
+		URL:               conf.KeyValueStoreURL,
+		Token:             conf.KeyValueStoreToken,
+		ServerTLSCert:     conf.KeyValueStoreServerTLSCert,
+		ClientTLSCert:     conf.KeyValueStoreClientTLSCert,
+		ClientTLSKey:      conf.KeyValueStoreClientTLSKey,
+		KvMode:            conf.KeyValueStoreKvMode,
+		FallbackKvVersion: conf.KeyValueStoreFallbackKvVersion,
+	}
+	kvClient, err := keyvaluestoreclient.NewKeyValueStoreClient(config)
+	if err != nil {
+		return nil, err
+	}
 
 	return &Core{
-		Conf: conf,
+		kvClient:    kvClient,
+		projectPath: projectPath,
+		clusterID:   conf.ClusterID,
 	}, nil
 }
 
-func (c *Core) GetArtifact(organization string, environment string, name string, kind string) (*models.SqlElement, error) {
-
-	databaseConfig, err := c.GetNamespaceDatabaseConfiguration(environment)
-	if err != nil {
-		return nil, err
-	}
-
-	organizationConfig, err := c.GetNamespaceDatabaseConfiguration(organization)
-	if err != nil {
-		return nil, err
-	}
-
-	namespacedOrganizationName := organizationConfig.Sql.Database
-
-	client, clientError := sql.NewSqlClient(databaseConfig)
-	if clientError != nil {
-		logging.Error("Client error: %v\n", clientError.Error())
-		return nil, clientError
-	}
-
-	result, queryError := client.FindByNameAndKind(namespacedOrganizationName, databaseConfig.Sql.Table, name, kind)
-	if queryError != nil {
-		return nil, queryError
-	}
-
-	if result == nil {
-		return nil, nil
-	}
-
-	var sqlElement models.SqlElement
-
-	jsonUnmarshallError := json.Unmarshal([]byte(result.Record), &sqlElement)
-	if jsonUnmarshallError != nil {
-		return nil, jsonUnmarshallError
-	}
-	return &sqlElement, nil
+// PutPolicy - puts policy to key value store
+func (c *Core) PutPolicy(policyID uint64, policyContent string) error {
+	policyAPI := policies.NewPolicyAPI(c.kvClient, c.projectPath)
+	return policyAPI.Save(strconv.FormatUint(policyID, 10), policyContent)
 }
 
-func (c *Core) CreateUser(namespace string, name string, role string, password string) error {
-
-	databaseConfig, err := c.GetNamespaceDatabaseConfiguration(namespace)
+// DeletePolicy - deletes policy from key value store
+func (c *Core) DeletePolicy(policyID uint64) error {
+	policyAPI := policies.NewPolicyAPI(c.kvClient, c.projectPath)
+	policyKey := strconv.FormatUint(policyID, 10)
+	_, err := policyAPI.Find(policyKey)
 	if err != nil {
-		return err
+		return fmt.Errorf("cannot find policy: %v", err)
 	}
-
-	userElement, validationError := c.GetUser(namespace, name)
-	if validationError != nil {
-
-		return validationError
-	}
-	if userElement != nil {
-
-		return errors.New(fmt.Sprintf("%v %v already exists", models.UsersKind, name))
-	}
-
-	// get organization Configuration using namespace
-	configuration, configurationError := c.getConfig(namespace)
-	if configurationError != nil {
-		return configurationError
-	}
-
-	encodedPassword := util.EncodeString(password, configuration.Vamp.Security.PasswordHashAlgorithm, configuration.Vamp.Security.PasswordHashSalt)
-
-	artifact := models.Artifact{
-		Name:     name,
-		Password: encodedPassword,
-		Kind:     models.UsersKind,
-		Roles:    []string{role},
-		Metadata: map[string]string{},
-	}
-
-	artifactAsJson, artifactJsonError := json.Marshal(artifact)
-	if artifactJsonError != nil {
-		return artifactJsonError
-	}
-
-	artifactAsJsonString := string(artifactAsJson)
-
-	sqlElement := models.SqlElement{
-		Version:   models.BackendVersion,
-		Instance:  util.UUID(),
-		Timestamp: util.Timestamp(),
-		Name:      name,
-		Kind:      models.UsersKind,
-		Artifact:  artifactAsJsonString,
-	}
-
-	sqlElementAsJson, sqlElementJsonError := json.Marshal(sqlElement)
-	if sqlElementJsonError != nil {
-		return sqlElementJsonError
-	}
-
-	sqlElementAsJsonString := string(sqlElementAsJson)
-
-	client, clientError := sql.NewSqlClient(databaseConfig)
-	if clientError != nil {
-		logging.Error("Client error: %v\n", clientError.Error())
-		return clientError
-	}
-
-	return client.Insert(databaseConfig.Sql.Database, databaseConfig.Sql.Table, sqlElementAsJsonString)
-
+	return policyAPI.Delete(policyKey)
 }
 
-func (c *Core) UpdateUser(namespace string, name string, role string, password string) error {
-
-	databaseConfig, err := c.GetNamespaceDatabaseConfiguration(namespace)
+// ListPolicies - lists existing policies
+func (c *Core) ListPolicies() ([]models.PolicyView, error) {
+	policyAPI := policies.NewPolicyAPI(c.kvClient, c.projectPath)
+	apiPolicyViews, err := policyAPI.FindAll()
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("cannot list policies: %v", err)
 	}
 
-	userElement, validationError := c.GetUser(namespace, name)
-	if validationError != nil {
-
-		return validationError
-	}
-	if userElement == nil {
-
-		return errors.New(fmt.Sprintf("%v %v does not exist", models.UsersKind, name))
-	}
-
-	// get organization Configuration using namespace
-	configuration, configurationError := c.getConfig(namespace)
-	if configurationError != nil {
-		return configurationError
-	}
-
-	encodedPassword := util.EncodeString(password, configuration.Vamp.Security.PasswordHashAlgorithm, configuration.Vamp.Security.PasswordHashSalt)
-
-	artifact := models.Artifact{
-		Name:     name,
-		Password: encodedPassword,
-		Kind:     models.UsersKind,
-		Roles:    []string{role},
-		Metadata: map[string]string{},
-	}
-
-	artifactAsJson, artifactJsonError := json.Marshal(artifact)
-	if artifactJsonError != nil {
-		return artifactJsonError
-	}
-
-	artifactAsJsonString := string(artifactAsJson)
-
-	sqlElement := models.SqlElement{
-		Version:   models.BackendVersion,
-		Instance:  util.UUID(),
-		Timestamp: util.Timestamp(),
-		Name:      name,
-		Kind:      models.UsersKind,
-		Artifact:  artifactAsJsonString,
-	}
-
-	sqlElementAsJson, sqlElementJsonError := json.Marshal(sqlElement)
-	if sqlElementJsonError != nil {
-		return sqlElementJsonError
-	}
-
-	sqlElementAsJsonString := string(sqlElementAsJson)
-
-	client, clientError := sql.NewSqlClient(databaseConfig)
-	if clientError != nil {
-		logging.Error("Client error: %v\n", clientError.Error())
-		return clientError
-	}
-
-	return client.InsertOrReplace(databaseConfig.Sql.Database, databaseConfig.Sql.Table, sqlElement.Name, sqlElement.Kind, sqlElementAsJsonString)
-
-}
-
-func (c *Core) DeleteUser(namespace string, user string) error {
-
-	databaseConfig, err := c.GetNamespaceDatabaseConfiguration(namespace)
-	if err != nil {
-		return err
-	}
-
-	client, clientError := sql.NewSqlClient(databaseConfig)
-	if clientError != nil {
-		logging.Error("Client error: %v\n", clientError.Error())
-		return clientError
-	}
-
-	return client.DeleteByNameAndKind(databaseConfig.Sql.Database, databaseConfig.Sql.Table, user, models.UsersKind) //TODO admin should be a constant
-
-}
-
-func (c *Core) AddUser(namespace string, user string) error {
-
-	databaseConfig, err := c.GetNamespaceDatabaseConfiguration(namespace)
-	if err != nil {
-		return err
-	}
-
-	// get organization Configuration using namespace
-	configuration, configurationError := c.getConfig(namespace)
-	if configurationError != nil {
-		return configurationError
-	}
-
-	var userArtifact models.Artifact
-
-	marshallError := json.Unmarshal([]byte(user), &userArtifact)
-	if marshallError != nil {
-		return marshallError
-	}
-
-	userArtifact.Password = util.EncodeString(userArtifact.Password, configuration.Vamp.Security.PasswordHashAlgorithm, configuration.Vamp.Security.PasswordHashSalt)
-
-	userJson, marshalError := json.Marshal(userArtifact)
-	if marshalError != nil {
-		return marshalError
-	}
-
-	sqlElement, convertError := ConvertToSqlElement(string(userJson))
-	if convertError != nil {
-		return convertError
-	}
-
-	client, clientError := sql.NewSqlClient(databaseConfig)
-	if clientError != nil {
-		logging.Error("Client error: %v\n", clientError.Error())
-		return clientError
-	}
-
-	sqlElementString, jsonMarshallError := json.Marshal(sqlElement)
-	if jsonMarshallError != nil {
-		return jsonMarshallError
-	}
-
-	return client.InsertOrReplace(databaseConfig.Sql.Database, databaseConfig.Sql.Table, sqlElement.Name, sqlElement.Kind, string(sqlElementString))
-
-}
-
-func (c *Core) GetUser(namespace string, name string) (*models.SqlElement, error) {
-
-	databaseConfig, err := c.GetNamespaceDatabaseConfiguration(namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	client, clientError := sql.NewSqlClient(databaseConfig)
-	if clientError != nil {
-		logging.Error("Client error: %v\n", clientError.Error())
-		return nil, clientError
-	}
-
-	result, queryError := client.FindByNameAndKind(databaseConfig.Sql.Database, databaseConfig.Sql.Table, name, models.UsersKind)
-	if queryError != nil {
-		return nil, queryError
-	}
-
-	if result == nil {
-		return nil, nil
-	}
-
-	var sqlElement models.SqlElement
-
-	jsonUnmarshallError := json.Unmarshal([]byte(result.Record), &sqlElement)
-	if jsonUnmarshallError != nil {
-		return nil, jsonUnmarshallError
-	}
-	return &sqlElement, nil
-}
-
-func (c *Core) ListArtifacts(organization string, environment string, kind string) ([]string, error) {
-
-	databaseConfig, err := c.GetNamespaceDatabaseConfiguration(environment)
-	if err != nil {
-		return nil, err
-	}
-
-	organizationConfig, err := c.GetNamespaceDatabaseConfiguration(organization)
-	if err != nil {
-		return nil, err
-	}
-
-	namespacedOrganizationName := organizationConfig.Sql.Database
-
-	client, clientError := sql.NewSqlClient(databaseConfig)
-	if clientError != nil {
-		logging.Error("Client error: %v\n", clientError.Error())
-		return nil, clientError
-	}
-
-	result, queryError := client.List(namespacedOrganizationName, databaseConfig.Sql.Table, kind)
-	if queryError != nil {
-		return nil, queryError
-	}
-
-	if result == nil {
-		return nil, nil
-	}
-
-	var names []string
-
-	for _, element := range result {
-
-		var sqlElement models.SqlElement
-
-		jsonUnmarshallError := json.Unmarshal([]byte(element.Record), &sqlElement)
-		if jsonUnmarshallError != nil {
-			return nil, jsonUnmarshallError
+	policyViews := make([]models.PolicyView, len(apiPolicyViews))
+	for i, apiPolicyView := range apiPolicyViews {
+		policyViews[i] = models.PolicyView{
+			ID:   apiPolicyView.PolicyID,
+			Name: apiPolicyView.PolicyName,
+			Type: string(apiPolicyView.PolicyType),
 		}
-
-		names = append(names, sqlElement.Name)
 	}
 
-	return names, nil
+	return policyViews, nil
 }
 
-func (c *Core) ListUsers(namespace string) ([]string, error) {
-
-	databaseConfig, err := c.GetNamespaceDatabaseConfiguration(namespace)
+// GetPolicyString - gets exisiting policy string
+func (c *Core) GetPolicyString(policyID uint64) (string, error) {
+	policyAPI := policies.NewPolicyAPI(c.kvClient, c.projectPath)
+	policyView, err := policyAPI.FindByID(policyID)
 	if err != nil {
-		return nil, err
+		return "", fmt.Errorf("cannot get policy: %v", err)
 	}
-
-	client, clientError := sql.NewSqlClient(databaseConfig)
-	if clientError != nil {
-		logging.Error("Client error: %v\n", clientError.Error())
-		return nil, clientError
-	}
-
-	result, queryError := client.List(databaseConfig.Sql.Database, databaseConfig.Sql.Table, "users")
-	if queryError != nil {
-		return nil, queryError
-	}
-
-	if result == nil {
-		return nil, nil
-	}
-
-	var names []string
-
-	for _, element := range result {
-
-		var sqlElement models.SqlElement
-
-		jsonUnmarshallError := json.Unmarshal([]byte(element.Record), &sqlElement)
-		if jsonUnmarshallError != nil {
-			return nil, jsonUnmarshallError
+	switch policyView.PolicyType {
+	case api.ReleasePolicyType:
+		policy, err := policyAPI.GetReleasePolicyByID(policyID)
+		if err != nil {
+			return "", fmt.Errorf("cannot get release policy: %v", err)
 		}
-
-		names = append(names, sqlElement.Name)
+		return getReleasePolicyString(policy)
+	case api.ValidationPolicyType:
+		policy, err := policyAPI.GetValidationPolicyByID(policyID)
+		if err != nil {
+			return "", fmt.Errorf("cannot get validation policy: %v", err)
+		}
+		return getValidationPolicyString(policy)
 	}
-
-	return names, nil
+	return "", fmt.Errorf("unsupported policy type: %v", policyView.PolicyType)
 }
 
-func (c *Core) AddPolicy(organization string, environment string, policyContent string) error {
-	logging.Info("Adding policy:\n")
-	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(environment)
-	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
-	if keyValueStoreClientError != nil {
-		return keyValueStoreClientError
-	}
-	basePath := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleaseAgentKeyValueStorePath)
-	policyAPI := policies.NewPolicyAPI(keyValueStoreClient, basePath)
-	return policyAPI.Save(policyContent)
-}
-
-func (c *Core) DeleteReleasePolicy(organization string, environment string, policyName string) error {
-	logging.Info("Deleting policy: %v\n", policyName)
-	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(environment)
-	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
-	if keyValueStoreClientError != nil {
-		return keyValueStoreClientError
-	}
-	basePath := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleaseAgentKeyValueStorePath)
-	policyAPI := policies.NewPolicyAPI(keyValueStoreClient, basePath)
-	return policyAPI.Delete(policyName)
-}
-
-// AddReleasePlan - adds release plan to key value store
-func (c *Core) AddReleasePlan(name string, content string) error {
-	keyValueStoreConfig := c.GetKeyValueStoreConfiguration()
-	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
-	if keyValueStoreClientError != nil {
-		return keyValueStoreClientError
-	}
-	key := path.Join(c.Conf.ReleasePlansKeyValueStorePath, name)
-	logging.Info("Storing Release Plan Under Key: %v\n", key)
-	keyValueStoreClientPutError := keyValueStoreClient.Put(key, content)
-	if keyValueStoreClientPutError != nil {
-		return keyValueStoreClientPutError
-	}
-	return nil
+// PutReleasePlan - puts release plan to key value store
+func (c *Core) PutReleasePlan(serviceID uint64, serviceVersion string, releasePlanContent string) error {
+	releasePlanKey := c.getReleasePlanKey(serviceID, serviceVersion)
+	return c.kvClient.Put(releasePlanKey, releasePlanContent)
 }
 
 // DeleteReleasePlan - deletes release plan from key value store
-func (c *Core) DeleteReleasePlan(name string) error {
-	keyValueStoreConfig := c.GetKeyValueStoreConfiguration()
-	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
-	if keyValueStoreClientError != nil {
-		return keyValueStoreClientError
+func (c *Core) DeleteReleasePlan(serviceID uint64, serviceVersion string) error {
+	releasePlanKey := c.getReleasePlanKey(serviceID, serviceVersion)
+	exists, err := c.kvClient.Exists(releasePlanKey)
+	if err != nil {
+		return fmt.Errorf("cannot find release plan: %v", err)
 	}
-	key := path.Join(c.Conf.ReleasePlansKeyValueStorePath, name)
-	logging.Info("Deleting Release Plan Under Key: %v\n", key)
-	keyValueStoreClientDeleteError := keyValueStoreClient.Delete(key)
-	if keyValueStoreClientDeleteError != nil {
-		return keyValueStoreClientDeleteError
+	if !exists {
+		return fmt.Errorf("release plan does not exist")
 	}
-	return nil
+	return c.kvClient.Delete(releasePlanKey)
 }
 
-func (c *Core) addArtifactToDatabase(organization string, environment string, content string) error {
+// ListReleasePlans - lists existing release plans
+func (c *Core) ListReleasePlans(serviceID uint64) ([]string, error) {
+	releasePlansPath := c.getReleasePlansPath(serviceID)
+	releasePlanKeys, err := c.kvClient.List(releasePlansPath)
+	if err != nil {
+		return nil, fmt.Errorf("cannot list release plans: %v", err)
+	}
 
-	databaseConfig, err := c.GetNamespaceDatabaseConfiguration(environment)
+	return releasePlanKeys, nil
+}
+
+// GetReleasePlanText - gets release plan content
+func (c *Core) GetReleasePlanText(serviceID uint64, serviceVersion string) (string, error) {
+	releasePlanKey := c.getReleasePlanKey(serviceID, serviceVersion)
+	exists, err := c.kvClient.Exists(releasePlanKey)
+	if err != nil {
+		return "", fmt.Errorf("cannot find release plan: %v", err)
+	}
+	if !exists {
+		return "", fmt.Errorf("release plan does not exist")
+	}
+	return c.kvClient.Get(releasePlanKey)
+}
+
+// PutReleaseAgentConfig - puts Release Agent config to key value store
+func (c *Core) PutReleaseAgentConfig(clusterID uint64, natsChannelName, optimiserNatsChannelName, natsToken string) error {
+	if natsChannelName == "" {
+		return fmt.Errorf("NATS channel name must not be empty")
+	}
+	releaseAgentConfigKey := c.getReleaseAgentConfigKey(clusterID)
+	existingReleaseAgentConfig, exists, err := c.getReleaseAgentConfig(releaseAgentConfigKey)
 	if err != nil {
 		return err
 	}
 
-	organizationDbConfiguration, err := c.GetNamespaceDatabaseConfiguration(organization)
+	var releaseAgentConfig models.ReleaseAgentConfig
+	if exists {
+		releaseAgentConfig = models.ReleaseAgentConfig{
+			NatsChannel:                 natsChannelName,
+			NatsToken:                   natsToken,
+			OptimiserNatsChannel:        optimiserNatsChannelName,
+			K8SNamespaceToApplicationID: existingReleaseAgentConfig.K8SNamespaceToApplicationID,
+		}
+	} else {
+		releaseAgentConfig = models.ReleaseAgentConfig{
+			NatsChannel:                 natsChannelName,
+			NatsToken:                   natsToken,
+			OptimiserNatsChannel:        optimiserNatsChannelName,
+			K8SNamespaceToApplicationID: make(map[string]uint64),
+		}
+	}
+
+	return c.saveReleaseAgentConfig(releaseAgentConfigKey, releaseAgentConfig)
+}
+
+// DeleteReleaseAgentConfig - deletes Release Agent config from key value store
+func (c *Core) DeleteReleaseAgentConfig(clusterID uint64) error {
+	releaseAgentConfigKey := c.getReleaseAgentConfigKey(clusterID)
+	_, exists, err := c.getReleaseAgentConfig(releaseAgentConfigKey)
 	if err != nil {
-		return err
+		return fmt.Errorf("cannot find Release Agent config: %v", err)
+	}
+	if !exists {
+		return fmt.Errorf("Release Agent config does not exist")
 	}
 
-	sqlElement, convertError := ConvertToSqlElement(content)
-	if convertError != nil {
-		return convertError
-	}
-
-	client, clientError := sql.NewSqlClient(databaseConfig)
-	if clientError != nil {
-		logging.Error("Client error: %v\n", clientError.Error())
-		return clientError
-	}
-
-	sqlElementString, jsonMarshallError := json.Marshal(sqlElement)
-	if jsonMarshallError != nil {
-		return jsonMarshallError
-	}
-
-	if sqlElement.Kind == "workflows" {
-		tokenSqlElementAsString, generateTokenError := c.GenerateTokenForWorkflow(environment, sqlElement.Name, "admin")
-		if generateTokenError != nil {
-			return generateTokenError
-		}
-		insertTokenError := client.InsertOrReplace(organizationDbConfiguration.Sql.Database, organizationDbConfiguration.Sql.Table, sqlElement.Name, "tokens", tokenSqlElementAsString)
-		if insertTokenError != nil {
-			return insertTokenError
-		}
-	}
-
-	return client.InsertOrReplace(organizationDbConfiguration.Sql.Database, databaseConfig.Sql.Table, sqlElement.Name, sqlElement.Kind, string(sqlElementString))
+	return c.kvClient.Delete(releaseAgentConfigKey)
 }
 
-func (c *Core) addArtifactToVault(organization string, environment string, content string) error {
-	var artifact models.Artifact
-	unmarshallError := json.Unmarshal([]byte(content), &artifact)
-	if unmarshallError != nil {
-		logging.Error("Unmarshalling error : %v\n", unmarshallError)
-		return unmarshallError
-	}
-
-	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(environment)
-	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
-	if keyValueStoreClientError != nil {
-		return keyValueStoreClientError
-	}
-	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleaseAgentKeyValueStorePath, artifact.Kind, artifact.Name)
-	logging.Info("Storing Artifact Under Key: %v\n", key)
-	keyValueStoreClientPutError := keyValueStoreClient.Put(key, content)
-	if keyValueStoreClientPutError != nil {
-		return keyValueStoreClientPutError
-	}
-	return nil
-}
-
-// AddArtifact : adds artifact to sql database and Vault
-func (c *Core) AddArtifact(organization string, environment string, content string) error {
-
-	if c.Conf.DatabaseEnabled {
-
-		dbError := c.addArtifactToDatabase(organization, environment, content)
-		if dbError != nil {
-			return dbError
-		}
-
-	}
-
-	return c.addArtifactToVault(organization, environment, content)
-}
-
-func (c *Core) deleteArtifactFromDatabase(organization string, environment string, name string, kind string) error {
-
-	databaseConfig, err := c.GetNamespaceDatabaseConfiguration(environment)
+// ListClusters - lists existing clusters
+func (c *Core) ListClusters() ([]models.ClusterView, error) {
+	clustersPath := path.Join(c.projectPath, "clusters")
+	clusterIDStrings, err := c.kvClient.List(clustersPath)
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("cannot list clusters: %v", err)
 	}
-
-	organizationDatabaseConfig, err := c.GetNamespaceDatabaseConfiguration(organization)
-	if err != nil {
-		return err
-	}
-
-	client, clientError := sql.NewSqlClient(databaseConfig)
-	if clientError != nil {
-		logging.Error("Client error: %v\n", clientError.Error())
-		return clientError
-	}
-
-	tokenName := GenerateTokenName(environment, name, kind)
-
-	deleteTokenError := client.DeleteByNameAndKind(organizationDatabaseConfig.Sql.Database, organizationDatabaseConfig.Sql.Table, tokenName, "tokens")
-	if deleteTokenError != nil {
-		return deleteTokenError
-	}
-
-	return client.DeleteByNameAndKind(organizationDatabaseConfig.Sql.Database, databaseConfig.Sql.Table, name, kind)
-}
-
-func (c *Core) deleteArtifactFromVault(organization string, environment string, name string, kind string) error {
-	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(environment)
-	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
-	if keyValueStoreClientError != nil {
-		return keyValueStoreClientError
-	}
-	key := path.Join(keyValueStoreConfig.BasePath, c.Conf.ReleaseAgentKeyValueStorePath, kind, name)
-	logging.Info("Deleting Artifact Under Key: %v\n", key)
-	keyValueStoreClientDeleteError := keyValueStoreClient.Delete(key)
-	if keyValueStoreClientDeleteError != nil {
-		return keyValueStoreClientDeleteError
-	}
-	return nil
-}
-
-// DeleteArtifact : deletes artifact from sql database and Vault
-func (c *Core) DeleteArtifact(organization string, environment string, name string, kind string) error {
-
-	if c.Conf.DatabaseEnabled {
-
-		if dbError := c.deleteArtifactFromDatabase(organization, environment, name, kind); dbError != nil {
-			return dbError
+	clusterIDs := make([]uint64, len(clusterIDStrings))
+	for i, clusterIDString := range clusterIDStrings {
+		clusterID, err := strconv.ParseUint(clusterIDString, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("found cluster with invalid id: '%s'", clusterIDString)
 		}
-
+		clusterIDs[i] = clusterID
 	}
 
-	return c.deleteArtifactFromVault(organization, environment, name, kind)
-}
+	clusters := make([]models.ClusterView, 0)
 
-func (c *Core) CreateOrganization(namespace string, configuration models.VampConfiguration) error {
-
-	putConfigError := c.putConfig(namespace, configuration)
-	if putConfigError != nil {
-		return putConfigError
-	}
-
-	if !c.Conf.DatabaseEnabled {
-		//If database is not enabled we return
-		return nil
-	}
-
-	databaseConfig, err := c.GetNamespaceDatabaseConfiguration(namespace)
-	if err != nil {
-		return err
-	}
-
-	client, clientError := sql.NewSqlClient(databaseConfig)
-	if clientError != nil {
-		logging.Error("Client error: %v\n", clientError.Error())
-		return clientError
-	}
-
-	return client.SetupOrganization(databaseConfig.Sql.Database, databaseConfig.Sql.Table)
-
-}
-
-func (c *Core) UpdateOrganization(namespace string, configuration models.VampConfiguration) error {
-	return c.putConfig(namespace, configuration)
-}
-
-func (c *Core) ListOrganizations(baseNamespace string) ([]string, error) {
-	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration("")
-	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
-	if keyValueStoreClientError != nil {
-		return nil, keyValueStoreClientError
-	}
-	key := keyValueStoreConfig.BasePath
-	logging.Info("Listing Values in Key Value Store with namespace: %v\n", baseNamespace)
-	list, keyValueStoreClientListError := keyValueStoreClient.List(key)
-	if keyValueStoreClientListError != nil {
-		return nil, keyValueStoreClientListError
-	}
-	filteredMap := make(map[string]bool)
-	for _, name := range list {
-		if strings.HasPrefix(name, baseNamespace) {
-			filteredName := strings.Split(name, "-")
-			if len(filteredName) == 2 {
-				filteredMap[filteredName[1]] = true
-			}
+	for _, clusterID := range clusterIDs {
+		releaseAgentConfigKey := c.getReleaseAgentConfigKey(clusterID)
+		releaseAgentConfig, exists, err := c.getReleaseAgentConfig(releaseAgentConfigKey)
+		if err != nil {
+			return nil, fmt.Errorf("cannot get cluster '%d': %v", clusterID, err)
 		}
+		if !exists {
+			logging.Info("cluster config for cluster '%d' does not exist", clusterID)
+			continue
+		}
+		clusters = append(clusters, models.ClusterView{
+			ID:                   clusterID,
+			NatsChannel:          releaseAgentConfig.NatsChannel,
+			OptimiserNatsChannel: releaseAgentConfig.OptimiserNatsChannel,
+		})
 	}
-	filteredReducedList := make([]string, len(filteredMap))
-	i := 0
-	for k, _ := range filteredMap {
-		filteredReducedList[i] = k
-		i++
-	}
-	return filteredReducedList, nil
+
+	return clusters, nil
 }
 
-func (c *Core) ListEnvironments(baseNamespace string, organization string) ([]string, error) {
-	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration("")
-	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
-	if keyValueStoreClientError != nil {
-		return nil, keyValueStoreClientError
-	}
-	key := keyValueStoreConfig.BasePath
-	logging.Info("Listing Values in Key Value Store Under Key: %v\n", key)
-	list, keyValueStoreClientListError := keyValueStoreClient.List(key)
-	if keyValueStoreClientListError != nil {
-		return nil, keyValueStoreClientListError
-	}
-	filteredMap := make(map[string]bool)
-	filterPrefix := baseNamespace + "-" + organization + "-"
-	for _, name := range list {
-		if strings.HasPrefix(name, filterPrefix) {
-			filteredName := strings.Split(name, "-")
-			if len(filteredName) == 3 {
-				filteredMap[filteredName[2]] = true
-			}
-		}
-	}
-	filteredReducedList := make([]string, len(filteredMap))
-	i := 0
-	for k, _ := range filteredMap {
-		filteredReducedList[i] = k
-		i++
-	}
-	return filteredReducedList, nil
-}
-
-func (c *Core) CreateEnvironment(namespace string, organization string, elements []string, configuration models.VampConfiguration) error {
-	putConfigError := c.putConfig(namespace, configuration)
-	if putConfigError != nil {
-		return putConfigError
-	}
-
-	if !c.Conf.DatabaseEnabled {
-		//If database is not enabled we return
-		return nil
-	}
-
-	databaseConfig, err := c.GetNamespaceDatabaseConfiguration(namespace)
+// GetCluster - gets existing cluster
+func (c *Core) GetCluster(clusterID uint64) (*models.ClusterView, error) {
+	releaseAgentConfigKey := c.getReleaseAgentConfigKey(clusterID)
+	releaseAgentConfig, exists, err := c.getReleaseAgentConfig(releaseAgentConfigKey)
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("cannot get cluster: %v", err)
 	}
-
-	organizationDatabaseConfig, err := c.GetNamespaceDatabaseConfiguration(organization)
-	if err != nil {
-		return err
+	if !exists {
+		return nil, fmt.Errorf("cluster config does not exist")
 	}
-
-	client, clientError := sql.NewSqlClient(databaseConfig)
-	if clientError != nil {
-		logging.Error("Client error: %v\n", clientError.Error())
-		return clientError
-	}
-
-	sqlElements := make([]string, len(elements))
-	for i, element := range elements {
-		sqlElement, convertError := ConvertToSqlElementJson(element)
-		if convertError != nil {
-			return convertError
-		}
-		sqlElements[i] = sqlElement
-
-		sqlElementAsStruct, conversionError := ConvertToSqlElement(element)
-		if conversionError != nil {
-			return conversionError
-		}
-		if sqlElementAsStruct.Kind == "workflows" {
-			tokenSqlElementAsString, generateTokenError := c.GenerateTokenForWorkflow(namespace, sqlElementAsStruct.Name, "admin")
-			if generateTokenError != nil {
-				return generateTokenError
-			}
-			insertTokenError := client.InsertOrReplace(organizationDatabaseConfig.Sql.Database, organizationDatabaseConfig.Sql.Table, sqlElementAsStruct.Name, "tokens", tokenSqlElementAsString)
-			if insertTokenError != nil {
-				return insertTokenError
-			}
-		}
-	}
-
-	return client.SetupEnvironment(organizationDatabaseConfig.Sql.Database, databaseConfig.Sql.Table, sqlElements)
-
-}
-
-func (c *Core) UpdateEnvironment(namespace string, organization string, elements []string, configuration models.VampConfiguration) error {
-
-	putConfigError := c.putConfig(namespace, configuration)
-	if putConfigError != nil {
-		return putConfigError
-	}
-
-	if !c.Conf.DatabaseEnabled {
-		//If database is not enabled we return
-		return nil
-	}
-
-	databaseConfig, err := c.GetNamespaceDatabaseConfiguration(namespace)
-	if err != nil {
-		return err
-	}
-
-	organizationConfig, err := c.GetNamespaceDatabaseConfiguration(organization)
-	if err != nil {
-		return err
-	}
-
-	namespacedOrganizationName := organizationConfig.Sql.Database
-
-	client, clientError := sql.NewSqlClient(databaseConfig)
-	if clientError != nil {
-		logging.Error("Client error: %v\n", clientError.Error())
-		return clientError
-	}
-
-	return client.UpdateEnvironment(namespacedOrganizationName, databaseConfig.Sql.Table, elements)
-
-}
-
-// GetNamespaceDatabaseConfiguration retrieves the database configuration by namespace
-func (c *Core) GetNamespaceDatabaseConfiguration(namespace string) (models.Database, error) {
-
-	if !c.Conf.DatabaseEnabled {
-		return models.Database{}, errors.New("Database is not enabled")
-	}
-
-	return models.Database{
-		Sql: models.SqlConfiguration{
-			Database: Namespaced(namespace, c.Conf.DatabaseName),
-			Table:    Namespaced(namespace, c.Conf.DatabaseTable),
-			User:     c.Conf.DatabaseUser,
-			Password: c.Conf.DatabasePassword,
-			Url:      Namespaced(namespace, c.Conf.DatabaseURL),
-		},
-		Type: c.Conf.DatabaseType,
+	return &models.ClusterView{
+		ID:                   clusterID,
+		NatsChannel:          releaseAgentConfig.NatsChannel,
+		OptimiserNatsChannel: releaseAgentConfig.OptimiserNatsChannel,
+		NatsToken:            releaseAgentConfig.NatsToken,
 	}, nil
 }
 
-func (c *Core) GetNamespaceKeyValueStoreConfiguration(namespace string) *models.KeyValueStoreConfiguration {
-	return &models.KeyValueStoreConfiguration{
-		Type:     c.Conf.KeyValueStoreType,
-		BasePath: Namespaced(namespace, c.Conf.KeyValueStoreBasePath),
-		Vault: models.VaultKeyValueStoreConfiguration{
-			Url:               c.Conf.KeyValueStoreUrL,
-			Token:             c.Conf.KeyValueStoreToken,
-			ServerTlsCert:     c.Conf.KeyValueStoreServerTlsCert,
-			ClientTlsCert:     c.Conf.KeyValueStoreClientTlsCert,
-			ClientTlsKey:      c.Conf.KeyValueStoreClientTlsKey,
-			KvMode:            c.Conf.KeyValueStoreKvMode,
-			FallbackKvVersion: c.Conf.KeyValueStoreFallbackKvVersion,
-		},
-	}
-}
-
-// GetKeyValueStoreConfiguration - gets key value store configuration
-func (c *Core) GetKeyValueStoreConfiguration() *models.KeyValueStoreConfiguration {
-
-	return &models.KeyValueStoreConfiguration{
-		Type: c.Conf.KeyValueStoreType,
-		Vault: models.VaultKeyValueStoreConfiguration{
-			Url:               c.Conf.KeyValueStoreUrL,
-			Token:             c.Conf.KeyValueStoreToken,
-			ServerTlsCert:     c.Conf.KeyValueStoreServerTlsCert,
-			ClientTlsCert:     c.Conf.KeyValueStoreClientTlsCert,
-			ClientTlsKey:      c.Conf.KeyValueStoreClientTlsKey,
-			KvMode:            c.Conf.KeyValueStoreKvMode,
-			FallbackKvVersion: c.Conf.KeyValueStoreFallbackKvVersion,
-		},
-	}
-
-}
-
-func (c *Core) DeleteOrganization(namespace string) error {
-	return c.deleteConfig(namespace)
-}
-
-func (c *Core) DeleteEnvironment(namespace string) error {
-	return c.deleteConfig(namespace)
-}
-
-func (c *Core) ShowOrganization(namespace string) (*models.VampConfiguration, error) {
-	conf, err := c.getConfig(namespace)
-	if err != nil {
-		if strings.HasPrefix(err.Error(), "No Values") {
-			return nil, errors.New("No organization found")
+// PutApplication - puts application to existing Release Agent config
+func (c *Core) PutApplication(applicationID uint64, namespace string) error {
+	putApplication := func(releaseAgentConfig *models.ReleaseAgentConfig) {
+		for configNamespace, configApplicationID := range releaseAgentConfig.K8SNamespaceToApplicationID {
+			if configApplicationID == applicationID {
+				delete(releaseAgentConfig.K8SNamespaceToApplicationID, configNamespace)
+			}
 		}
-		return nil, err
+		releaseAgentConfig.K8SNamespaceToApplicationID[namespace] = applicationID
 	}
-	return conf, err
+
+	return c.onReleaseAgentConfig(putApplication)
 }
 
-func (c *Core) ShowEnvironment(namespace string) (*models.VampConfiguration, error) {
-	conf, err := c.getConfig(namespace)
-	if err != nil {
-		if strings.HasPrefix(err.Error(), "No Values") {
-			return nil, errors.New("No environment found")
+// DeleteApplication - deletes application from Release Agent config
+func (c *Core) DeleteApplication(applicationID uint64) error {
+	deleteApplication := func(releaseAgentConfig *models.ReleaseAgentConfig) {
+		for configNamespace, configApplicationID := range releaseAgentConfig.K8SNamespaceToApplicationID {
+			if configApplicationID == applicationID {
+				delete(releaseAgentConfig.K8SNamespaceToApplicationID, configNamespace)
+			}
 		}
-		return nil, err
 	}
-	return conf, err
+
+	return c.onReleaseAgentConfig(deleteApplication)
 }
 
-func (c *Core) putConfig(namespace string, configuration models.VampConfiguration) error {
-	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(namespace)
-	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
-	if keyValueStoreClientError != nil {
-		return keyValueStoreClientError
+// ListApplications - lists existing applications
+func (c *Core) ListApplications() ([]models.ApplicationView, error) {
+	if c.clusterID == nil {
+		return nil, fmt.Errorf("cluster id must be provided")
 	}
-	key := keyValueStoreConfig.BasePath + "/configuration/applied"
-	logging.Info("Storing Config Under Key: %v\n", key)
-	value, jsonMarshallError := json.Marshal(configuration)
-	if jsonMarshallError != nil {
-		return jsonMarshallError
+	releaseAgentConfigKey := c.getReleaseAgentConfigKey(uint64(*c.clusterID))
+	releaseAgentConfig, exists, err := c.getReleaseAgentConfig(releaseAgentConfigKey)
+	if err != nil {
+		return nil, fmt.Errorf("cannot find Release Agent config: %v", err)
 	}
-	keyValueStoreClientPutError := keyValueStoreClient.Put(key, string(value))
-	if keyValueStoreClientPutError != nil {
-		return keyValueStoreClientPutError
+	if !exists {
+		return nil, fmt.Errorf("Release Agent config does not exist")
 	}
-	return nil
+	applications := make([]models.ApplicationView, len(releaseAgentConfig.K8SNamespaceToApplicationID))
+	i := 0
+	for namespace, applicationID := range releaseAgentConfig.K8SNamespaceToApplicationID {
+		applications[i] = models.ApplicationView{
+			ID:        applicationID,
+			Namespace: namespace,
+		}
+		i++
+	}
+
+	return applications, nil
 }
 
-func (c *Core) getConfig(namespace string) (*models.VampConfiguration, error) {
-	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(namespace)
-	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
-	if keyValueStoreClientError != nil {
-		return nil, keyValueStoreClientError
+// GetApplication - gets existing application
+func (c *Core) GetApplication(applicationID uint64) (*models.ApplicationView, error) {
+	if c.clusterID == nil {
+		return nil, fmt.Errorf("cluster id must be provided")
 	}
-	key := keyValueStoreConfig.BasePath + "/configuration/applied"
-	logging.Info("Reading Config Under Key: %v\n", key)
-	configJson, keyValueStoreClientGetError := keyValueStoreClient.Get(key)
-	if keyValueStoreClientGetError != nil {
-		return nil, keyValueStoreClientGetError
+	releaseAgentConfigKey := c.getReleaseAgentConfigKey(uint64(*c.clusterID))
+	releaseAgentConfig, exists, err := c.getReleaseAgentConfig(releaseAgentConfigKey)
+	if err != nil {
+		return nil, fmt.Errorf("cannot find Release Agent config: %v", err)
 	}
-	var configuration models.VampConfiguration
-	jsonUnmarshallError := json.Unmarshal([]byte(configJson), &configuration)
-	if jsonUnmarshallError != nil {
-		return nil, jsonUnmarshallError
+	if !exists {
+		return nil, fmt.Errorf("Release Agent config does not exist")
 	}
-	return &configuration, nil
+
+	for namespace, configApplicationID := range releaseAgentConfig.K8SNamespaceToApplicationID {
+		if applicationID == configApplicationID {
+			return &models.ApplicationView{
+				ID:        applicationID,
+				Namespace: namespace,
+			}, nil
+		}
+	}
+
+	return nil, fmt.Errorf("application '%d' not found", applicationID)
 }
 
-func (c *Core) deleteConfig(namespace string) error {
-	keyValueStoreConfig := c.GetNamespaceKeyValueStoreConfiguration(namespace)
-	keyValueStoreClient, keyValueStoreClientError := keyvaluestoreclient.NewKeyValueStoreClient(*keyValueStoreConfig)
-	if keyValueStoreClientError != nil {
-		return keyValueStoreClientError
+// PutServiceConfig - puts service to key value store
+func (c *Core) PutServiceConfig(serviceConfigText string) error {
+	if c.clusterID == nil {
+		return fmt.Errorf("cluster id must be provided")
 	}
-	key := keyValueStoreConfig.BasePath + "/configuration/applied"
-	logging.Info("Deleting Config Under Key: %v\n", key)
-	keyValueStoreClientPutError := keyValueStoreClient.Delete(key)
-	if keyValueStoreClientPutError != nil {
-		return keyValueStoreClientPutError
+
+	var serviceConfig models.ServiceConfig
+	if err := json.Unmarshal([]byte(serviceConfigText), &serviceConfig); err != nil {
+		return fmt.Errorf("cannot deserialize service config: %v", err)
 	}
-	return nil
+	if err := models.NewValidateDTO()(serviceConfig); err != nil {
+		return fmt.Errorf("service config validation failed: %v", err)
+	}
+	if err := serviceConfig.Validate(); err != nil {
+		return fmt.Errorf("service config validation failed: %v", err)
+	}
+
+	serviceConfigKey := c.getServiceConfigKey(*c.clusterID, *serviceConfig.ApplicationID, *serviceConfig.ServiceID)
+
+	return c.kvClient.Put(serviceConfigKey, serviceConfigText)
 }
 
-func Namespaced(namespace string, text string) string {
-	return strings.Replace(text, "${namespace}", namespace, -1)
+// DeleteServiceConfig - deletes service config from key value store
+func (c *Core) DeleteServiceConfig(serviceID, applicationID uint64) error {
+	if c.clusterID == nil {
+		return fmt.Errorf("cluster id must be provided")
+	}
+
+	serviceConfigKey := c.getServiceConfigKey(*c.clusterID, applicationID, serviceID)
+	exists, err := c.kvClient.Exists(serviceConfigKey)
+	if err != nil {
+		return fmt.Errorf("cannot find service config: %v", err)
+	}
+	if !exists {
+		return fmt.Errorf("service config does not exist")
+	}
+
+	return c.kvClient.Delete(serviceConfigKey)
 }
 
-func ConvertToSqlElement(artifactAsJsonString string) (*models.SqlElement, error) {
-	var artifact models.Artifact
-	unmarshallError := json.Unmarshal([]byte(artifactAsJsonString), &artifact)
-	if unmarshallError != nil {
-		fmt.Printf("Unmarshalling error : %v\n", artifactAsJsonString)
-		fmt.Printf("Unmarshalling error : %v\n", unmarshallError.Error())
-		return nil, unmarshallError
+// ListServices - lists existing services from key value store
+func (c *Core) ListServices(applicationID uint64) ([]uint64, error) {
+	if c.clusterID == nil {
+		return nil, fmt.Errorf("cluster id must be provided")
+	}
+	serviceConfigsPath := c.getServiceConfigsPath(*c.clusterID, applicationID)
+	serviceConfigsKeys, err := c.kvClient.List(serviceConfigsPath)
+	if err != nil {
+		return nil, fmt.Errorf("cannot list services: %v", err)
 	}
 
-	return &models.SqlElement{
-		Version:   models.BackendVersion,
-		Instance:  util.UUID(),
-		Timestamp: util.Timestamp(),
-		Name:      artifact.Name,
-		Kind:      artifact.Kind,
-		Artifact:  artifactAsJsonString,
-	}, nil
+	serviceIDs := make([]uint64, len(serviceConfigsKeys))
+
+	for i, serviceConfigKey := range serviceConfigsKeys {
+		serviceID, err := strconv.ParseUint(serviceConfigKey, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("found service with invalid id: '%s'", serviceConfigKey)
+		}
+		serviceIDs[i] = serviceID
+	}
+
+	return serviceIDs, nil
 }
 
-func ConvertToSqlElementJson(artifactAsJsonString string) (string, error) {
-	sqlElement, conversionError := ConvertToSqlElement(artifactAsJsonString)
-	if conversionError != nil {
-		return "", conversionError
+// GetServiceConfigText - gets service config json text from key value store
+func (c *Core) GetServiceConfigText(serviceID, applicationID uint64) (string, error) {
+	if c.clusterID == nil {
+		return "", fmt.Errorf("cluster id must be provided")
 	}
 
-	sqlElementString, jsonMarshallError := json.Marshal(sqlElement)
-	if jsonMarshallError != nil {
-		return "", jsonMarshallError
+	serviceConfigKey := c.getServiceConfigKey(*c.clusterID, applicationID, serviceID)
+	exists, err := c.kvClient.Exists(serviceConfigKey)
+	if err != nil {
+		return "", fmt.Errorf("cannot find service config: %v", err)
 	}
-	return string(sqlElementString), nil
+	if !exists {
+		return "", fmt.Errorf("service config does not exist")
+	}
+
+	return c.kvClient.Get(serviceConfigKey)
 }
 
-func GenerateTokenName(namespace string, workflowName string, kindInTokenName string) string {
+func (c *Core) onReleaseAgentConfig(apply func(*models.ReleaseAgentConfig)) error {
+	if c.clusterID == nil {
+		return fmt.Errorf("cluster id must be provided")
+	}
+	releaseAgentConfigKey := c.getReleaseAgentConfigKey(uint64(*c.clusterID))
+	releaseAgentConfig, exists, err := c.getReleaseAgentConfig(releaseAgentConfigKey)
+	if err != nil {
+		return fmt.Errorf("cannot find Release Agent config: %v", err)
+	}
+	if !exists {
+		return fmt.Errorf("Release Agent config does not exist. Please create cluster first")
+	}
 
-	artifactVersion := "v1"
-	namespaceReference := "class io.vamp.common.Namespace@" + namespace
-	lookupHashAlgorithm := "SHA1" // it is fixed
-	logging.Info("namespaceReference %v LookupHashAlgorithm %v, artifactVersion %v\n", namespaceReference, lookupHashAlgorithm, artifactVersion)
-	lookupName := util.EncodeString(namespaceReference, lookupHashAlgorithm, artifactVersion)
+	apply(releaseAgentConfig)
 
-	return fmt.Sprintf("%s/%s/%s", lookupName, kindInTokenName, workflowName)
+	return c.saveReleaseAgentConfig(releaseAgentConfigKey, *releaseAgentConfig)
 }
 
-func (c *Core) GenerateTokenForWorkflow(namespace string, workflowName string, role string) (string, error) {
-	// get Configuration using namespace
-	s := strings.Split(namespace, "-")
-	configuration, configurationError := c.getConfig(s[0] + "-" + s[1])
-	if configurationError != nil {
-		return "", configurationError
-	}
-	kind := "tokens"
-	kindInTokenName := "workflows"
+func (c *Core) getClusterPath(clusterID uint64) string {
+	return path.Join(c.projectPath, "clusters", strconv.FormatUint(clusterID, 10))
+}
 
-	tokenName := GenerateTokenName(namespace, workflowName, kindInTokenName)
-	//TODO: More meaningful configuration.Vamp.Security.PasswordHashSalt
+func (c *Core) getReleasePlansPath(serviceID uint64) string {
+	return path.Join(c.projectPath, "release-plans", strconv.FormatUint(serviceID, 10))
+}
 
-	encodedValue := util.RandomEncodedString(configuration.Vamp.Security.TokenValueLength)
+func (c *Core) getReleasePlanKey(serviceID uint64, serviceVersion string) string {
+	return path.Join(c.getReleasePlansPath(serviceID), serviceVersion)
+}
 
-	artifact := models.Artifact{
-		Name:      tokenName,
-		Value:     encodedValue,
-		Namespace: namespace,
-		Kind:      kind,
-		Roles:     []string{role},
-		Metadata:  map[string]string{},
-	}
+func (c *Core) getReleaseAgentConfigKey(clusterID uint64) string {
+	return path.Join(c.getClusterPath(clusterID), "release-agent-config")
+}
 
-	artifactAsJson, artifactJsonError := json.Marshal(artifact)
-	if artifactJsonError != nil {
-		return "", artifactJsonError
-	}
+func (c *Core) getServiceConfigsPath(clusterID, applicationID uint64) string {
+	return path.Join(
+		c.getClusterPath(clusterID),
+		"applications",
+		strconv.FormatUint(applicationID, 10),
+		"service-configs",
+	)
+}
 
-	artifactAsJsonString := string(artifactAsJson)
-	logging.Info("Token string: %v\n", artifactAsJsonString)
+func (c *Core) getServiceConfigKey(clusterID, applicationID, serviceID uint64) string {
+	return path.Join(c.getServiceConfigsPath(clusterID, applicationID), strconv.FormatUint(serviceID, 10))
+}
 
-	sqlElement := models.SqlElement{
-		Version:   models.BackendVersion,
-		Instance:  util.UUID(),
-		Timestamp: util.Timestamp(),
-		Name:      tokenName,
-		Kind:      kind,
-		Artifact:  artifactAsJsonString,
+func (c *Core) getReleaseAgentConfig(releaseAgentConfigKey string) (*models.ReleaseAgentConfig, bool, error) {
+	configExists, err := c.kvClient.Exists(releaseAgentConfigKey)
+	if err != nil {
+		return nil, false, fmt.Errorf("cannot check if Release Agent config exists in Vault: %v", err)
 	}
 
-	sqlElementAsJson, sqlElementJsonError := json.Marshal(sqlElement)
-	if sqlElementJsonError != nil {
-		return "", sqlElementJsonError
+	if configExists {
+		releaseAgentConfigContent, err := c.kvClient.Get(releaseAgentConfigKey)
+		if err != nil {
+			return nil, false, fmt.Errorf("cannot get existing Release Agent config from Vault: %v", err)
+		}
+		var releaseAgentConfig models.ReleaseAgentConfig
+		if err = json.Unmarshal([]byte(releaseAgentConfigContent), &releaseAgentConfig); err != nil {
+			return nil, false, fmt.Errorf("cannot deserialize existing Release Agent config: %v", err)
+		}
+		return &releaseAgentConfig, true, nil
 	}
 
-	sqlElementAsJsonString := string(sqlElementAsJson)
+	return nil, false, nil
+}
 
-	return sqlElementAsJsonString, nil
+func (c *Core) saveReleaseAgentConfig(releaseAgentConfigKey string, releaseAgentConfig models.ReleaseAgentConfig) error {
+	releaseAgentConfigBytes, err := json.Marshal(releaseAgentConfig)
+	if err != nil {
+		return fmt.Errorf("cannot serialize Release Agent config: %v", err)
+	}
 
+	return c.kvClient.Put(releaseAgentConfigKey, string(releaseAgentConfigBytes))
+}
+
+func getReleasePolicyString(policy *policiesModel.Policy) (string, error) {
+	policyDTO, err := policiesDTO.ToPolicyDTO(policy)
+	if err != nil {
+		return "", fmt.Errorf("cannot get release policy string: %v", err)
+	}
+	buf := new(bytes.Buffer)
+	enc := json.NewEncoder(buf)
+	enc.SetEscapeHTML(false)
+	err = enc.Encode(policyDTO)
+	if err != nil {
+		return "", fmt.Errorf("cannot marshal release policy: %v", err)
+	}
+	return buf.String(), nil
+}
+
+func getValidationPolicyString(policy *policiesModel.ValidationPolicy) (string, error) {
+	policyDTO, err := policiesDTO.ToValidationPolicyDTO(policy)
+	if err != nil {
+		return "", fmt.Errorf("cannot get validation policy string: %v", err)
+	}
+	buf := new(bytes.Buffer)
+	enc := json.NewEncoder(buf)
+	enc.SetEscapeHTML(false)
+	err = enc.Encode(policyDTO)
+	if err != nil {
+		return "", fmt.Errorf("cannot marshal validation policy: %v", err)
+	}
+	return buf.String(), nil
 }

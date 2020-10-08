@@ -1,4 +1,4 @@
-// Copyright © 2019 Developer <developer@vamp.io>
+// Copyright © 2020 Developer <developer@vamp.io>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,8 +21,8 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/magneticio/forklift/core"
 	"github.com/magneticio/forklift/logging"
@@ -31,33 +31,36 @@ import (
 
 var deletePolicyCmd = &cobra.Command{
 	Use:   "policy",
-	Short: "Delete a policy",
+	Short: "Delete existing policy",
 	Long: AddAppName(`Delete existing policy
-    Example:
-    $AppName delete policy name --organization org --environment env`),
+    Usage:
+    $AppName delete policy <policy_id>`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
-			return errors.New("Not Enough Arguments, Policy name needed.")
+			return fmt.Errorf("Not enough arguments - policy id needed")
 		}
-		name := args[0]
+		policyIDString := args[0]
 
-		logging.Info("Deleteing new policy to environment %v in organization %v\n", organization, environment)
-		namespacedEnvironment := Config.Namespace + "-" + organization + "-" + environment
-		namespacedOrganization := Config.Namespace + "-" + organization
-
-		core, coreError := core.NewCore(Config)
-		if coreError != nil {
-			return coreError
+		policyID, err := strconv.ParseUint(policyIDString, 10, 64)
+		if err != nil {
+			return fmt.Errorf("Policy id '%s' must be a natural number", policyIDString)
 		}
 
-		createpolicyError := core.DeleteReleasePolicy(namespacedOrganization, namespacedEnvironment, name)
-		if createpolicyError != nil {
-			return createpolicyError
+		logging.Info("Deleting policy '%d'\n", policyID)
+
+		core, err := core.NewCore(Config)
+		if err != nil {
+			return err
 		}
 
-		fmt.Printf("Policy has been deleted\n")
+		err = core.DeletePolicy(policyID)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("Policy '%d' has been deleted\n", policyID)
 
 		return nil
 	},
@@ -65,11 +68,4 @@ var deletePolicyCmd = &cobra.Command{
 
 func init() {
 	deleteCmd.AddCommand(deletePolicyCmd)
-
-	deletePolicyCmd.Flags().StringVarP(&organization, "organization", "", "", "Organization of the workflow")
-	deletePolicyCmd.MarkFlagRequired("organization")
-
-	deletePolicyCmd.Flags().StringVarP(&environment, "environment", "", "", "Environment of the workflow")
-	deletePolicyCmd.MarkFlagRequired("environment")
-
 }

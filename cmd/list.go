@@ -1,4 +1,4 @@
-// Copyright © 2019 Developer <developer@vamp.io>
+// Copyright © 2020 Developer <developer@vamp.io>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -29,14 +29,14 @@ import (
 // listCmd represents the list command
 var listCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List organizations, environments, artifacts or users",
-	Long: AddAppName(`List organizations, environments, artifacts or users
+	Short: "List existing artifacts",
+	Long: AddAppName(`List artifacts
     Example:
-    $AppName list organizations`),
+    $AppName list policies`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return errors.New("A resource type expected.")
+		return errors.New("A resource type expected")
 	},
 }
 

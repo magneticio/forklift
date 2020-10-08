@@ -1,4 +1,4 @@
-// Copyright © 2019 Developer <developer@vamp.io>
+// Copyright © 2020 Developer <developer@vamp.io>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,6 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/magneticio/forklift/models"
 	"github.com/spf13/cobra"
 )
 
@@ -42,7 +41,6 @@ var versionCmd = &cobra.Command{
 			}
 		} else {
 			fmt.Printf("Version: %v\n", Version)
-			fmt.Printf("Backend Version: %v\n", models.BackendVersion)
 		}
 
 	},

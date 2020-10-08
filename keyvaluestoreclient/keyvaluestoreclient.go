@@ -1,8 +1,6 @@
 package keyvaluestoreclient
 
 import (
-	"errors"
-
 	"github.com/magneticio/forklift/models"
 	"github.com/magneticio/vamp-sdk-go/kvstore"
 )
@@ -15,20 +13,17 @@ type KeyValueStoreClient interface {
 	List(string) ([]string, error)
 }
 
-func NewKeyValueStoreClient(config models.KeyValueStoreConfiguration) (KeyValueStoreClient, error) {
-	if config.Type == "vault" {
-		params := map[string]string{
-			"cert":   config.Vault.ClientTlsCert,
-			"key":    config.Vault.ClientTlsKey,
-			"caCert": config.Vault.ServerTlsCert,
-		}
-
-		vaultKVclient, vaultKVclientError := kvstore.NewVaultKeyValueStore(config.Vault.Url, config.Vault.Token, params)
-		if vaultKVclientError != nil {
-			return nil, vaultKVclientError
-		}
-
-		return vaultKVclient, nil
+func NewKeyValueStoreClient(config models.VaultKeyValueStoreConfiguration) (KeyValueStoreClient, error) {
+	params := map[string]string{
+		"cert":   config.ClientTLSCert,
+		"key":    config.ClientTLSKey,
+		"caCert": config.ServerTLSCert,
 	}
-	return nil, errors.New("Unsupported Key Value Store Client: " + config.Type)
+
+	vaultKVclient, vaultKVclientError := kvstore.NewVaultKeyValueStore(config.URL, config.Token, params)
+	if vaultKVclientError != nil {
+		return nil, vaultKVclientError
+	}
+
+	return vaultKVclient, nil
 }
