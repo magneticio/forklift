@@ -53,6 +53,41 @@ func TestIntegrationApplicationCommands(t *testing.T) {
 				So(clusterConfig, ShouldEqual, snapshot)
 			})
 
+			Convey("and showing application", func() {
+				showApplicationCommand := fmt.Sprintf(
+					"show application %d --cluster %d",
+					applicationID,
+					clusterID,
+				)
+				stdoutLines, err := runCommand(showApplicationCommand)
+
+				Convey("error should not be thrown", func() {
+					So(err, ShouldBeNil)
+				})
+
+				Convey("response should contain application definition", func() {
+					So(stdoutLines[0], ShouldEqual, "id: 12345")
+					So(stdoutLines[1], ShouldEqual, "namespace: test-namespace")
+				})
+			})
+
+			Convey("and listing applications", func() {
+				listApplicationsCommand := fmt.Sprintf(
+					"list applications --cluster %d",
+					clusterID,
+				)
+				stdoutLines, err := runCommand(listApplicationsCommand)
+
+				Convey("error should not be thrown", func() {
+					So(err, ShouldBeNil)
+				})
+
+				Convey("response should contain list of applications", func() {
+					So(stdoutLines[0], ShouldEqual, "- id: 12345")
+					So(stdoutLines[1], ShouldEqual, "  namespace: test-namespace")
+				})
+			})
+
 			Convey("and deleting it afterwards", func() {
 				deleteApplicationCommand := fmt.Sprintf(
 					"delete application %d --cluster %d",
