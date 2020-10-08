@@ -7,7 +7,7 @@ require (
 	github.com/go-playground/validator/v10 v10.4.0
 	github.com/google/uuid v1.1.1
 	github.com/hashicorp/vault v1.1.3
-	github.com/magneticio/vamp-policies v0.0.20
+	github.com/magneticio/vamp-policies v0.0.21
 	github.com/magneticio/vamp-sdk-go v0.0.0-20190612094709-b89098f15d2b
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/smartystreets/goconvey v1.6.4
