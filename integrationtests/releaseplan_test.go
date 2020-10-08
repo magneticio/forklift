@@ -38,6 +38,41 @@ func TestIntegrationReleasePlanCommands(t *testing.T) {
 			So(vaultPolicy, ShouldEqual, snapshot)
 		})
 
+		Convey("and showing release plan", func() {
+			showReleasePlanCommand := fmt.Sprintf(
+				"show releaseplan %s --service %d",
+				serviceVersion,
+				serviceID,
+			)
+
+			stdoutLines, err := runCommand(showReleasePlanCommand)
+
+			Convey("error should not be thrown", func() {
+				So(err, ShouldBeNil)
+			})
+
+			Convey("response should contain release plan", func() {
+				snapshot, _ := readSnapshot("./snapshots/releaseplan_show.txt")
+				So(toText(stdoutLines), ShouldEqual, snapshot)
+			})
+		})
+
+		Convey("and listing release plans", func() {
+			listReleasePlansCommand := fmt.Sprintf(
+				"list releaseplans --service %d",
+				serviceID,
+			)
+			stdoutLines, err := runCommand(listReleasePlansCommand)
+
+			Convey("error should not be thrown", func() {
+				So(err, ShouldBeNil)
+			})
+
+			Convey("response should contain release plans list", func() {
+				So(stdoutLines[0], ShouldEqual, "- 1.0.5")
+			})
+		})
+
 		Convey("and deleting it afterwards", func() {
 			deleteReleasePlanCommand := fmt.Sprintf(
 				"delete releaseplan %s --service %d",
