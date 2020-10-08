@@ -50,7 +50,8 @@ func TestIntegrationPolicyCommands(t *testing.T) {
 			})
 
 			Convey("response should contain policy", func() {
-				So(len(stdoutLines), ShouldEqual, 79)
+				snapshot, _ := readSnapshot("./snapshots/policy_show.txt")
+				So(toText(stdoutLines), ShouldEqual, snapshot)
 			})
 		})
 
