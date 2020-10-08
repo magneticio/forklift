@@ -17,7 +17,7 @@
             },
             "conditions": [
                 {
-                    "value": "health \u003e= baselines.minHealth",
+                    "value": "health >= baselines.minHealth",
                     "gracePeriod": "1m0s"
                 }
             ]
@@ -35,7 +35,7 @@
             },
             "conditions": [
                 {
-                    "value": "health \u003e= baselines.minHealth",
+                    "value": "health >= baselines.minHealth",
                     "gracePeriod": "1m0s"
                 }
             ]
@@ -55,7 +55,7 @@
             },
             "conditions": [
                 {
-                    "value": "health \u003e= baselines.minHealth",
+                    "value": "health >= baselines.minHealth",
                     "gracePeriod": "1m0s"
                 }
             ]

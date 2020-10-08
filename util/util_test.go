@@ -67,3 +67,14 @@ func TestEncodeString(t *testing.T) {
 	result3 := util.EncodeString(text3, "SHA-1", "v1")
 	assert.Equal(t, expected3, result3)
 }
+
+func TestConvertJSONToJSON(t *testing.T) {
+	jsonWithEscapedChars := `{"value": "health \u003e= baselines.minHealth"}`
+	prettyJSON, err := util.Convert("json", "json", jsonWithEscapedChars)
+
+	assert.NoError(t, err)
+
+	expected := "{\n    \"value\": \"health >= baselines.minHealth\"\n}"
+
+	assert.Equal(t, expected, prettyJSON)
+}

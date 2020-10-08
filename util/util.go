@@ -20,6 +20,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -94,7 +95,13 @@ func Convert(inputFormat string, outputFormat string, input string) (string, err
 		if indentError != nil {
 			return "", indentError
 		}
-		return string(prettyJSON.Bytes()), nil
+
+		unescapedPrettyJSON, err := strconv.Unquote(strings.Replace(strconv.Quote(prettyJSON.String()), `\\u`, `\u`, -1))
+		if err != nil {
+			return "", err
+		}
+
+		return unescapedPrettyJSON, nil
 	}
 
 	return "", fmt.Errorf("unsupported conversion from '%s' format to '%s' format", inputFormat, outputFormat)
