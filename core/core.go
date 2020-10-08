@@ -127,6 +127,30 @@ func (c *Core) DeleteReleasePlan(serviceID uint64, serviceVersion string) error 
 	return c.kvClient.Delete(releasePlanKey)
 }
 
+// ListReleasePlans - lists existing release plans
+func (c *Core) ListReleasePlans(serviceID uint64) ([]string, error) {
+	releasePlansPath := c.getReleasePlansPath(serviceID)
+	releasePlanKeys, err := c.kvClient.List(releasePlansPath)
+	if err != nil {
+		return nil, fmt.Errorf("cannot list release plans: %v", err)
+	}
+
+	return releasePlanKeys, nil
+}
+
+// GetReleasePlanText - gets release plan content
+func (c *Core) GetReleasePlanText(serviceID uint64, serviceVersion string) (string, error) {
+	releasePlanKey := c.getReleasePlanKey(serviceID, serviceVersion)
+	exists, err := c.kvClient.Exists(releasePlanKey)
+	if err != nil {
+		return "", fmt.Errorf("cannot find release plan: %v", err)
+	}
+	if !exists {
+		return "", fmt.Errorf("release plan does not exist")
+	}
+	return c.kvClient.Get(releasePlanKey)
+}
+
 // PutReleaseAgentConfig - puts Release Agent config to key value store
 func (c *Core) PutReleaseAgentConfig(clusterID uint64, natsChannelName, optimiserNatsChannelName, natsToken string) error {
 	if natsChannelName == "" {
@@ -368,8 +392,12 @@ func (c *Core) getClusterPath(clusterID uint64) string {
 	return path.Join(c.projectPath, "clusters", strconv.FormatUint(clusterID, 10))
 }
 
+func (c *Core) getReleasePlansPath(serviceID uint64) string {
+	return path.Join(c.projectPath, "release-plans", strconv.FormatUint(serviceID, 10))
+}
+
 func (c *Core) getReleasePlanKey(serviceID uint64, serviceVersion string) string {
-	return path.Join(c.projectPath, "release-plans", strconv.FormatUint(serviceID, 10), serviceVersion)
+	return path.Join(c.getReleasePlansPath(serviceID), serviceVersion)
 }
 
 func (c *Core) getReleaseAgentConfigKey(clusterID uint64) string {
