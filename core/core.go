@@ -70,7 +70,8 @@ func (c *Core) ListPolicies() ([]models.PolicyView, error) {
 	policyAPI := policies.NewPolicyAPI(c.kvClient, c.projectPath)
 	apiPolicyViews, err := policyAPI.FindAll()
 	if err != nil {
-		return nil, fmt.Errorf("cannot list policies: %v", err)
+		logging.Error("no policies found: %v", err)
+		return nil, fmt.Errorf("no policies found")
 	}
 
 	policyViews := make([]models.PolicyView, len(apiPolicyViews))
@@ -133,7 +134,8 @@ func (c *Core) ListReleasePlans(serviceID uint64) ([]string, error) {
 	releasePlansPath := c.getReleasePlansPath(serviceID)
 	releasePlanKeys, err := c.kvClient.List(releasePlansPath)
 	if err != nil {
-		return nil, fmt.Errorf("cannot list release plans: %v", err)
+		logging.Error("no release plans found: %v", err)
+		return nil, fmt.Errorf("no release plans found")
 	}
 
 	return releasePlanKeys, nil
@@ -202,7 +204,8 @@ func (c *Core) ListClusters() ([]models.ClusterView, error) {
 	clustersPath := path.Join(c.projectPath, "clusters")
 	clusterIDStrings, err := c.kvClient.List(clustersPath)
 	if err != nil {
-		return nil, fmt.Errorf("cannot list clusters: %v", err)
+		logging.Error("no clusters found: %v", err)
+		return nil, fmt.Errorf("no clusters found")
 	}
 	clusterIDs := make([]uint64, len(clusterIDStrings))
 	for i, clusterIDString := range clusterIDStrings {
@@ -380,7 +383,8 @@ func (c *Core) ListServices(applicationID uint64) ([]uint64, error) {
 	serviceConfigsPath := c.getServiceConfigsPath(*c.clusterID, applicationID)
 	serviceConfigsKeys, err := c.kvClient.List(serviceConfigsPath)
 	if err != nil {
-		return nil, fmt.Errorf("cannot list services: %v", err)
+		logging.Error("no services found: %v", err)
+		return nil, fmt.Errorf("no services found")
 	}
 
 	serviceIDs := make([]uint64, len(serviceConfigsKeys))
