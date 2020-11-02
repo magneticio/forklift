@@ -34,7 +34,7 @@ var listReleasePlansCmd = &cobra.Command{
 	Short: "List existing release plans",
 	Long: AddAppName(`List existing release plans
     Usage:
-    $AppName list releaseplans --service <service_id>`),
+    $AppName list releaseplans --cluster <cluster_id> --application <application_id> --service <service_id>`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -44,7 +44,7 @@ var listReleasePlansCmd = &cobra.Command{
 			return err
 		}
 
-		releasePlans, err := core.ListReleasePlans(serviceID)
+		releasePlans, err := core.ListReleasePlans(applicationID, serviceID)
 		if err != nil {
 			return err
 		}
@@ -62,6 +62,9 @@ var listReleasePlansCmd = &cobra.Command{
 
 func init() {
 	listCmd.AddCommand(listReleasePlansCmd)
+
+	listReleasePlansCmd.Flags().Uint64VarP(&applicationID, "application", "a", 0, "ID of the application")
+	listReleasePlansCmd.MarkFlagRequired("application")
 
 	listReleasePlansCmd.Flags().Uint64VarP(&serviceID, "service", "s", 0, "ID of the service")
 	listReleasePlansCmd.MarkFlagRequired("service")

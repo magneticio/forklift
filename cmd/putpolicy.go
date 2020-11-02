@@ -80,7 +80,7 @@ var putPolicyCmd = &cobra.Command{
 func init() {
 	putCmd.AddCommand(putPolicyCmd)
 
-	putPolicyCmd.Flags().StringVarP(&configPath, "file", "", "", "Policy configuration file path")
+	putPolicyCmd.Flags().StringVarP(&configPath, "file", "f", "", "Policy configuration file path")
 	putPolicyCmd.MarkFlagRequired("file")
 	putPolicyCmd.Flags().StringVarP(&configFileType, "input", "i", "json", "Policy configuration file type yaml or json")
 }

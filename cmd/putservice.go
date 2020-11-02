@@ -70,7 +70,7 @@ var putServiceCmd = &cobra.Command{
 func init() {
 	putCmd.AddCommand(putServiceCmd)
 
-	putServiceCmd.Flags().StringVarP(&configPath, "file", "", "", "Service configuration file path")
+	putServiceCmd.Flags().StringVarP(&configPath, "file", "f", "", "Service configuration file path")
 	putServiceCmd.MarkFlagRequired("file")
 	putServiceCmd.Flags().StringVarP(&configFileType, "input", "i", "json", "Service configuration file type yaml or json")
 }

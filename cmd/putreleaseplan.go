@@ -35,7 +35,7 @@ var putReleasePlanCmd = &cobra.Command{
 	Short: "Put a release plan",
 	Long: AddAppName(`Put a release plan
     Usage:
-    $AppName put releaseplan <service_version> --service <service_id> --file <release_plan_file_path>`),
+    $AppName put releaseplan <service_version> --cluster <cluster_id> --application <application_id> --service <service_id> --file <release_plan_file_path>`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -63,7 +63,7 @@ var putReleasePlanCmd = &cobra.Command{
 
 		releasePlanText := string(releasePlanJSON)
 
-		err = core.PutReleasePlan(serviceID, serviceVersion, releasePlanText)
+		err = core.PutReleasePlan(applicationID, serviceID, serviceVersion, releasePlanText)
 		if err != nil {
 			return err
 		}
@@ -77,10 +77,13 @@ var putReleasePlanCmd = &cobra.Command{
 func init() {
 	putCmd.AddCommand(putReleasePlanCmd)
 
+	putReleasePlanCmd.Flags().Uint64VarP(&applicationID, "application", "a", 0, "ID of the application")
+	putReleasePlanCmd.MarkFlagRequired("application")
+
 	putReleasePlanCmd.Flags().Uint64VarP(&serviceID, "service", "s", 0, "ID of the service")
 	putReleasePlanCmd.MarkFlagRequired("service")
 
-	putReleasePlanCmd.Flags().StringVarP(&configPath, "file", "", "", "Release plan configuration file path")
+	putReleasePlanCmd.Flags().StringVarP(&configPath, "file", "f", "", "Release plan configuration file path")
 	putReleasePlanCmd.MarkFlagRequired("file")
 	putReleasePlanCmd.Flags().StringVarP(&configFileType, "input", "i", "json", "Release plan configuration file type yaml or json")
 }

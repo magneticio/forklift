@@ -67,6 +67,6 @@ var deleteServiceCmd = &cobra.Command{
 func init() {
 	deleteCmd.AddCommand(deleteServiceCmd)
 
-	deleteServiceCmd.Flags().Uint64VarP(&applicationID, "application", "s", 0, "ID of the application")
+	deleteServiceCmd.Flags().Uint64VarP(&applicationID, "application", "a", 0, "ID of the application")
 	deleteServiceCmd.MarkFlagRequired("application")
 }

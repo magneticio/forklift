@@ -74,6 +74,6 @@ var showServiceCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(showServiceCmd)
 
-	showServiceCmd.Flags().Uint64VarP(&applicationID, "application", "s", 0, "ID of the application")
+	showServiceCmd.Flags().Uint64VarP(&applicationID, "application", "a", 0, "ID of the application")
 	showServiceCmd.MarkFlagRequired("application")
 }
