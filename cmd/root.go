@@ -40,7 +40,7 @@ import (
 const AppName string = "forklift"
 
 // Version - should be in format d.d.d where d is a decimal number
-const Version string = "v2.1.0"
+const Version string = "v2.1.1"
 
 // AddAppName - Application name can change over time so it is made parameteric
 func AddAppName(str string) string {
