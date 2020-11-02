@@ -332,11 +332,37 @@ forklift delete policy 10
 Release plans can be created with the following command:
 
 ```shell
-forklift put releaseplan 1.0.1 --service 5 --file ./releaseplandefinition.json
+forklift put releaseplan 1.0.1 --cluster 7 --application 6 --service 5 --file ./releaseplandefinition.json
+```
+
+Example of release plan:
+
+```json
+{
+	"status": "not started",
+	"service": {
+		"name": "sava",
+		"version": "1.0.5"
+	},
+	"releaseGroups": [
+		{
+			"group": 1,
+			"name": "group-1",
+			"status": "not started",
+			"environments": [
+				{
+					"id": "test",
+					"name": "test",
+					"status": "not started"
+				}
+			]
+		}
+	]
+}
 ```
 
 Release plan can also be deleted with
 
 ```shell
-forklift delete releaseplan 1.0.1 --service 5
+forklift delete releaseplan 1.0.1 --cluster 7 --application 6 --service 5
 ```
