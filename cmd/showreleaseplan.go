@@ -34,7 +34,7 @@ var showReleasePlanCmd = &cobra.Command{
 	Short: "Show existing release plan",
 	Long: AddAppName(`Show existing release plan
     Usage:
-    $AppName show releaseplan <service_version> --service <service_id>`),
+    $AppName show releaseplan <service_version> --cluster <cluster_id> --application <application_id> --service <service_id>`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -49,7 +49,7 @@ var showReleasePlanCmd = &cobra.Command{
 			return err
 		}
 
-		releasePlanText, err := core.GetReleasePlanText(serviceID, serviceVersion)
+		releasePlanText, err := core.GetReleasePlanText(applicationID, serviceID, serviceVersion)
 		if err != nil {
 			return err
 		}
@@ -67,6 +67,9 @@ var showReleasePlanCmd = &cobra.Command{
 
 func init() {
 	showCmd.AddCommand(showReleasePlanCmd)
+
+	showReleasePlanCmd.Flags().Uint64VarP(&applicationID, "application", "a", 0, "ID of the application")
+	showReleasePlanCmd.MarkFlagRequired("application")
 
 	showReleasePlanCmd.Flags().Uint64VarP(&serviceID, "service", "s", 0, "ID of the service")
 	showReleasePlanCmd.MarkFlagRequired("service")

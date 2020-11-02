@@ -111,14 +111,20 @@ func (c *Core) GetPolicyString(policyID uint64) (string, error) {
 }
 
 // PutReleasePlan - puts release plan to key value store
-func (c *Core) PutReleasePlan(serviceID uint64, serviceVersion string, releasePlanContent string) error {
-	releasePlanKey := c.getReleasePlanKey(serviceID, serviceVersion)
+func (c *Core) PutReleasePlan(applicationID, serviceID uint64, serviceVersion string, releasePlanContent string) error {
+	releasePlanKey, err := c.getReleasePlanKey(applicationID, serviceID, serviceVersion)
+	if err != nil {
+		return err
+	}
 	return c.kvClient.Put(releasePlanKey, releasePlanContent)
 }
 
 // DeleteReleasePlan - deletes release plan from key value store
-func (c *Core) DeleteReleasePlan(serviceID uint64, serviceVersion string) error {
-	releasePlanKey := c.getReleasePlanKey(serviceID, serviceVersion)
+func (c *Core) DeleteReleasePlan(applicationID, serviceID uint64, serviceVersion string) error {
+	releasePlanKey, err := c.getReleasePlanKey(applicationID, serviceID, serviceVersion)
+	if err != nil {
+		return err
+	}
 	exists, err := c.kvClient.Exists(releasePlanKey)
 	if err != nil {
 		return fmt.Errorf("cannot find release plan: %v", err)
@@ -130,8 +136,11 @@ func (c *Core) DeleteReleasePlan(serviceID uint64, serviceVersion string) error 
 }
 
 // ListReleasePlans - lists existing release plans
-func (c *Core) ListReleasePlans(serviceID uint64) ([]string, error) {
-	releasePlansPath := c.getReleasePlansPath(serviceID)
+func (c *Core) ListReleasePlans(applicationID, serviceID uint64) ([]string, error) {
+	releasePlansPath, err := c.getReleasePlansPath(applicationID, serviceID)
+	if err != nil {
+		return nil, err
+	}
 	releasePlanKeys, err := c.kvClient.List(releasePlansPath)
 	if err != nil {
 		logging.Error("no release plans found: %v", err)
@@ -142,8 +151,11 @@ func (c *Core) ListReleasePlans(serviceID uint64) ([]string, error) {
 }
 
 // GetReleasePlanText - gets release plan content
-func (c *Core) GetReleasePlanText(serviceID uint64, serviceVersion string) (string, error) {
-	releasePlanKey := c.getReleasePlanKey(serviceID, serviceVersion)
+func (c *Core) GetReleasePlanText(applicationID, serviceID uint64, serviceVersion string) (string, error) {
+	releasePlanKey, err := c.getReleasePlanKey(applicationID, serviceID, serviceVersion)
+	if err != nil {
+		return "", err
+	}
 	exists, err := c.kvClient.Exists(releasePlanKey)
 	if err != nil {
 		return "", fmt.Errorf("cannot find release plan: %v", err)
@@ -440,12 +452,27 @@ func (c *Core) getClusterPath(clusterID uint64) string {
 	return path.Join(c.projectPath, "clusters", strconv.FormatUint(clusterID, 10))
 }
 
-func (c *Core) getReleasePlansPath(serviceID uint64) string {
-	return path.Join(c.projectPath, "release-plans", strconv.FormatUint(serviceID, 10))
+func (c *Core) getApplicationPath(clusterID, applicationID uint64) string {
+	return path.Join(
+		c.getClusterPath(clusterID),
+		"applications",
+		strconv.FormatUint(applicationID, 10),
+	)
 }
 
-func (c *Core) getReleasePlanKey(serviceID uint64, serviceVersion string) string {
-	return path.Join(c.getReleasePlansPath(serviceID), serviceVersion)
+func (c *Core) getReleasePlansPath(applicationID, serviceID uint64) (string, error) {
+	if c.clusterID == nil {
+		return "", fmt.Errorf("cluster id must be provided")
+	}
+	return path.Join(c.getApplicationPath(*c.clusterID, applicationID), "release-plans", strconv.FormatUint(serviceID, 10)), nil
+}
+
+func (c *Core) getReleasePlanKey(applicationID, serviceID uint64, serviceVersion string) (string, error) {
+	releasePlansPath, err := c.getReleasePlansPath(applicationID, serviceID)
+	if err != nil {
+		return "", err
+	}
+	return path.Join(releasePlansPath, serviceVersion), nil
 }
 
 func (c *Core) getReleaseAgentConfigKey(clusterID uint64) string {
@@ -453,12 +480,7 @@ func (c *Core) getReleaseAgentConfigKey(clusterID uint64) string {
 }
 
 func (c *Core) getServiceConfigsPath(clusterID, applicationID uint64) string {
-	return path.Join(
-		c.getClusterPath(clusterID),
-		"applications",
-		strconv.FormatUint(applicationID, 10),
-		"service-configs",
-	)
+	return path.Join(c.getApplicationPath(clusterID, applicationID), "service-configs")
 }
 
 func (c *Core) getServiceConfigKey(clusterID, applicationID, serviceID uint64) string {
