@@ -75,5 +75,16 @@
             "metric": "health",
             "value": 0.1
         }
+    ],
+    "onFailure": [
+        {
+            "type": "argocd",
+            "value": {
+                "url": "argocd.local/api/v1",
+                "applicationName": "test-app",
+                "action": "rollback",
+                "token": "xxxyyyzzz"
+            }
+        }
     ]
 }
