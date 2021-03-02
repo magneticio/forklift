@@ -1,1 +1,1 @@
-"{\"nats_channel\":\"nats-channel\",\"nats_token\":\"nats-token\",\"applications\":{\"test-namespace\":12345},\"optimiser_nats_channel\":\"optimiser-channel\"}"
+"{\"nats_channel\":\"nats-channel\",\"nats_token\":\"nats-token\",\"applications\":{\"test-namespace\":12345},\"optimiser_nats_channel\":\"optimiser-channel\",\"cluster_name\":\"test-cluster\"}"

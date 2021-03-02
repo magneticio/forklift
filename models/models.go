@@ -95,6 +95,7 @@ type ReleaseAgentConfig struct {
 	NatsToken                   string            `json:"nats_token"`
 	K8SNamespaceToApplicationID map[string]uint64 `json:"applications"`
 	OptimiserNatsChannel        string            `json:"optimiser_nats_channel"`
+	ClusterName                 string            `json:"cluster_name"`
 }
 
 // ServiceConfig - service config for Release Agent
@@ -138,6 +139,7 @@ type ApplicationView struct {
 // ClusterView - view used as an output for list and show commands
 type ClusterView struct {
 	ID                   uint64 `yaml:"id"`
+	Name                 string `yaml:"name"`
 	NatsChannel          string `yaml:"nats-channel"`
 	NatsToken            string `yaml:"nats-token,omitempty"`
 	OptimiserNatsChannel string `yaml:"optimiser-nats-channel"`
