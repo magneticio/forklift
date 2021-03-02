@@ -1,61 +1,85 @@
 {
     "type": "release",
-    "name": "policy-with-steps-names",
-    "version": 0,
+    "id": 456,
+    "version": 12,
     "steps": [
         {
-            "name": "first step",
             "source": {
-                "weight": 90
+                "weight": 100
             },
             "target": {
-                "weight": 10
-            },
-            "endAfter": {
-                "value": "health >= baselines.minHealth",
-                "maxDuration": "0s"
-            },
-            "conditions": [
-                {
-                    "value": "health >= baselines.minHealth",
-                    "gracePeriod": "1m0s"
-                }
-            ]
-        },
-        {
-            "name": "second step",
-            "source": {
-                "weight": 50
-            },
-            "target": {
-                "weight": 50
-            },
-            "endAfter": {
-                "value": "duration == 2m0s"
-            },
-            "conditions": [
-                {
-                    "value": "health >= baselines.minHealth",
-                    "gracePeriod": "1m0s"
-                }
-            ]
-        },
-        {
-            "name": "third step",
-            "source": {
                 "weight": 0,
-                "condition": "header: my-header exists"
-            },
-            "target": {
-                "weight": 100,
-                "condition": "header: my-header exists"
+                "condition": "cookie: vamp exists",
+                "conditionStrength": 5
             },
             "endAfter": {
-                "value": "duration == 2m0s"
+                "maxDuration": "1m0s"
             },
             "conditions": [
                 {
-                    "value": "health >= baselines.minHealth",
+                    "metric": "Health",
+                    "budget": 70,
+                    "interval": {
+                        "type": "rolling",
+                        "duration": "5m0s"
+                    },
+                    "gracePeriod": "1m0s",
+                    "threshold": 1,
+                    "operator": "ge"
+                },
+                {
+                    "metric": "restarts",
+                    "budget": 5,
+                    "interval": {
+                        "type": "rolling",
+                        "duration": "5m0s"
+                    },
+                    "gracePeriod": "1m0s"
+                },
+                {
+                    "metric": "available replicas",
+                    "budget": 90,
+                    "interval": {
+                        "type": "rolling",
+                        "duration": "5m0s"
+                    },
+                    "gracePeriod": "1m0s",
+                    "threshold": 80,
+                    "operator": "ge"
+                }
+            ]
+        },
+        {
+            "source": {
+                "weight": 100
+            },
+            "target": {
+                "weight": 0,
+                "condition": "cookie: vamp exists",
+                "conditionStrength": 10
+            },
+            "endAfter": {
+                "maxDuration": "1m0s"
+            },
+            "conditions": [
+                {
+                    "metric": "Health",
+                    "budget": 70,
+                    "interval": {
+                        "type": "rolling",
+                        "duration": "5m0s"
+                    },
+                    "gracePeriod": "1m0s",
+                    "threshold": 1,
+                    "operator": "ge"
+                },
+                {
+                    "metric": "restarts",
+                    "budget": 5,
+                    "interval": {
+                        "type": "rolling",
+                        "duration": "5m0s"
+                    },
                     "gracePeriod": "1m0s"
                 }
             ]
@@ -63,27 +87,39 @@
     ],
     "metrics": [
         {
-            "name": "health",
+            "name": "restarts",
+            "type": "EventBased",
+            "value": {
+                "source": "k8s-deployment-health",
+                "type": "restarts"
+            }
+        },
+        {
+            "name": "available replicas",
+            "type": "TimeBased",
+            "value": {
+                "source": "k8s-deployment-health",
+                "type": "availablereplicas"
+            }
+        },
+        {
+            "name": "Health",
+            "type": "TimeBased",
             "value": {
                 "source": "k8s-deployment-health"
             }
         }
     ],
-    "baselines": [
+    "onSuccess": [
         {
-            "name": "minHealth",
-            "metric": "health",
-            "value": 0.1
-        }
-    ],
-    "onFailure": [
-        {
-            "type": "argocd",
+            "type": "http",
             "value": {
-                "url": "argocd.local/api/v1",
-                "applicationName": "test-app",
-                "action": "rollback",
-                "token": "xxxyyyzzz"
+                "url": "http://test.local",
+                "httpRequest": "POST",
+                "headers": [
+                    "authorization: Bearer xxxyyy",
+                    "content-type: text/plain"
+                ]
             }
         }
     ]

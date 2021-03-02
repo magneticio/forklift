@@ -78,7 +78,6 @@ func (c *Core) ListPolicies() ([]models.PolicyView, error) {
 	for i, apiPolicyView := range apiPolicyViews {
 		policyViews[i] = models.PolicyView{
 			ID:   apiPolicyView.PolicyID,
-			Name: apiPolicyView.PolicyName,
 			Type: string(apiPolicyView.PolicyType),
 		}
 	}
