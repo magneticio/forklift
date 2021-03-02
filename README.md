@@ -1,30 +1,32 @@
 # Vamp Forklift command line client
 
-Vamp Forklift is a command line client written in Go and allows to easily set up Clusters, Applications, Services and Policies in Vamp.
+Vamp Forklift is a command line client written in Go and allows to easily set up Clusters, Applications, Services and
+Policies in Vamp.
 
 ## Table of Contents
 
 ================
 
 - [Vamp Forklift command line client](#vamp-forklift-command-line-client)
-  - [Table of Contents](#table-of-contents)
-  - [Development](#development)
-  - [Build](#build)
-  - [Installation](#installation)
-    - [Verifying installation](#verifying-installation)
-  - [Usage](#usage)
-    - [Clusters](#clusters)
-    - [Applications](#applications)
-    - [Services](#services)
-    - [Policies](#policies)
-    - [Release plans](#release-plans)
+    - [Table of Contents](#table-of-contents)
+    - [Development](#development)
+    - [Build](#build)
+    - [Installation](#installation)
+        - [Verifying installation](#verifying-installation)
+    - [Usage](#usage)
+        - [Clusters](#clusters)
+        - [Applications](#applications)
+        - [Services](#services)
+        - [Policies](#policies)
+        - [Release plans](#release-plans)
 
 ## Development
 
 if you have golang installed, it is recommended to git clone Forklift to \$GOPATH/src/github.com/magneticio/forklift
 This is a requirement for docker builder to work.
 
-It is also recommended to read and follow golang setup for a development environment setup: https://golang.org/doc/install
+It is also recommended to read and follow golang setup for a development environment
+setup: https://golang.org/doc/install
 
 ## Build
 
@@ -57,7 +59,8 @@ For mac run:
 ./bin/forklift-darwin-amd64 --help
 ```
 
-If you have downloaded the binary directly, Just copy the binary for you platform to the user binaries folder for general usage, for MacOS:
+If you have downloaded the binary directly, Just copy the binary for you platform to the user binaries folder for
+general usage, for MacOS:
 
 ```shell
 cp forklift-darwin-amd64 /usr/local/bin/forklift
@@ -66,8 +69,7 @@ chmod +x /usr/local/bin/forklift
 
 If you don't have anything yet and automatically download an install, then follow the commands for your platform:
 
-keep in mind that this installation may not work since this is a private repository.
-Manual installation is recommended.
+keep in mind that this installation may not work since this is a private repository. Manual installation is recommended.
 
 Easy install for MacOS or Linux:
 
@@ -78,8 +80,7 @@ version=$(curl -s https://api.github.com/repos/magneticio/forklift/releases/late
   chmod +x /usr/local/bin/forklift
 ```
 
-For general users it is recommended to download the binary for your platform.
-Latest release can be found here:
+For general users it is recommended to download the binary for your platform. Latest release can be found here:
 https://github.com/magneticio/forklift/releases/latest
 
 Run get version so see if it is installed correctly:
@@ -88,7 +89,8 @@ Run get version so see if it is installed correctly:
 forklift version
 ```
 
-Now make sure to have a "config.yaml" configuration file in your home under ".forklift" folder, like the one shown below, but with the correct parameters to connect to the key-value store.
+Now make sure to have a "config.yaml" configuration file in your home under ".forklift" folder, like the one shown
+below, but with the correct parameters to connect to the key-value store.
 
 ```
 key-value-store-url: ${env://VAMP_PERSISTENCE_KEY_VALUE_STORE_VAULT_URL}
@@ -105,8 +107,8 @@ The configuration path can be changed during the execution of any command by spe
 
 Where config-path is the path of the configuration file to be used.
 
-Environment variables can be used in combination with the config.
-Environment variables overrides the configuration file!
+Environment variables can be used in combination with the config. Environment variables overrides the configuration
+file!
 
 Environment variables:
 
@@ -137,7 +139,8 @@ export VAMP_FORKLIFT_VAULT_ADDR="http://vault.default.svc.cluster.local:8200"
 
 ### Verifying installation
 
-To verify the installation you can run the following command, which will return the version of the client's and vamp's versions.
+To verify the installation you can run the following command, which will return the version of the client's and vamp's
+versions.
 
 ```shell
 forklift version
@@ -156,7 +159,7 @@ forklift help
 Forklift allows for the creation and update of clusters by running:
 
 ```shell
-forklift put cluster 10 --nats-channel-name name --optimiser-nats-channel-name optimiser-name --nats-token token
+forklift put cluster 10 --name cluster-name --nats-channel-name name --optimiser-nats-channel-name optimiser-name --nats-token token
 ```
 
 delete them with
@@ -187,7 +190,7 @@ Forklift allows for the creation and update of services by running:
 forklift put service 10 --cluster 7 --application 5 --file ./serviceconfig.json`
 ```
 
-Example of service service config:
+Example of service config:
 
 ```json
 {
@@ -245,77 +248,127 @@ Example of policy definition:
 ```json
 {
   "type": "release",
-  "name": "patch-policy",
+  "id": 456,
+  "version": 12,
   "steps": [
     {
-      "endAfter": {
-        "value": "duration == 1m0s"
-      },
       "source": {
         "weight": 100
       },
       "target": {
-        "weight": 0
+        "weight": 0,
+        "condition": "cookie: vamp exists",
+        "conditionStrength": 5
+      },
+      "endAfter": {
+        "maxDuration": "1m0s"
       },
       "conditions": [
         {
-          "value": "health >= baselines.health",
-          "gracePeriod": "40s"
+          "metric": "Health",
+          "budget": 70,
+          "interval": {
+            "type": "rolling",
+            "duration": "5m0s"
+          },
+          "gracePeriod": "1m0s",
+          "threshold": 1,
+          "operator": "ge"
+        },
+        {
+          "metric": "restarts",
+          "budget": 5,
+          "interval": {
+            "type": "rolling",
+            "duration": "5m0s"
+          },
+          "gracePeriod": "1m0s"
+        },
+        {
+          "metric": "available replicas",
+          "budget": 90,
+          "interval": {
+            "type": "rolling",
+            "duration": "5m0s"
+          },
+          "gracePeriod": "1m0s",
+          "threshold": 80,
+          "operator": "ge"
         }
       ]
     },
     {
-      "endAfter": {
-        "value": "duration == baselines.maxDuration"
-      },
       "source": {
-        "weight": 50
-      },
-      "target": {
-        "weight": 50
-      },
-      "conditions": [
-        {
-          "value": "health >= baselines.health",
-          "gracePeriod": "40s"
-        }
-      ]
-    },
-    {
-      "endAfter": {
-        "value": "duration == baselines.maxDuration"
-      },
-      "source": {
-        "weight": 0
-      },
-      "target": {
         "weight": 100
       },
+      "target": {
+        "weight": 0,
+        "condition": "cookie: vamp exists",
+        "conditionStrength": 10
+      },
+      "endAfter": {
+        "maxDuration": "1m0s"
+      },
       "conditions": [
         {
-          "value": "health >= baselines.health",
-          "gracePeriod": "40s"
+          "metric": "Health",
+          "budget": 70,
+          "interval": {
+            "type": "rolling",
+            "duration": "5m0s"
+          },
+          "gracePeriod": "1m0s",
+          "threshold": 1,
+          "operator": "ge"
+        },
+        {
+          "metric": "restarts",
+          "budget": 5,
+          "interval": {
+            "type": "rolling",
+            "duration": "5m0s"
+          },
+          "gracePeriod": "1m0s"
         }
       ]
     }
   ],
   "metrics": [
     {
-      "name": "health",
+      "name": "restarts",
+      "type": "EventBased",
+      "value": {
+        "source": "k8s-deployment-health",
+        "type": "restarts"
+      }
+    },
+    {
+      "name": "available replicas",
+      "type": "TimeBased",
+      "value": {
+        "source": "k8s-deployment-health",
+        "type": "availablereplicas"
+      }
+    },
+    {
+      "name": "Health",
+      "type": "TimeBased",
       "value": {
         "source": "k8s-deployment-health"
       }
     }
   ],
-  "baselines": [
+  "onSuccess": [
     {
-      "name": "health",
-      "metric": "health",
-      "value": 0.97
-    },
-    {
-      "name": "maxDuration",
-      "value": "1m30s"
+      "type": "http",
+      "value": {
+        "url": "http://test.local",
+        "httpRequest": "POST",
+        "headers": [
+          "authorization: Bearer xxxyyy",
+          "content-type: text/plain"
+        ]
+      }
     }
   ]
 }
@@ -339,25 +392,25 @@ Example of release plan:
 
 ```json
 {
-	"status": "not started",
-	"service": {
-		"name": "sava",
-		"version": "1.0.5"
-	},
-	"releaseGroups": [
-		{
-			"group": 1,
-			"name": "group-1",
-			"status": "not started",
-			"environments": [
-				{
-					"id": "test",
-					"name": "test",
-					"status": "not started"
-				}
-			]
-		}
-	]
+  "status": "not started",
+  "service": {
+    "name": "sava",
+    "version": "1.0.5"
+  },
+  "releaseGroups": [
+    {
+      "group": 1,
+      "name": "group-1",
+      "status": "not started",
+      "environments": [
+        {
+          "id": "test",
+          "name": "test",
+          "status": "not started"
+        }
+      ]
+    }
+  ]
 }
 ```
 
