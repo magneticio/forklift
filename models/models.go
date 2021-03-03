@@ -109,7 +109,7 @@ type ServiceConfig struct {
 	PatchPolicyID   *uint64                     `json:"patch_policy_id"`
 	MinorPolicyID   *uint64                     `json:"minor_policy_id"`
 	MajorPolicyID   *uint64                     `json:"major_policy_id"`
-	IngressRules    []*ServiceConfigIngressRule `json:"ingress_rules"`
+	IngressRules    []*ServiceConfigIngressRule `json:"ingress_rules" validate:"dive"`
 	IsHeadless      bool                        `json:"headless"`
 }
 
