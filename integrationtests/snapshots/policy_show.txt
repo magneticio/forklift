@@ -117,8 +117,7 @@
                 "url": "http://test.local",
                 "httpRequest": "POST",
                 "headers": [
-                    "authorization: Bearer xxxyyy",
-                    "content-type: text/plain"
+                    "authorization: Bearer xxxyyy"
                 ]
             }
         }
