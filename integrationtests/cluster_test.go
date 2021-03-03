@@ -66,6 +66,9 @@ func TestIntegrationClusterCommands(t *testing.T) {
 
 			Convey("response should contain cluster list", func() {
 				So(stdoutLines[0], ShouldEqual, "- id: 1")
+				So(stdoutLines[1], ShouldEqual, "  name: test-cluster")
+				So(stdoutLines[2], ShouldEqual, "  nats-channel: nats-channel")
+				So(stdoutLines[3], ShouldEqual, "  optimiser-nats-channel: optimiser-channel")
 			})
 		})
 

@@ -243,6 +243,7 @@ func (c *Core) ListClusters() ([]models.ClusterView, error) {
 		}
 		clusters = append(clusters, models.ClusterView{
 			ID:                   clusterID,
+			Name:                 releaseAgentConfig.ClusterName,
 			NatsChannel:          releaseAgentConfig.NatsChannel,
 			OptimiserNatsChannel: releaseAgentConfig.OptimiserNatsChannel,
 		})

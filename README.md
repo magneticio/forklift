@@ -187,7 +187,7 @@ forklift delete application 10 --cluster 8
 Forklift allows for the creation and update of services by running:
 
 ```shell
-forklift put service 10 --cluster 7 --application 5 --file ./serviceconfig.json`
+forklift put service 10 --cluster 7 --file ./serviceconfig.json`
 ```
 
 Example of service config:
