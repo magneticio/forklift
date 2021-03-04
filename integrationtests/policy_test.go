@@ -64,8 +64,7 @@ func TestIntegrationPolicyCommands(t *testing.T) {
 
 			Convey("response should contain policies list", func() {
 				So(stdoutLines[0], ShouldEqual, "- id: 456")
-				So(stdoutLines[1], ShouldEqual, "  name: policy-with-steps-names")
-				So(stdoutLines[2], ShouldEqual, "  type: release")
+				So(stdoutLines[1], ShouldEqual, "  type: release")
 			})
 		})
 

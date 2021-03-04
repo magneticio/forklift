@@ -1,88 +1,125 @@
 {
-	"type": "release",
-	"name": "policy-with-steps-names",
-	"steps": [
-		{
-			"name": "first step",
-			"source": {
-				"weight": 90
-			},
-			"target": {
-				"weight": 10
-			},
-			"endAfter": {
-				"value": "health >= baselines.minHealth"
-			},
-			"conditions": [
-				{
-					"value": "health >= baselines.minHealth",
-					"gracePeriod": "1m0s"
-				}
-			]
-		},
-		{
-			"name": "second step",
-			"source": {
-				"weight": 50
-			},
-			"target": {
-				"weight": 50
-			},
-			"endAfter": {
-				"value": "duration == 2m0s"
-			},
-			"conditions": [
-				{
-					"value": "health >= baselines.minHealth",
-					"gracePeriod": "1m0s"
-				}
-			]
-		},
-		{
-			"name": "third step",
-			"source": {
-				"weight": 0,
-				"condition": "header: my-header exists"
-			},
-			"target": {
-				"weight": 100,
-				"condition": "header: my-header exists"
-			},
-			"endAfter": {
-				"value": "duration == 2m0s"
-			},
-			"conditions": [
-				{
-					"value": "health >= baselines.minHealth",
-					"gracePeriod": "1m0s"
-				}
-			]
-		}
-	],
-	"metrics": [
-		{
-			"name": "health",
-			"value": {
-				"source": "k8s-deployment-health"
-			}
-		}
-	],
-	"baselines": [
-		{
-			"name": "minHealth",
-			"metric": "health",
-			"value": 0.1
-		}
-	],
-	"onFailure": [
-		{
-			"type": "argocd",
-			"value": {
-				"url": "argocd.local/api/v1",
-				"applicationName": "test-app",
-				"token": "xxxyyyzzz",
-				"action": "rollback"
-			}
-		}
-	]
+  "type": "release",
+  "id": 456,
+  "version": 12,
+  "steps": [
+    {
+      "source": {
+        "weight": 100
+      },
+      "target": {
+        "weight": 0,
+        "condition": "cookie: vamp exists",
+        "conditionStrength": 5
+      },
+      "endAfter": {
+        "maxDuration": "1m0s"
+      },
+      "conditions": [
+        {
+          "metric": "Health",
+          "budget": 70,
+          "interval": {
+            "type": "rolling",
+            "duration": "5m0s"
+          },
+          "gracePeriod": "1m0s",
+          "threshold": 1,
+          "operator": "ge"
+        },
+        {
+          "metric": "restarts",
+          "budget": 5,
+          "interval": {
+            "type": "rolling",
+            "duration": "5m0s"
+          },
+          "gracePeriod": "1m0s"
+        },
+        {
+          "metric": "available replicas",
+          "budget": 90,
+          "interval": {
+            "type": "rolling",
+            "duration": "5m0s"
+          },
+          "gracePeriod": "1m0s",
+          "threshold": 80,
+          "operator": "ge"
+        }
+      ]
+    },
+    {
+      "source": {
+        "weight": 100
+      },
+      "target": {
+        "weight": 0,
+        "condition": "cookie: vamp exists",
+        "conditionStrength": 10
+      },
+      "endAfter": {
+        "maxDuration": "1m0s"
+      },
+      "conditions": [
+        {
+          "metric": "Health",
+          "budget": 70,
+          "interval": {
+            "type": "rolling",
+            "duration": "5m0s"
+          },
+          "gracePeriod": "1m0s",
+          "threshold": 1,
+          "operator": "ge"
+        },
+        {
+          "metric": "restarts",
+          "budget": 5,
+          "interval": {
+            "type": "rolling",
+            "duration": "5m0s"
+          },
+          "gracePeriod": "1m0s"
+        }
+      ]
+    }
+  ],
+  "metrics": [
+    {
+      "name": "restarts",
+      "type": "EventBased",
+      "value": {
+        "source": "k8s-deployment-health",
+        "type": "restarts"
+      }
+    },
+    {
+      "name": "available replicas",
+      "type": "TimeBased",
+      "value": {
+        "source": "k8s-deployment-health",
+        "type": "availablereplicas"
+      }
+    },
+    {
+      "name": "Health",
+      "type": "TimeBased",
+      "value": {
+        "source": "k8s-deployment-health"
+      }
+    }
+  ],
+  "onSuccess": [
+    {
+      "type": "http",
+      "value": {
+        "url": "http://test.local",
+        "httpRequest": "POST",
+        "headers": [
+          "authorization: Bearer xxxyyy"
+        ]
+      }
+    }
+  ]
 }

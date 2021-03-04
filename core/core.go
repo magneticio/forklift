@@ -78,7 +78,6 @@ func (c *Core) ListPolicies() ([]models.PolicyView, error) {
 	for i, apiPolicyView := range apiPolicyViews {
 		policyViews[i] = models.PolicyView{
 			ID:   apiPolicyView.PolicyID,
-			Name: apiPolicyView.PolicyName,
 			Type: string(apiPolicyView.PolicyType),
 		}
 	}
@@ -167,7 +166,7 @@ func (c *Core) GetReleasePlanText(applicationID, serviceID uint64, serviceVersio
 }
 
 // PutReleaseAgentConfig - puts Release Agent config to key value store
-func (c *Core) PutReleaseAgentConfig(clusterID uint64, natsChannelName, optimiserNatsChannelName, natsToken string) error {
+func (c *Core) PutReleaseAgentConfig(clusterID uint64, clusterName, natsChannelName, optimiserNatsChannelName, natsToken string) error {
 	if natsChannelName == "" {
 		return fmt.Errorf("NATS channel name must not be empty")
 	}
@@ -180,6 +179,7 @@ func (c *Core) PutReleaseAgentConfig(clusterID uint64, natsChannelName, optimise
 	var releaseAgentConfig models.ReleaseAgentConfig
 	if exists {
 		releaseAgentConfig = models.ReleaseAgentConfig{
+			ClusterName:                 clusterName,
 			NatsChannel:                 natsChannelName,
 			NatsToken:                   natsToken,
 			OptimiserNatsChannel:        optimiserNatsChannelName,
@@ -187,6 +187,7 @@ func (c *Core) PutReleaseAgentConfig(clusterID uint64, natsChannelName, optimise
 		}
 	} else {
 		releaseAgentConfig = models.ReleaseAgentConfig{
+			ClusterName:                 clusterName,
 			NatsChannel:                 natsChannelName,
 			NatsToken:                   natsToken,
 			OptimiserNatsChannel:        optimiserNatsChannelName,
@@ -242,6 +243,7 @@ func (c *Core) ListClusters() ([]models.ClusterView, error) {
 		}
 		clusters = append(clusters, models.ClusterView{
 			ID:                   clusterID,
+			Name:                 releaseAgentConfig.ClusterName,
 			NatsChannel:          releaseAgentConfig.NatsChannel,
 			OptimiserNatsChannel: releaseAgentConfig.OptimiserNatsChannel,
 		})
@@ -262,6 +264,7 @@ func (c *Core) GetCluster(clusterID uint64) (*models.ClusterView, error) {
 	}
 	return &models.ClusterView{
 		ID:                   clusterID,
+		Name:                 releaseAgentConfig.ClusterName,
 		NatsChannel:          releaseAgentConfig.NatsChannel,
 		OptimiserNatsChannel: releaseAgentConfig.OptimiserNatsChannel,
 		NatsToken:            releaseAgentConfig.NatsToken,

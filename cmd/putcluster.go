@@ -29,6 +29,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var clusterName string
 var natsChannelName string
 var optimiserNatsChannelName string
 var natsToken string
@@ -38,7 +39,7 @@ var putClusterCmd = &cobra.Command{
 	Short: "Put a cluster",
 	Long: AddAppName(`Put a cluster
     Usage:
-    $AppName put cluster <cluster_id> --nats-channel-name <nats_channel_name> --optimiser-nats-channel-name <optimiser_nats_channel_name> --nats-token <nats_token>`),
+    $AppName put cluster <cluster_id> --name <cluster_name> --nats-channel-name <nats_channel_name> --optimiser-nats-channel-name <optimiser_nats_channel_name> --nats-token <nats_token>`),
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -57,7 +58,7 @@ var putClusterCmd = &cobra.Command{
 			return err
 		}
 
-		err = core.PutReleaseAgentConfig(clusterID, natsChannelName, optimiserNatsChannelName, natsToken)
+		err = core.PutReleaseAgentConfig(clusterID, clusterName, natsChannelName, optimiserNatsChannelName, natsToken)
 		if err != nil {
 			return err
 		}
@@ -70,6 +71,9 @@ var putClusterCmd = &cobra.Command{
 
 func init() {
 	putCmd.AddCommand(putClusterCmd)
+
+	putClusterCmd.Flags().StringVar(&clusterName, "name", "", "cluster name")
+	putClusterCmd.MarkFlagRequired("name")
 
 	putClusterCmd.Flags().StringVar(&natsChannelName, "nats-channel-name", "", "NATS channel name")
 	putClusterCmd.MarkFlagRequired("nats-channel-name")

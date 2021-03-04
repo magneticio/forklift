@@ -10,13 +10,15 @@ import (
 )
 
 func TestIntegrationClusterCommands(t *testing.T) {
+	var clusterName = "test-cluster"
 	var natsChannelName = "nats-channel"
 	var optimiserChannelName = "optimiser-channel"
 	var natsToken = "nats-token"
 
 	Convey("When executing put cluster command with all necessary flags", t, func() {
 		command := fmt.Sprintf(
-			"put cluster 1 --nats-channel-name %s --optimiser-nats-channel-name %s --nats-token %s",
+			"put cluster 1 --name %s --nats-channel-name %s --optimiser-nats-channel-name %s --nats-token %s",
+			clusterName,
 			natsChannelName,
 			optimiserChannelName,
 			natsToken,
@@ -48,9 +50,10 @@ func TestIntegrationClusterCommands(t *testing.T) {
 
 			Convey("response should contain cluster information", func() {
 				So(stdoutLines[0], ShouldEqual, "id: 1")
-				So(stdoutLines[1], ShouldEqual, "nats-channel: nats-channel")
-				So(stdoutLines[2], ShouldEqual, "nats-token: nats-token")
-				So(stdoutLines[3], ShouldEqual, "optimiser-nats-channel: optimiser-channel")
+				So(stdoutLines[1], ShouldEqual, "name: test-cluster")
+				So(stdoutLines[2], ShouldEqual, "nats-channel: nats-channel")
+				So(stdoutLines[3], ShouldEqual, "nats-token: nats-token")
+				So(stdoutLines[4], ShouldEqual, "optimiser-nats-channel: optimiser-channel")
 			})
 		})
 
@@ -63,6 +66,9 @@ func TestIntegrationClusterCommands(t *testing.T) {
 
 			Convey("response should contain cluster list", func() {
 				So(stdoutLines[0], ShouldEqual, "- id: 1")
+				So(stdoutLines[1], ShouldEqual, "  name: test-cluster")
+				So(stdoutLines[2], ShouldEqual, "  nats-channel: nats-channel")
+				So(stdoutLines[3], ShouldEqual, "  optimiser-nats-channel: optimiser-channel")
 			})
 		})
 
@@ -84,9 +90,25 @@ func TestIntegrationClusterCommands(t *testing.T) {
 		})
 	})
 
+	Convey("When executing put cluster command without name flag", t, func() {
+		command := fmt.Sprintf(
+			"put cluster 1 --optimiser-nats-channel-name %s --nats-channel-name %s --nats-token %s",
+			optimiserChannelName,
+			natsChannelName,
+			natsToken,
+		)
+
+		_, err := runCommand(command)
+
+		Convey("error should be thrown", func() {
+			So(err.Error(), ShouldEqual, `required flag(s) "name" not set`)
+		})
+	})
+
 	Convey("When executing put cluster command without nats-channel-name flag", t, func() {
 		command := fmt.Sprintf(
-			"put cluster 1 --optimiser-nats-channel-name %s --nats-token %s",
+			"put cluster 1 --name %s --optimiser-nats-channel-name %s --nats-token %s",
+			clusterName,
 			optimiserChannelName,
 			natsToken,
 		)
@@ -100,7 +122,8 @@ func TestIntegrationClusterCommands(t *testing.T) {
 
 	Convey("When executing put cluster command without optimiser-nats-channel-name flag", t, func() {
 		command := fmt.Sprintf(
-			"put cluster 1 --nats-channel-name %s --nats-token %s",
+			"put cluster 1 --name %s --nats-channel-name %s --nats-token %s",
+			clusterName,
 			natsChannelName,
 			natsToken,
 		)

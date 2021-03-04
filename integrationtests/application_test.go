@@ -12,6 +12,7 @@ import (
 func TestIntegrationApplicationCommands(t *testing.T) {
 	var applicationID = uint64(12345)
 	var clusterID = uint64(4321)
+	var clusterName = "test-cluster"
 	var namespace = "test-namespace"
 	var natsChannelName = "nats-channel"
 	var optimiserChannelName = "optimiser-channel"
@@ -27,8 +28,9 @@ func TestIntegrationApplicationCommands(t *testing.T) {
 
 		Convey("and cluster is present in Vault", func() {
 			putClusterCommand := fmt.Sprintf(
-				"put cluster %d --nats-channel-name %s --optimiser-nats-channel-name %s --nats-token %s",
+				"put cluster %d --name %s --nats-channel-name %s --optimiser-nats-channel-name %s --nats-token %s",
 				clusterID,
+				clusterName,
 				natsChannelName,
 				optimiserChannelName,
 				natsToken,
