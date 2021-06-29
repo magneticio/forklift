@@ -425,6 +425,5 @@ forklift delete releaseplan 1.0.1 --cluster 7 --application 6 --service 5
 Update `cmd/root.go` with the new version and create a new tag with
 
 ```shell
-git tag <version>
-git push origin --tags
+./release.sh
 ```
