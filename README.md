@@ -419,3 +419,11 @@ Release plan can also be deleted with
 ```shell
 forklift delete releaseplan 1.0.1 --cluster 7 --application 6 --service 5
 ```
+
+## Release a new version
+
+Update `cmd/root.go` with the new version and create a new tag with
+
+```shell
+./release.sh
+```
